@@ -2,9 +2,8 @@ import os
 import re
 
 from bs4 import BeautifulSoup
-from lxml import html
-
 from file_clerk import clerk
+from lxml import html
 
 
 def get_html(path):
