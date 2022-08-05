@@ -3,6 +3,11 @@ name = "webcode-tk"
 version = "0.1.0"
 description = ""
 authors = ["hundredvisionsguy <cwinikka@gmail.com>"]
+keywords = ["html", "validation", "css", ]
+license = "MIT"
+readme = "README.rst"
+homepage = "https://github.com/HundredVisionsGuy/webcode-tk"
+repository = "https://github.com/HundredVisionsGuy/webcode-tk"
 
 [tool.poetry.dependencies]
 python = "^3.9"
