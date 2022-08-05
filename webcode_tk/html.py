@@ -1,3 +1,17 @@
+"""A collection of functions for getting HTML code and contents.
+
+This is a library I created in order to help me autograde student web
+desing projects. For example, in a web design assignment, I might ask
+my students to be sure to include at least two bullet lists or five
+links.
+
+This tool allows you to get and analyze what tags are present in a
+project, get contents from elements, find out how many particular
+elements were present or not.
+
+    Typical usage example:
+    ``
+"""
 import os
 import re
 
@@ -6,15 +20,30 @@ from file_clerk import clerk
 from lxml import html
 
 
-def get_html(path):
-    with open(path, encoding="utf-8") as fp:
+def get_html(file_path: str) -> BeautifulSoup:
+    """Returns an html document (from file_path) as a BeautifulSoup object
+
+    This function takes advantage of the bs4 library's `BeautifulSoup`
+    datatype, also known as simply a soup object.
+
+    Args:
+        file_path: the file location (and filename as a relative link).
+
+    Returns:
+        soup: this is a BeautifulSoup object that represents an HTML tree
+            or NoneType if there is a failure.
+
+    .. Beautiful Soup Documentation:
+        https://www.crummy.com/software/BeautifulSoup/bs4/doc/#making-the-soup
+    """
+    with open(file_path, encoding="utf-8") as fp:
         soup = BeautifulSoup(fp, "html.parser")
         return soup
     return None
 
 
-def get_num_elements_in_file(el, path):
-    with open(path, encoding="utf-8") as fp:
+def get_num_elements_in_file(el: str, file_path: str):
+    with open(file_path, encoding="utf-8") as fp:
         if (
             el.lower() in ["doctype", "html", "head", "title", "body"]
             and el.lower() != "header"
