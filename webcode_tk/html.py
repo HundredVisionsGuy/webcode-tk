@@ -14,10 +14,17 @@ elements were present or not.
 """
 import os
 import re
+from typing import Union
 
 from bs4 import BeautifulSoup
+from bs4 import Tag
 from file_clerk import clerk
 from lxml import html
+
+# global variables
+STARTS_WITH_OPENING_TAG_RE = "^<[^/]+?>"
+OPENING_TAG_RE = "<[^/]+?>"
+CLOSING_TAG_RE = "</.+?>"
 
 
 def get_html(file_path: str) -> BeautifulSoup:
@@ -33,16 +40,40 @@ def get_html(file_path: str) -> BeautifulSoup:
         soup: this is a BeautifulSoup object that represents an HTML tree
             or NoneType if there is a failure.
 
+    Raises:
+        FileNotFound: the file path did not exist.
+
     .. Beautiful Soup Documentation:
         https://www.crummy.com/software/BeautifulSoup/bs4/doc/#making-the-soup
     """
-    with open(file_path, encoding="utf-8") as fp:
-        soup = BeautifulSoup(fp, "html.parser")
-        return soup
-    return None
+    try:
+        with open(file_path, encoding="utf-8") as fp:
+            soup = BeautifulSoup(fp, "html.parser")
+            return soup
+    except FileNotFoundError:
+        print("This is a non-existent file")
+        raise
 
 
-def get_num_elements_in_file(el: str, file_path: str):
+def get_num_elements_in_file(el: str, file_path: str) -> int:
+    """Returns the number of HTML elements in a web page (file)
+
+    This function takes the name of an element in the string form and
+    the relative path to the HTML document, and it returns the number
+    of occurences of that tag in the document.
+
+    Args:
+        el: the name of a tag, but not in tag form (for example: p, ul,
+            or div)
+        file_path: relative path to an html document (relative to the
+            project folder)
+
+    Returns:
+        num: the number of elements found in the document in integer form
+
+    Raises:
+        FileNotFound: the file path did not exist.
+    """
     with open(file_path, encoding="utf-8") as fp:
         if (
             el.lower() in ["doctype", "html", "head", "title", "body"]
@@ -67,11 +98,34 @@ def get_num_elements_in_file(el: str, file_path: str):
             return count
         soup = BeautifulSoup(fp, "html.parser")
         elements = soup.find_all(el.lower())
-    return len(elements)
+    num = len(elements)
+    return num
 
 
-def get_num_elements_in_folder(el, dir_path):
+def get_num_elements_in_folder(el: str, dir_path: str) -> int:
+    """Returns the total number of a specific element in all files
+    of a project.
+
+    Checks to make sure the folder exists, then goes through all html
+    files in the directory to see how many occurrences there are among
+    all the files.
+
+    Args:
+        el: the name of a tag, but not in tag form (for example: p, ul,
+            or div)
+        dir_path: relative path to an html document (relative to the
+            project folder).
+
+    Returns:
+        num: the number of elements found in the document in integer form
+
+    Raises:
+        FileNotFound: the folder path did not exist.
+    """
     elements = 0
+    # raise error if path does not exist
+    if not os.path.isdir(dir_path):
+        raise FileNotFoundError
     for subdir, dirs, files in os.walk(dir_path):
         for filename in files:
             filepath = subdir + os.sep + filename
@@ -80,21 +134,106 @@ def get_num_elements_in_folder(el, dir_path):
     return elements
 
 
-def get_elements(el, path):
-    with open(path, encoding="utf-8") as fp:
+def get_elements(el: str, file_path: str) -> list:
+    """Returns a list of all Tag objects of type el from file path.
+
+    Extracts all tags of type (el) from the filename (file_path) as
+    a list of BeautifulSoup Tag ojects.
+
+    Args:
+        el: the name of a tag, but not in tag form (for example: p, ul,
+            or div)
+        file_path: relative path to an html document (relative to the
+            project folder)
+
+    Returns:
+        num: the number of elements found in the document in integer form
+
+    Raises:
+        FileNotFound: the folder path did not exist.
+    """
+    with open(file_path, encoding="utf-8") as fp:
         soup = BeautifulSoup(fp, "html.parser")
         elements = soup.find_all(el)
     return elements
 
 
-def get_element_content(el):
-    return el.get_text()
+def get_element_content(el: Union[Tag, str]) -> str:
+    """gets the content of element (el) as a string
+
+    This function can accept a Tag (a BeautifulSoup object) or a string
+    and returns the contents of the tag as a string.
+
+    Args:
+        el: the element can either be a Tag (preferred) or a string.
+
+    Returns:
+        content: the contents of the tag as a string. This is like
+            .innerText() method in JavaScript.
+    """
+    # Convert to tag if it's a string
+    if isinstance(el, str):
+        el = string_to_tag(el)
+    content = ""
+    for i in el:
+        content += str(i).replace("\n", "")
+    return content
 
 
-def uses_inline_styles(markup):
+def string_to_tag(el: str) -> Tag:
+    """Takes html markup as a string and returns a bs4 Tag object
+
+    Args:
+        el: HTML code in the form of a string. (example: '<h1>My Header</h1>')
+
+    Returns:
+        tag: A BeautifulSoup 4 Tag object
+
+    Raises:
+        ValueError: to get a tag object, the BeautifulSoup object must
+            start with an opening tag. Without an opening tag, soup.find()
+            will return a None type object.
+
+    .. BeautifulSoup Tag Object:
+        https://www.crummy.com/software/BeautifulSoup/bs4/doc/#tag
+    """
+
+    # raise ValueError if there is no opening tag at the beginning
+    # of the string
+    el = el.strip()
+    match = re.search(STARTS_WITH_OPENING_TAG_RE, el)
+    if not match:
+        raise ValueError(f"{el} is not proper HTML.")
+
+    # find the first element of the string
+    start = el.index("<") + 1
+    stop = el.index(">")
+    tag_name = el[start:stop]
+    if " " in tag_name:
+        stop = tag_name.index(" ")
+        tag_name = tag_name[:stop]
+
+    # get the tag from the string using find()
+    soup = BeautifulSoup(el, "html.parser")
+    tag = soup.find(tag_name)
+    return tag
+
+
+def uses_inline_styles(markup: Union[Tag, str]) -> bool:
+    """determines whether the markup uses inline styles or not as a
+    boolean.
+
+    Args:
+        markup: the code in string or Tag form.
+
+    Returns:
+        has_inline_styles: boolean True if contains style attribute
+            False if it does not contain style attribute.
+    """
     tree = html.fromstring(markup)
     tags_with_inline_styles = tree.xpath("//@style")
-    return bool(tags_with_inline_styles)
+    has_inline_styles = bool(tags_with_inline_styles)
+    return has_inline_styles
 
 
 if __name__ == "__main__":
