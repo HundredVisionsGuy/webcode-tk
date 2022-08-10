@@ -1,15 +1,8 @@
-# file-clerk Docs
+# webcode-tk Docs
 
 A collection of functions for dealing with files and file content.
 
-This was a library I created for previous projects that deal with files
-and file paths in order to get code from files, lists of files in
-project folders, file extensions, and allows us to capture just files
-of a particular type.
-
-I also developed my projects on Windows OS, so
-these functions were designed to work with the file paths on Windows,
-Mac, and Linux (Windows is the one with backslashes - wacky, I know.).
+More about this later. Still working on automation.
 
 ## Table Of Contents
 
@@ -22,7 +15,7 @@ your use case by looking at the different pages.
 
 ## Project Overview
 
-::: file_clerk
+::: webcode_tk
 
 ## Acknowledgements
 I'd like to thank Guido van Rossum for his love of Monty Python and creating the Python programming language (pseudo-code that works) as well as the Python community and PyCon for running Development Sprints and giving rookies like me the chance to learn how to contribute to open-source projects.
