@@ -27,6 +27,27 @@ OPENING_TAG_RE = "<[^/]+?>"
 CLOSING_TAG_RE = "</.+?>"
 
 
+def get_all_html_files(dir_path: str) -> list:
+    """Returns a list of all files in the dir_path folder.
+
+    This function takes a path to a directory and returns a list of all
+    html documents in that folder as full paths (including the path to
+    the directory).
+
+
+    Args:
+        dir_path: a string of a path to a folder (directory). This path
+            should be a relative path starting at the root directory of
+            your python project.
+
+    Returns:
+        html_files: a list of full paths to all HTML documents in the
+            dir_path folder.
+    """
+    html_files = clerk.get_all_files_of_type(dir_path, "html")
+    return html_files
+
+
 def get_html(file_path: str) -> BeautifulSoup:
     """Returns an html document (from file_path) as a BeautifulSoup object
 

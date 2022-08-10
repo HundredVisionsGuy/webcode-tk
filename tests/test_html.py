@@ -43,6 +43,19 @@ def test_html_report_for_file_that_uses_inline_styles(
     assert html.uses_inline_styles(markup_with_inline_styles)
 
 
+def test_get_all_html_files_for_existence_of_file():
+    project_files = html.get_all_html_files(project_path)
+    expected_path = project_path + "/background.html"
+    assert expected_path in project_files
+
+
+def test_get_all_html_files_for_all_5_files():
+    # NOTE: I hid an inner_folder to make sure it worked for all
+    # sub folders.
+    results = html.get_all_html_files(project_path)
+    assert len(results) == 5
+
+
 def test_get_html_for_return_type(html_soup):
     assert isinstance(html_soup, BeautifulSoup)
 
