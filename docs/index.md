@@ -1,6 +1,8 @@
 # webcode-tk Docs
 
-A collection of functions for dealing with files and file content.
+A collection of functions designed by a Web Design teacher for checking front-end web documents (in particular HTML and CSS files). It can automatically check validation on HTML and CSS.
+
+It can also check for a particular HTML element, and in soon to be released version, will also allow automatic checks for particular CSS properties or values.
 
 More about this later. Still working on automation.
 
