@@ -1,0 +1,27 @@
+site_name: file-clerk docs
+
+theme:
+  name: "material"
+  palette:
+    # scheme: preference uses dark or light mode based on user (OS) preference
+    scheme: preference
+    primary: purple
+    accent: #3bb027
+  icon:
+      logo: fontawesome/solid/code
+  favicon: 'docs/docs_assets/images/favicon.ico'
+  language: 'en'
+
+plugins:
+  - mkdocstrings
+
+nav:
+  - file-clerk Docs: index.md
+  - tutorials.md
+  - reference.md
+  - explanation.md
+
+# If I make changes to mkdocs, I need to test, revise, rebuild and re-deploy
+# Test: mkdocs serve
+# Build: mkdocs build
+# Re-deploy: mkdocs gh-deploy
