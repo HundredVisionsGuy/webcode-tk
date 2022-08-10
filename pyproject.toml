@@ -16,6 +16,7 @@ classifiers = [
 [project.urls]
 "Homepage" = "https://github.com/HundredVisionsGuy/webcode-tk"
 "Repository" = "https://github.com/HundredVisionsGuy/webcode-tk"
+"Bug Tracker" = "https://github.com/HundredVisionsGuy/webcode-tk/issues"
 
 [tool.poetry.dependencies]
 python = "^3.9"
