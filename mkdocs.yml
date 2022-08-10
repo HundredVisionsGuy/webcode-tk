@@ -16,7 +16,7 @@ plugins:
   - mkdocstrings
 
 nav:
-  - file-clerk Docs: index.md
+  - webcode-tk Docs: index.md
   - tutorials.md
   - reference.md
   - explanation.md
