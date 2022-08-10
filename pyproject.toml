@@ -1,13 +1,21 @@
 [tool.poetry]
-name = "webcode-tk"
+name = "webcode-tk_hundredvisionsguy"
 version = "0.1.0"
 description = ""
 authors = ["hundredvisionsguy <cwinikka@gmail.com>"]
 keywords = ["html", "validation", "css", ]
 license = "MIT"
 readme = "README.rst"
-homepage = "https://github.com/HundredVisionsGuy/webcode-tk"
-repository = "https://github.com/HundredVisionsGuy/webcode-tk"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/HundredVisionsGuy/webcode-tk"
+"Repository" = "https://github.com/HundredVisionsGuy/webcode-tk"
 
 [tool.poetry.dependencies]
 python = "^3.9"
