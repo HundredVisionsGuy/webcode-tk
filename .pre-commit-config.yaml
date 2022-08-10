@@ -3,6 +3,7 @@ repos:
   rev: v2.4.0
   hooks:
   - id: check-added-large-files
+    args: ['--maxkb=700']
   - id: check-ast
   - id: check-docstring-first
   - id: check-json
