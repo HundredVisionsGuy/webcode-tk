@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 from bs4 import BeautifulSoup
 from bs4 import Tag
@@ -109,6 +111,7 @@ def test_get_elements_for_expected_tag_type():
     assert results[0].name == "ul"
 
 
+@pytest.mark.skipif(not sys.platform.startswith("win"), reason="WindowsOS only test")
 def test_for_non_posix_path_for_WindowsOS():
     try:
         html.get_elements("ul", windows_path)
