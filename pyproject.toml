@@ -20,6 +20,10 @@ pre-commit = "^2.20.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
+mkdocs = "*"
+mkgendocs = "*"
+pytest-cov = "*"
+mkdocs-material = "*"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
