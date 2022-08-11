@@ -319,9 +319,18 @@
 <p>In order to grade student projects, you'll want to create a directory in your root project folder. I title mine "project".</p>
 <p>Be sure you have installed and imported webcode-tk (I prefer poetry: <code>poetry install webcode-tk</code>)</p>
 <p>Place your web documents in the project folder.</p>
+<p>Be sure to import one or more of the webcode-tk scripts:
+<code>from webcode_tk import html</code>
+or
+<code>from webcode_tk import validator</code></p>
 <p>In your Python script, set the project folder as a path:
 <code>project_path = "project"</code></p>
 <h3 id="html-tasks">HTML Tasks</h3>
+<p>Get a list of all HTML files:</p>
+<pre><code># at the top of the script with any other imports:
+from webcode_tk import html
+html_docs = html.get_all_html_files(project_path)
+</code></pre>
 
 
             </article>
