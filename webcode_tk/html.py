@@ -147,7 +147,7 @@ def get_num_elements_in_folder(el: str, dir_path: str) -> int:
     # raise error if path does not exist
     if not os.path.isdir(dir_path):
         raise FileNotFoundError
-    for subdir, dirs, files in os.walk(dir_path):
+    for subdir, _dirs, files in os.walk(dir_path):
         for filename in files:
             filepath = subdir + os.sep + filename
             if filepath.endswith(".html"):

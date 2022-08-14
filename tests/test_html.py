@@ -111,12 +111,12 @@ def test_get_elements_for_expected_tag_type():
     assert results[0].name == "ul"
 
 
-@pytest.mark.skipif(not sys.platform.startswith("win"), reason="WindowsOS only test")
+@pytest.mark.skipif(
+    not sys.platform.startswith("win"), reason="WindowsOS only test"
+)
 def test_for_non_posix_path_for_WindowsOS():
-    try:
-        html.get_elements("ul", windows_path)
-    except FileNotFoundError as exc:
-        assert False, f"'ul, {windows_path}' raised an exception {exc}"
+    results = html.get_elements("ul", windows_path)
+    assert results
 
 
 def test_get_element_content_for_sports_h1(sports_h1):
