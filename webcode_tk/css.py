@@ -4,9 +4,8 @@ and values.
 """
 import re
 
-import webcode_tk
-from . import color_keywords as keyword
-from . import colortools
+from webcode_tk import color_keywords as keyword
+from webcode_tk import colortools
 
 # regex patterns for various selectors
 regex_patterns: dict = {
@@ -170,11 +169,12 @@ class Stylesheet:
             nested_at_rule_dict[key] = rulesets
         self.nested_at_rules = nested_at_rule_dict
 
-    def get_color_ruleset(self, ruleset: webcode_tk.css.Ruleset) -> list:
+    def get_color_ruleset(self, ruleset) -> list:
         """Returns a list of all rules targetting color or background color.
 
         Args:
-            ruleset: a ruleset
+            ruleset(Ruleset): a Ruleset object complete with selector
+                and delcaration block.
 
         Returns:
             color_rulsets: a list of all selectors that target color

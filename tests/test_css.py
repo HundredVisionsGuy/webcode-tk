@@ -142,7 +142,7 @@ def declaration_block_with_one_selector():
 @pytest.fixture
 def layout_css():
     layout_css = clerk.file_to_string(
-        "tests/test_files/projects/large_project/css/layout.css"
+        "tests/test_files/large_project/css/layout.css"
     )
     yield layout_css
 
@@ -168,7 +168,7 @@ def styles_with_multiple_selectors():
 
 @pytest.fixture
 def navigation_styles():
-    path = "tests/test_files/projects/large_project/css/"
+    path = "tests/test_files/large_project/css/"
     path += "navigation.css"
     styles = clerk.file_to_string(path)
     sheet = css.Stylesheet("navigation.css", styles)

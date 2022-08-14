@@ -161,3 +161,6 @@ projects/responsive-navbar/*
 # Mac OS stuff
 .DS_Store
 */.DS_Stores
+
+# Unnecessary image files from test projects
+tests/test_files/large_project/images
