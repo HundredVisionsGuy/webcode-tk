@@ -6,16 +6,14 @@ authors = ["hundredvisionsguy <cwinikka@gmail.com>"]
 keywords = ["html", "validation", "css", ]
 license = "MIT"
 readme = "README.rst"
+homepage = "https://github.com/HundredVisionsGuy/webcode-tk"
+repository = "https://github.com/HundredVisionsGuy/webcode-tk"
+documentation = "https://hundredvisionsguy.github.io/webcode-tk/"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-
-[project.urls]
-"Homepage" = "https://github.com/HundredVisionsGuy/webcode-tk"
-"Repository" = "https://github.com/HundredVisionsGuy/webcode-tk"
-"Bug Tracker" = "https://github.com/HundredVisionsGuy/webcode-tk/issues"
 
 [tool.poetry.dependencies]
 python = "^3.8"
@@ -24,7 +22,6 @@ file-clerk = "^1.0.9"
 lxml = "^4.9.1"
 requests = "^2.28.1"
 MechanicalSoup = "^1.1.0"
-pre-commit = "^2.20.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
@@ -32,7 +29,14 @@ mkdocs = "*"
 mkgendocs = "*"
 pytest-cov = "*"
 mkdocs-material = "*"
+flake8 = "^5.0.4"
+pre-commit = "^2.20.0"
+autoflake8 = "^0.3.2"
+pip-licenses = "^3.5.4"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 79
