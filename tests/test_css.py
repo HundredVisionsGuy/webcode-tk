@@ -148,15 +148,14 @@ def layout_css():
 
 
 @pytest.fixture
-def layout_css_at_rules(layout_css):
-    rulesets = css.NestedAtRule(layout_css)
-    yield rulesets
-
-
-@pytest.fixture
 def layout_css_stylesheet(layout_css):
     css_sheet = css.Stylesheet("layout.css", layout_css)
     return css_sheet
+
+
+@pytest.fixture
+def layout_css_at_rules(layout_css_stylesheet):
+    yield layout_css_stylesheet.nested_at_rules
 
 
 @pytest.fixture
@@ -251,7 +250,7 @@ def test_nested_at_rules_for_non_nested_at_rule():
 
 def test_nested_at_rules_for_rules(layout_css_at_rules):
     rule = "@keyframes pulse"
-    expected = layout_css_at_rules.rule
+    expected = layout_css_at_rules[0].at_rule
     assert rule == expected
 
 
@@ -525,13 +524,6 @@ def test_get_num_required_selectors_for_layout_sheet(layout_css_stylesheet):
     )
     expected = 29
     assert results == expected
-
-
-def test_get_nested_at_rule_selectors(layout_css_stylesheet):
-    results = css.get_nested_at_rule_selectors(layout_css_stylesheet)
-    count = len(results)
-    expected = 5
-    assert count == expected
 
 
 def test_has_repeat_selectors_for_false(navigation_styles):

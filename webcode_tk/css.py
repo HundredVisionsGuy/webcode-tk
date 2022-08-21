@@ -68,18 +68,19 @@ class Stylesheet:
         self.comments = []
         self.color_rulesets = []
         self.selectors = []
-        self.minify()
-        self.extract_comments()
-        self.extract_nested_at_rules()
-        self.extract_rulesets_from_at_rules()
-        self.extract_rulesets()
-        self.get_selectors()
+        self.has_repeat_selectors = False
+        self.repeated_selectors = []
+        self.__minify()
+        self.__extract_comments()
+        self.__extract_nested_at_rules()
+        self.__extract_rulesets()
+        self.__set_selectors()
 
-    def minify(self):
+    def __minify(self):
         """Removes all whitespace, line returns, and tabs from text."""
         self.text = minify_code(self.text)
 
-    def extract_comments(self):
+    def __extract_comments(self):
         """Gets all comments from the code and stores in a list."""
         # split all CSS text at opening comment
         text_comment_split = self.text.split("/*")
@@ -103,14 +104,14 @@ class Stylesheet:
         # replace code (comments extracted)
         self.text = code_without_comments
 
-    def extract_nested_at_rules(self):
+    def __extract_nested_at_rules(self):
         """Pulls out any nested at-rule and stores them in a list."""
         # Search through nested at rules
         at_rules = []
         non_at_rules_css = []
 
         # split at the double }} (end of a nested at rule)
-        css_split = self.text.split("}}", 3)
+        css_split = self.text.split("}}")
         css_split = restore_braces(css_split)
 
         if len(css_split) == 1:
@@ -129,10 +130,17 @@ class Stylesheet:
                         if split_code[0]:
                             # an @rule was NOT at the beginning or else,
                             # there would be an empty string
+                            # that means there is CSS to add (non-at-rules)
                             non_at_rules_css.append(split_code[0])
-                            at_rules.append(rule + split_code[1])
-                        else:
-                            at_rules.append(rule + split_code[1])
+                        # create a nested at-rule object
+                        text = split_code[1]
+                        pos = text.find("{")
+                        at_rule = rule + text[:pos]
+                        ruleset_string = text[pos + 1 : -1]
+                        nested = NestedAtRule(at_rule, ruleset_string)
+                        if nested.has_repeat_selectors:
+                            self.has_repeat_selectors = True
+                        at_rules.append(nested)
                     else:
                         # it's only an @rule
                         print("skipping non-nested @rule.")
@@ -140,7 +148,7 @@ class Stylesheet:
         self.text = "".join(non_at_rules_css)
         self.nested_at_rules = at_rules
 
-    def extract_rulesets(self):
+    def __extract_rulesets(self):
         """Separates all code into individual rulesets."""
         # split rulesets by closing of rulesets: }
         ruleset_list = self.text.split("}")
@@ -149,25 +157,6 @@ class Stylesheet:
                 ruleset = Ruleset(ruleset + "}")
                 self.rulesets.append(ruleset)
                 self.get_color_ruleset(ruleset)
-
-    def extract_rulesets_from_at_rules(self):
-        """Separates all nested at-rules into individual rulesets."""
-        nested_at_rule_dict = {}
-        nested_rules = self.nested_at_rules
-        for nested_rule in nested_rules:
-            nested_rule_split = nested_rule.split("{", 1)
-            key = nested_rule_split.pop(0)
-            rule_split = nested_rule_split[0].split("}")
-            rulesets = []
-            for rule in rule_split:
-                if len(rule) > 1:
-                    if rule[-1] != "}":
-                        rule = rule + "}"
-                    ruleset = Ruleset(rule)
-                    rulesets.append(ruleset)
-                    self.get_color_ruleset(ruleset)
-            nested_at_rule_dict[key] = rulesets
-        self.nested_at_rules = nested_at_rule_dict
 
     def get_color_ruleset(self, ruleset) -> list:
         """Returns a list of all rules targetting color or background color.
@@ -205,9 +194,12 @@ class Stylesheet:
         if color_rulesets:
             self.color_rulesets += color_rulesets
 
-    def get_selectors(self):
+    def __set_selectors(self):
         """Adds all selectors from stylesheet to selectors attribute."""
         for rule in self.rulesets:
+            if rule.selector in self.selectors:
+                self.has_repeat_selectors = True
+                self.repeated_selectors.append(rule.selector)
             self.selectors.append(rule.selector)
 
     def sort_selectors(self):
@@ -216,19 +208,88 @@ class Stylesheet:
 
 
 class NestedAtRule:
-    def __init__(self, text):
-        is_valid = False
-        for rule in nested_at_rules:
-            if rule in text:
-                is_valid = True
-        if not is_valid:
-            raise Exception("The CSS has no nested @rules.")
-        self.__text = minify_code(text)
-        self.rule = ""
-        self.declaration_block = None
-        self.set_at_rule()
+    """An at-rule rule that is nested, such as @media or @keyframes.
 
-    def set_at_rule(self):
+    Nested at-rules are set in the global variable: nested_at_rules.
+    For more information on nested at-rules, you want to refer to MDN's
+    [nested]
+    (https://developer.mozilla.org/en-US/docs/Web/CSS/At-rule#nested)
+
+    Attributes:
+        at_rule (str): the full at-rule such as '@media only and
+            (min-width: 520px)'.
+        text (str): the text of the code (without the at_rule).
+            Provide the text if you do not provide a list of rulesets.
+        rulesets (list): a list of rulesets. This is optional as long
+            as you provide the text.
+        selectors (list): a list of all selectors from the rulesets
+        has_repeat_selectors (bool): whether there are any repeated
+            selectors in the NestedAtRule.
+    """
+
+    def __init__(self, at_rule, text="", rules=None):
+        """Inits a Nested @rule object.
+
+        Raises:
+        ValueError: an error is raised if neither at_rule nor text is
+            provided for the constructor or both are provided but they
+            do not match.
+        """
+        self.at_rule = at_rule.strip()
+        if rules:
+            self.rulesets = rules[:]
+        else:
+            self.rulesets = []
+        self.selectors = []
+        self.has_repeat_selectors = False
+        self.repeated_selectors = []
+
+        # If rulesets were NOT passed in, we need to get them from the tet
+        if not rules:
+            if text:
+                self.__text = minify_code(text)
+            if self.__text.count("}") == 1:
+                ruleset = Ruleset(self.__text)
+                self.selectors.append(ruleset.selector)
+                self.rulesets.append(ruleset)
+            elif self.__text.count("}") > 1:
+                code_split = self.__text.split("}")
+                rulesets = []
+                for part in code_split:
+                    if part.strip():
+                        ruleset = Ruleset(part + "}")
+                        if ruleset:
+                            selector = ruleset.selector
+                            self.selectors.append(selector)
+                        rulesets.append(ruleset)
+                if rulesets:
+                    self.rulesets = rulesets
+            else:
+                if not text.strip():
+                    msg = "A NestedAtRule must be provided either rulesets"
+                    msg += " or text, but you provided no useable code."
+                    raise ValueError(msg)
+        else:
+            if rules and text:
+                code_split = text.split("}")
+                if len(code_split) != len(rules):
+                    msg = "You passed both a ruleset and text, but "
+                    msg += "The text does not match the rules"
+                    raise ValueError(msg)
+            # let's get our selectors
+            for rule in rulesets:
+                selector = rule.selector
+                self.selectors.append(selector)
+        self.check_repeat_selectors()
+
+    def check_repeat_selectors(self):
+        for selector in self.selectors:
+            count = self.selectors.count(selector)
+            if count > 1:
+                self.has_repeat_selectors = True
+                self.repeated_selectors.append(selector)
+
+    def set_rulesets(self):
         # remove anything before the @ sign
         rule_list = self.__text.split("@")
         rule_list = "@" + rule_list[1]
@@ -240,6 +301,8 @@ class NestedAtRule:
 
 
 class Ruleset:
+    """_summary_"""
+
     def __init__(self, text):
         self.__text = text
         self.selector = ""
@@ -370,7 +433,11 @@ def restore_braces(split):
     if len(split) <= 1:
         return split
     for item in split:
-        if len(item) > 0:
+        # only restore braces if there is an at-rule
+        # this is more of a precaution in case there we
+        # two closing brackets on accident.
+        if len(item) > 0 and "@" in item:
+            print(item)
             item = item + "}}"
             result.append(item)
     return result
@@ -409,29 +476,7 @@ def missing_end_semicolon(css_code: str) -> bool:
 def has_repeat_selector(styles: Stylesheet) -> bool:
     """checks stylesheet to determine whether any selectors are repeated
     or not."""
-    # get & sort a list of all selectors
-    selectors = styles.selectors
-
-    # loop through and get a count of each
-    for selector in selectors:
-        count = selectors.count(selector)
-        # are there more than 1 of the same kind?
-        if count > 1:
-            return True
-    # otherwise
-    return False
-
-
-def get_nested_at_rule_selectors(sheet: Stylesheet) -> list:
-    """gets all selectors from nested @rules"""
-    selectors = []
-    for at_rule in sheet.nested_at_rules.keys():
-        type = at_rule.split()[0]
-        if type not in ["@media", "@page", "@supports"]:
-            continue
-        for item in sheet.nested_at_rules[at_rule]:
-            selectors.append(item.selector)
-    return selectors
+    return styles.has_repeat_selectors
 
 
 def split_css(css_code):
@@ -784,9 +829,9 @@ def get_number_required_selectors(
         matches = re.findall(pattern, selector)
         count += len(matches)
     # Loop through all nested @rules and count selectors
-    for _at_rule, rules in sheet.nested_at_rules.items():
-        for rule in rules:
-            matches = re.findall(pattern, rule.selector)
+    for rules in sheet.nested_at_rules:
+        for selector in rules.selectors:
+            matches = re.findall(pattern, selector)
             count += len(matches)
     return count
 
