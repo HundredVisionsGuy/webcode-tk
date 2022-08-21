@@ -41,7 +41,22 @@ nested_at_rules: tuple = (
 
 
 class Stylesheet:
-    """A Stylesheet object with details about the sheet and its components.
+    """A Stylesheet object with details about the sheet and its
+    components.
+
+    The stylesheet object has the full code, a list of comments from the
+    stylesheet, a list of nested @rules, rulesets pertaining to colors,
+    a list of all selectors, and information about repeated selectors.
+
+    About repeated selectors, front-end developers should always employ
+    the DRY principle: Don't Repeat Yourself. In other words, if you
+    use a selector once in your stylesheet, the only other place you
+    would logically put the same selector would be in a nested at-rule
+    (in particular, an @media or @print breakpoint)
+
+    For this reason, both the Stylesheet object and the NesteAtRule
+    objects have attributes that show whether there are repeated
+    selectors or not as well as which selectors get repeated.
 
     Attributes:
         href: the filename (not path), which may end with .css or .html
@@ -54,6 +69,12 @@ class Stylesheet:
         color_rulesets: a list of all rulesets that target color or
             background colors.
         selectors: a list of all selectors.
+        has_repeat_selectors (bool): whether there are any repeated
+            selectors anywhere in the stylesheet (including in the
+            NestedAtRule.
+        repeated_selectors (list): a list of any selectors that are
+            repeated. They might be repeated in the main stylesheet
+            or they might be repeated in one of the nested @rules.
     """
 
     def __init__(
@@ -86,27 +107,22 @@ class Stylesheet:
         text_comment_split = self.text.split("/*")
         comments = []
         code_without_comments = ""
+
         # loop through the list of code
         # in each iteration extract the comment
-
         for i in text_comment_split:
-            # append comment to comments
             if "*/" in i:
                 comment = i.split("*/")
                 comments.append("/*" + comment[0] + "*/")
-                # append code to code_without_comments
                 code_without_comments += comment[1]
             else:
                 # no comments, just get code
                 code_without_comments += i
-        # add comments
         self.comments = comments
-        # replace code (comments extracted)
         self.text = code_without_comments
 
     def __extract_nested_at_rules(self):
         """Pulls out any nested at-rule and stores them in a list."""
-        # Search through nested at rules
         at_rules = []
         non_at_rules_css = []
 
@@ -121,10 +137,9 @@ class Stylesheet:
             if not code.strip():
                 continue
             for rule in nested_at_rules:
-                # check each
+                # if there is a nested @rule
+                # split code from @rule
                 if rule in code:
-                    # we found a nested @rule
-                    # split code from @rule
                     split_code = code.split(rule)
                     if len(split_code) == 2:
                         if split_code[0]:
@@ -132,6 +147,7 @@ class Stylesheet:
                             # there would be an empty string
                             # that means there is CSS to add (non-at-rules)
                             non_at_rules_css.append(split_code[0])
+
                         # create a nested at-rule object
                         text = split_code[1]
                         pos = text.find("{")
@@ -210,7 +226,17 @@ class Stylesheet:
 class NestedAtRule:
     """An at-rule rule that is nested, such as @media or @keyframes.
 
-    Nested at-rules are set in the global variable: nested_at_rules.
+    Nested at-rules include animation keyframes, styles for print
+    (@media print), and breakpoints (@media screen). Each nested
+    at-rule has an at-rule, which works like a selector, and a
+    ruleset for that at-rule. The ruleset may contain any number
+    of selectors and their declaration blocks.
+
+    You can almost think of them as stylesheets within a stylesheet
+    *"A dweam within a dweam"* -The Impressive Clergyman.
+    *"We have to go deeper"* -Dom Cobb.
+
+    Nested at-rules are defined in the global variable: nested_at_rules.
     For more information on nested at-rules, you want to refer to MDN's
     [nested]
     (https://developer.mozilla.org/en-US/docs/Web/CSS/At-rule#nested)
@@ -225,15 +251,17 @@ class NestedAtRule:
         selectors (list): a list of all selectors from the rulesets
         has_repeat_selectors (bool): whether there are any repeated
             selectors in the NestedAtRule.
+        repeated_selectors (list): a list of any selectors that are
+            repeated.
     """
 
     def __init__(self, at_rule, text="", rules=None):
         """Inits a Nested @rule object.
 
         Raises:
-        ValueError: an error is raised if neither at_rule nor text is
-            provided for the constructor or both are provided but they
-            do not match.
+            ValueError: an error is raised if neither at_rule nor text is
+                provided for the constructor or both are provided but they
+                do not match.
         """
         self.at_rule = at_rule.strip()
         if rules:
@@ -244,32 +272,12 @@ class NestedAtRule:
         self.has_repeat_selectors = False
         self.repeated_selectors = []
 
-        # If rulesets were NOT passed in, we need to get them from the tet
+        # If rulesets were NOT passed in, we need to get them from the text
         if not rules:
-            if text:
-                self.__text = minify_code(text)
-            if self.__text.count("}") == 1:
-                ruleset = Ruleset(self.__text)
-                self.selectors.append(ruleset.selector)
-                self.rulesets.append(ruleset)
-            elif self.__text.count("}") > 1:
-                code_split = self.__text.split("}")
-                rulesets = []
-                for part in code_split:
-                    if part.strip():
-                        ruleset = Ruleset(part + "}")
-                        if ruleset:
-                            selector = ruleset.selector
-                            self.selectors.append(selector)
-                        rulesets.append(ruleset)
-                if rulesets:
-                    self.rulesets = rulesets
-            else:
-                if not text.strip():
-                    msg = "A NestedAtRule must be provided either rulesets"
-                    msg += " or text, but you provided no useable code."
-                    raise ValueError(msg)
+            self.set_rulesets(text)
         else:
+            # if both rules and text were passed in make sure they
+            # match and raise a ValueError if not
             if rules and text:
                 code_split = text.split("}")
                 if len(code_split) != len(rules):
@@ -277,27 +285,44 @@ class NestedAtRule:
                     msg += "The text does not match the rules"
                     raise ValueError(msg)
             # let's get our selectors
-            for rule in rulesets:
+            for rule in self.rulesets:
                 selector = rule.selector
                 self.selectors.append(selector)
         self.check_repeat_selectors()
 
     def check_repeat_selectors(self):
+        """Checks to see if there are any repeated selectors"""
         for selector in self.selectors:
             count = self.selectors.count(selector)
             if count > 1:
                 self.has_repeat_selectors = True
                 self.repeated_selectors.append(selector)
 
-    def set_rulesets(self):
-        # remove anything before the @ sign
-        rule_list = self.__text.split("@")
-        rule_list = "@" + rule_list[1]
-
-        # split at the first {
-        pos = rule_list.find("{")
-        self.rule = rule_list[:pos].strip()
-        self.declaration_block = DeclarationBlock(rule_list[pos:])
+    def set_rulesets(self, text):
+        """Converts string of text into a list of ruleset objects"""
+        # first, make sure text was not an empty string
+        if text.strip():
+            self.__text = minify_code(text)
+        else:
+            msg = "A NestedAtRule must be provided either rulesets"
+            msg += " or text, but you provided no useable code."
+            raise ValueError(msg)
+        if self.__text.count("}") == 1:
+            ruleset = Ruleset(self.__text)
+            self.selectors.append(ruleset.selector)
+            self.rulesets.append(ruleset)
+        else:
+            code_split = self.__text.split("}")
+            rulesets = []
+            for part in code_split:
+                if part.strip():
+                    ruleset = Ruleset(part + "}")
+                    if ruleset:
+                        selector = ruleset.selector
+                        self.selectors.append(selector)
+                    rulesets.append(ruleset)
+            if rulesets:
+                self.rulesets = rulesets
 
 
 class Ruleset:
