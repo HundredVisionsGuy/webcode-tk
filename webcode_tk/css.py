@@ -179,10 +179,10 @@ class Stylesheet:
 
         Args:
             ruleset(Ruleset): a Ruleset object complete with selector
-                and delcaration block.
+                and declaration block.
 
         Returns:
-            color_rulsets: a list of all selectors that target color
+            color_rulesets: a list of all selectors that target color
                 in some way, but just with the color-based declarations.
         """
         color_rulesets = []
@@ -241,13 +241,18 @@ class NestedAtRule:
     [nested]
     (https://developer.mozilla.org/en-US/docs/Web/CSS/At-rule#nested)
 
-    Attributes:
+    Args:
         at_rule (str): the full at-rule such as '@media only and
             (min-width: 520px)'.
         text (str): the text of the code (without the at_rule).
             Provide the text if you do not provide a list of rulesets.
-        rulesets (list): a list of rulesets. This is optional as long
-            as you provide the text.
+        rules (list): a list of Ruleset objects. This is optional and
+            defaults to None. Just be sure to add text if you don't
+            provide a list.
+    Attributes:
+        at_rule (str): the full at-rule such as '@media only and
+            (min-width: 520px)'.
+        rulesets (list): a list of Ruleset objects.
         selectors (list): a list of all selectors from the rulesets
         has_repeat_selectors (bool): whether there are any repeated
             selectors in the NestedAtRule.
@@ -264,10 +269,10 @@ class NestedAtRule:
                 do not match.
         """
         self.at_rule = at_rule.strip()
-        if rules:
-            self.rulesets = rules[:]
-        else:
+        if rules is None:
             self.rulesets = []
+        else:
+            self.rulesets = rules[:]
         self.selectors = []
         self.has_repeat_selectors = False
         self.repeated_selectors = []
@@ -326,9 +331,25 @@ class NestedAtRule:
 
 
 class Ruleset:
-    """_summary_"""
+    """Creates a ruleset: a selector with a declaration block.
+
+    For more information about Rulesets, please read MDN's article on
+    [Rulesets]
+    (https://developer.mozilla.org/en-US/docs/Web/CSS/Syntax#css_rulesets)
+
+    Args:
+        text (str): the CSS code in text form.
+
+    Attributes:
+        __text (str): the CSS code.
+        selector (str): the selector of the Ruleset
+        declaration_block (DeclarationBlock): a DeclarationBlock
+            object.
+        is_valid (bool): whether the Ruleset is valid or not.
+    """
 
     def __init__(self, text):
+        """Inits a DeclarationBlock object using CSS code"""
         self.__text = text
         self.selector = ""
         self.declaration_block = None
@@ -337,6 +358,7 @@ class Ruleset:
         self.initialize()
 
     def initialize(self):
+        """converts the text into a DeclarationBlock."""
         if self.is_valid:
             contents = self.__text.split("{")
             self.selector = contents[0].replace("\n", "").strip()
@@ -344,6 +366,7 @@ class Ruleset:
             self.declaration_block = DeclarationBlock(block)
 
     def validate(self):
+        """Determines whether the code is valid or not"""
         try:
             open_brace_pos = self.__text.index("{")
             close_brace_pos = self.__text.index("}")
