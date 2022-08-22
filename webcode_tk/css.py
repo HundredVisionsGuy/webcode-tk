@@ -381,12 +381,27 @@ class Ruleset:
 
 
 class DeclarationBlock:
+    """A set of properties and values that go with a selector
+
+    In CSS a declaration block is a block of code set off by curly
+    brackets `{}`. They come after a selector and contain one or more
+    declarations (pairs of properties and values such as
+    `width: 200px`).
+
+    Attributes:
+        text (str): full text of the declaration block including
+            curly brackets.
+        declarations: a list of Declaration objects (see the
+            Declaration class below)."""
+
     def __init__(self, text):
+        """Inits a declaration block"""
         self.text = text
         self.declarations = []
         self.__set_declarations()
 
     def __set_declarations(self):
+        """converts text into a list of declarations."""
         declarations = self.text
 
         # remove selectors and braces if present
@@ -418,50 +433,142 @@ class DeclarationBlock:
 
 
 class Declaration:
+    """A property and value pair.
+
+    A declaration is a pairing of a property with a specific value.
+    Examples include: `font-family: Helvetica;` which changes the
+    font to Helvetica. Another example could be `min-height: 100px`
+    which sets the height of the element to be at the very least
+    100 pixels.
+
+    Attributes:
+        text (str): the text of the declaration in the form of
+            `property: value;`
+        property (str): the thing you want to change (like `color`
+            or `border-width`.
+        value (str): what you want to change it to (like `aquamarine`
+            or `5px`
+
+    Raises:
+        ValueError: if the Declaration is not a valid declaration, it
+            should raise a ValueError"""
+
     def __init__(self, text):
+        """Inits a Declaration object."""
         self.__text = text
         self.property = ""
         self.value = ""
-        self.is_valid = False
+        # validate before trying to set the declaration.
+        self.validate_declaration()
         self.set_declaration()
 
     def set_declaration(self):
-        """validate while trying to set declaration"""
-        # assume it's valid until proven otherwise
-        self.is_valid = True
-        # Make sure there's a colon for validity and separating
-        if ":" not in self.__text:
-            self.is_valid = False
-        else:
-            elements = self.__text.split(":")
-            # make sure there are 2 values after the split
-            if len(elements) > 2:
-                self.is_valid = False
-            else:
-                self.property = elements[0].strip()
-                self.value = elements[1].strip()
-                self.validate_declaration()
+        """Sets the property and value based on the text (CSS code).
+
+        Note: this only gets run if the declaration was valid, and
+        we already ran the validation. Had the code not been valid,
+        it would have already thrown an exception, and we wouldn't
+        be in this method."""
+        elements = self.__text.split(":")
+        self.property = elements[0].strip()
+        self.value = elements[1].strip()
+        self.validate_declaration()
 
     def validate_declaration(self):
-        # Check to see if there's only 1 character in value
-        # 0 is valid; anything else is invalid
-        if len(self.value) == 1 and not self.value == "0":
-            self.is_valid = False
+        """Raises a ValueError if any part of the Declaration is
+        invalid."""
+
+        # split text at colon (should have 2 items only: the property
+        # on the left of the colon and the value on the right of the
+        # colon)
+        try:
+            property, value = self.__text.split(":")
+        except ValueError as err:
+            if "not enough values" in str(err):
+                # There was no colon - there must be one
+                msg = "The code is missing a colon. All declarations "
+                msg += "must have a colon between the property and "
+                msg += "the value."
+                raise ValueError(msg)
+            elif "too many values" in str(err):
+                # There were two or more colons - can only be one
+                msg = "You have too many colons. There should only be "
+                msg += "one colon between the property and the value."
+                raise ValueError(msg)
+
+        self.validate_property(property)
+        self.validate_value(value)
+
+    def validate_property(self, property) -> bool:
+        """checks property to make sure it is a valid CSS property.
+
+        A CSS property is valid if there are no spaces in between the
+        text. In future versions, we could check against a list of
+        valid properties, but that might take us down a rabbit hole
+        of ever changing properties.
+
+        Args:
+            property (str): the property of the Declaration which might
+                or might not be valid.
+
+        Raises:
+            ValueError: if the property is an invalid property
+        """
 
         # Make sure there are no spaces in between property
-        prop_list = self.property.split()
+        prop_list = property.strip().split()
         if len(prop_list) > 1:
-            self.is_valid = False
+            msg = "You cannot have a space in the middle of a property."
+            msg += "Did you forget the dash `-`?"
+            raise ValueError(msg)
 
+    def validate_value(self, value, property=None):
+        """Raises a ValueError if the value is invalid.
+
+        Caveat: this is by no means a comprehensive validation, and
+        so there is much room for improvement. For now, we're focusing
+        on the basics, such as there can be no text after the semi-
+        colon and there should be no units if the value is 0.
+
+        In future versions, we could extend the validation to make
+        sure the units match the property, which is why we added a
+        default value for property.
+
+        Args:
+            value (str): the code after the colon (what specifically
+                do you want the property set to)
+            property (str): the property which defaults to None.
+
+        Raises:
+            ValueError: if the value is invalid.
+        """
+        if property is None:
+            property = ""
+
+        value = value.strip()
         # Make sure there's nothing after the semi-colon
         # but account for the empty string element after the split
         # as well as spaces (just in case)
-        val_list = self.value.split(";")
+        val_list = value.split(";")
         if len(val_list) > 1 and val_list[1].strip():
-            self.is_valid = False
+            msg = "There should be no text after the semi-colon."
+            raise ValueError(msg)
 
-    def get_declaration(self):
-        return self.property + ": " + self.value
+        # Check for a value of 0 and make sure there are no units
+        zero_pattern = r"^\b0\w"
+        match = re.search(zero_pattern, value)
+        if match:
+            msg = "Values of 0 do not need a unit. Example: 0px should "
+            msg += "be just 0."
+            raise ValueError(msg)
+
+        # TODO: add some validation based on property type
+
+    def get_declaration(self) -> str:
+        """Returns the declaration in the form of `property: value`"""
+
+        declaration = self.property + ": " + self.value
+        return declaration
 
 
 def get_nested_at_rule(code, rule):
