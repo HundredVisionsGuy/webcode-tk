@@ -415,18 +415,21 @@ class DeclarationBlock:
         declarations = declarations.split(";")
 
         # remove all spaces and line returns
+        # capture positions of content we want to keep
+        keep = []
         for i in range(len(declarations)):
-            # make sure i is not out of range (after popping i)
-            if i > len(declarations) - 1:
-                break
             declarations[i] = declarations[i].replace("\n", "")
             declarations[i] = declarations[i].strip()
-            if not declarations[i]:
-                declarations.pop(i)
-        # create our declaration objects
-        # we separated the cleaning from the separating due
-        # to the potential of popping i resulting in index error
-        # or missing a declaration (it happened)
+            if declarations[i]:
+                keep.append(i)
+
+        # get only declarations with content
+        to_keep = []
+        for pos in keep:
+            to_keep.append(declarations[pos])
+        declarations = to_keep
+
+        # set all Declaration objects
         for i in range(len(declarations)):
             declarations[i] = Declaration(declarations[i])
         self.declarations = declarations
@@ -460,6 +463,7 @@ class Declaration:
         self.value = ""
         # validate before trying to set the declaration.
         self.validate_declaration()
+        self.is_valid = True
         self.set_declaration()
 
     def set_declaration(self):
@@ -472,7 +476,6 @@ class Declaration:
         elements = self.__text.split(":")
         self.property = elements[0].strip()
         self.value = elements[1].strip()
-        self.validate_declaration()
 
     def validate_declaration(self):
         """Raises a ValueError if any part of the Declaration is
@@ -553,7 +556,11 @@ class Declaration:
         if len(val_list) > 1 and val_list[1].strip():
             msg = "There should be no text after the semi-colon."
             raise ValueError(msg)
-
+        if value == ";" or not value:
+            msg = "You are missing a value. You must include a "
+            msg += "value in between the colon : and the semi-"
+            msg += "colon ;"
+            raise ValueError(msg)
         # Check for a value of 0 and make sure there are no units
         zero_pattern = r"^\b0\w"
         match = re.search(zero_pattern, value)
