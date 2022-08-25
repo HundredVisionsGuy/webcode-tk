@@ -20,6 +20,7 @@ nav:
   - tutorials.md
   - html.py: reference/html.md
   - css.py: reference/css.md
+  - color_keywords.py: reference/color_keywords.md
   - colortools.py: reference/colortools.md
   - validator.py: reference/validator.md
   - explanation.md

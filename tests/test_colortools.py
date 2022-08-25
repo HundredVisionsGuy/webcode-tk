@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Tests for `webtools` package."""
+"""Tests for `colortools` package."""
 import pytest
 
 from webcode_tk import colortools as color
