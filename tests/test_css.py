@@ -212,18 +212,6 @@ def test_valid_color_declaration_is_valid(valid_color_declaration):
     assert valid_color_declaration.is_valid
 
 
-def test_missing_end_semicolon_for_true_and_false():
-    missing = "body {\n    font-size: 20px;\n    font-family: sans-serif"
-    missing += "\ncolor: #336699\n}"
-    result = css.missing_end_semicolon(missing)
-    assert not result
-
-    including = "body {\n    font-size: 20px;\n    font-family: sans-serif"
-    including += "\ncolor: #336699;\n}"
-    result = css.missing_end_semicolon(including)
-    assert result
-
-
 def test_invalid1_declaration_for_value_error_no_colon():
     with pytest.raises(ValueError) as exc_info:
         css.Declaration(declarations["invalid1"])

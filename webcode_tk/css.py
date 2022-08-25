@@ -616,19 +616,20 @@ def restore_braces(split: list) -> list:
 
 
 def minify_code(text: str) -> str:
-    """remove all new lines, tabs, and double spaces"""
+    """remove all new lines, tabs, and double spaces from text
+
+    This is a classic function for web developers to minify their code
+    by removing new lines, tabs, and any double spaces from text.
+
+    Args:
+        text: the code you want to minify.
+
+    Returns:
+        text: the code without all the additional whitespace."""
     text = text.replace("\n", "")
     text = text.replace("  ", "")
     text = text.replace("\t", "")
     return text
-
-
-def missing_end_semicolon(css_code: str) -> bool:
-    # remove all whitespace and line breaks
-    cleaned = css_code.replace(" ", "")
-    cleaned = css_code.replace("\n", "")
-    # if there is no semicolon preceding closing curly bracket,
-    return ";}" in cleaned
 
 
 def has_repeat_selector(styles: Stylesheet) -> bool:
