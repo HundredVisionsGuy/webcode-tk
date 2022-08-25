@@ -12,14 +12,24 @@ I realized that if I could automate all those tasks, then I could just come in a
 I'll highlight those in the following *Use Case section*.
 
 ## Use Case
-If you want to manipulate files in a Python project, you may find this useful. Here are the main ways I use this library:
 
-* **Grab a list of all files** - in a project folder.
-* **Select just the filetypes I want** - typically, I am processing HTML, CSS, and CSV files)
-* **Write contents to files** - this is handy for generating reports
-* **My oddly specific tasks** for checking and processing student work, such as...
-    - **Split paragraphs into sentences** - so I can check things like word count and sentences per paragraph
-    - **remove inline tags from a container tag** - so I could count just words and sentences from a web document
+### For [colortools.py](reference/colortools.md)
+
+I primarily created the color tools to deal with CSS color codes. In particular, hexadecimal, rgb(), rgba(), hsl(), and hsla(). I use it to calculate whether two colors meet the color contrast guidelines.
+
+### For [css.py](reference/css.md)
+
+These tools are used to convert CSS code (whether from a css file or a style tag) into a Stylesheet object that contains Rulesets, Nested At-rules, Declaration blocks, and Declarations.
+
+The css module can be used to determine whether any selectors are repeated, get data on colors that are set, determine specificity scores, check to see if a particular property is present, and more.
+
+### For [html.py](reference/html.md)
+
+The HTML module allows you to get and analyze what tags are present in a project, get contents from elements, find out how many particular elements were present or not.
+
+### For [validator.py](reference/validator.md)
+
+The validator is used to check both HTML and CSS files to see if they contain valid code or not by running the code through the W3C Validator.
 
 ## licensing
 I selected to use the MIT license for this library. I selected it for three main reasons:

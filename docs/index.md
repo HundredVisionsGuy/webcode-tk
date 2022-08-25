@@ -4,16 +4,13 @@ A collection of functions designed by a Web Design teacher for checking front-en
 
 It can also check for a particular HTML element, and in soon to be released version, will also allow automatic checks for particular CSS properties or values.
 
-More about this later. Still working on automation.
-
 ## Table Of Contents
 
 1. [Tutorials](tutorials.md)
-2. [Reference](reference.md)
-    - [html.py](reference.md#htmlpy)
-    - [css.py](reference.md#csspy)
-    - [colortools.py](reference.md#colortools)
-    - [validator.py](reference.md#validatorpy)
+2. [html.py](reference/html.md)
+3. [css.py](reference/css.md)
+4. [colortools.py](reference/colortools.md)
+5. [validator.py](reference/validator.md)
 3. [Explanation](explanation.md)
 
 Quickly find what you're looking for depending on
