@@ -632,14 +632,6 @@ def minify_code(text: str) -> str:
     return text
 
 
-def get_selectors(css_list):
-    selectors = []
-    for i in range(0, len(css_list), 2):
-        selectors.append(css_list[i].strip())
-    selectors.remove("")
-    return selectors
-
-
 def get_declarations(css_list):
     """extract all CSS declarations from a list of Css
 
