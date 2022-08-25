@@ -632,14 +632,6 @@ def minify_code(text: str) -> str:
     return text
 
 
-def split_css(css_code):
-    """returns list of selectors & declarations (no { or })"""
-    # remove newlines
-    css_code = css_code.replace("\n", "")
-    pattern = r"\{(.*?)\}"
-    return re.split(pattern, css_code)
-
-
 def get_selectors(css_list):
     selectors = []
     for i in range(0, len(css_list), 2):
