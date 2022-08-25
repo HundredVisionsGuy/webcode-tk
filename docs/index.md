@@ -10,10 +10,10 @@ More about this later. Still working on automation.
 
 1. [Tutorials](tutorials.md)
 2. [Reference](reference.md)
-    * [html.py](reference.md#htmlpy)
-    * [css.py](reference.md#csspy)
-    * [colortools.py](reference.md#colortools)
-    * [validator.py](reference.md#validatorpy)
+    - [html.py](reference.md#htmlpy)
+    - [css.py](reference.md#csspy)
+    - [colortools.py](reference.md#colortools)
+    - [validator.py](reference.md#validatorpy)
 3. [Explanation](explanation.md)
 
 Quickly find what you're looking for depending on
