@@ -71,6 +71,13 @@ def test_hex_to_decimal_for_CB():
     assert expected == results
 
 
+def test_extract_rgb_from_string_for_green():
+    green = "rgb(0, 255, 0);"
+    results = color.extract_rgb_from_string(green)
+    expected = (0, 255, 0)
+    assert results == expected
+
+
 def test_rgb_to_hex_for_black():
     results = color.rgb_to_hex(0, 0, 0)
     expected = "#000000"
