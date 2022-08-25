@@ -18,6 +18,6 @@ reference for the technical implementation of the
 **[top](#reference) | [html.py](#htmlpy) | [css.py](#csspy) | [validator.py](#validatorpy)**
 
 ## css.py
-::: webcode-tk.css
+::: webcode_tk.css
 
 **[top](#reference) | [html.py](#htmlpy) | [css.py](#csspy) | [validator.py](#validatorpy)**

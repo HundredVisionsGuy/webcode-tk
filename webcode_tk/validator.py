@@ -50,7 +50,7 @@ def get_css_errors_list(val_results: bs4.ResultSet) -> list:
 
     Args:
         val_results: the results from the [CSS validator]
-        (https://jigsaw.w3.org/css-validator)
+        (jigsaw.w3.org/css-validator)
 
     Returns:
         error_list: a list of any error messages from the
@@ -142,7 +142,7 @@ def get_num_markup_warnings(markup_errors: list) -> int:
     counts the number of warnings only (ignores any errors).
 
     Args:
-        markup_response: a list a markup errors and warnings from the
+        markup_errors: a list a markup errors and warnings from the
             online validator.
 
     Returns:
