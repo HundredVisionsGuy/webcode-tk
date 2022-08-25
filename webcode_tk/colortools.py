@@ -9,11 +9,11 @@ some functions to convert various web color coding schemes (RGB to
 Hex and vice versa), so I decided to play around with conversions.
 
 Later, I wanted to know what the algorithm for determining the color
-contrast ratio as set out in the [WebAIM Contrast
-Checker](https://webaim.org/resources/contrastchecker/), so I found
-the algorithm and wrote some tests to see if it worked or not. The
-algorithm meant that I needed to break down some of the functions
-even further.
+contrast ratio as set out in the
+[WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/),
+so I found the algorithm and wrote some tests to see if it worked or
+not. The algorithm meant that I needed to break down some of the
+functions even further.
 
 One thing led to another, yada yada, then I realized that this could
 be a useful tool in my web grading projects, and there you have it:
