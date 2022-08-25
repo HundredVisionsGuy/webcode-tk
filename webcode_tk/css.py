@@ -572,26 +572,36 @@ class Declaration:
         # TODO: add some validation based on property type
 
     def get_declaration(self) -> str:
-        """Returns the declaration in the form of `property: value`"""
+        """Returns the declaration in the form of `property: value`
+
+        Returns:
+            declaration (str): a property and its value separated by
+            a colon. Example: `"color: rebeccapurple"`"""
 
         declaration = self.property + ": " + self.value
         return declaration
 
 
-def get_nested_at_rule(code, rule):
-    at_rule = []
-    at_split = code.split(rule)
-    if len(at_split) > 1:
-        if at_split[0] == "":
-            # rule was at the beginning
-            at_rule.append(rule + " " + at_split[1])
-        else:
-            at_rule.append(rule + " " + at_split[0])
-    return at_rule
+def restore_braces(split: list) -> list:
+    """restore the missing braces removed by the .split() method
 
+    This is more of a helper function to make sure that after splitting
+    at-rule code by two curly braces, we restore it back.
 
-def restore_braces(split):
+    In CSS, to find the end of a nested @rule, you can use the
+    following code: `css_code.split("}}")` This is because a nested
+    @rule ends with two closing curly braces: one for the last
+    declaration, and the other for the end of the nested @rule.
+
+    Args:
+        split (list): a list created by the split method on CSS code
+
+    Returns:
+        list: the list but with the double closing braces restored from
+            the split.
+    """
     result = []
+    split = tuple(split)
     if len(split) <= 1:
         return split
     for item in split:
@@ -603,20 +613,6 @@ def restore_braces(split):
             item = item + "}}"
             result.append(item)
     return result
-
-
-def split_by_partition(text, part):
-    # base case
-    if text.count(part) == 0:
-        return [
-            text,
-        ]
-    # recursive case
-    else:
-        text_tuple = text.partition(part)
-        return [
-            text_tuple[0],
-        ] + split_by_partition(text_tuple[2], part)
 
 
 def minify_code(text: str) -> str:
