@@ -632,12 +632,6 @@ def minify_code(text: str) -> str:
     return text
 
 
-def has_repeat_selector(styles: Stylesheet) -> bool:
-    """checks stylesheet to determine whether any selectors are repeated
-    or not."""
-    return styles.has_repeat_selectors
-
-
 def split_css(css_code):
     """returns list of selectors & declarations (no { or })"""
     # remove newlines

@@ -518,15 +518,15 @@ def test_get_num_required_selectors_for_layout_sheet(layout_css_stylesheet):
 
 
 def test_has_repeat_selectors_for_false(navigation_styles):
-    assert not css.has_repeat_selector(navigation_styles)
+    assert not navigation_styles.has_repeat_selectors
 
 
 def test_has_repeat_selectors_for_true_layout(layout_css_stylesheet):
-    assert css.has_repeat_selector(layout_css_stylesheet)
+    assert layout_css_stylesheet.has_repeat_selectors
 
 
 def test_has_repeat_selectors_for_true(styles_with_multiple_selectors):
-    assert css.has_repeat_selector(styles_with_multiple_selectors)
+    assert styles_with_multiple_selectors.has_repeat_selectors
 
 
 # TODO: test stylesheet_with_gradients for color rulesets
