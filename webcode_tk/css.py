@@ -632,23 +632,6 @@ def minify_code(text: str) -> str:
     return text
 
 
-def get_declarations(css_list):
-    """extract all CSS declarations from a list of Css
-
-    Args:
-        css_list (_type_): _description_
-
-    Returns:
-        _type_: _description_
-    """
-    declarations = []
-    for i in range(1, len(css_list), 2):
-        declarations.append(css_list[i].strip())
-    if "" in declarations:
-        declarations.remove("")
-    return declarations
-
-
 def get_comment_positions(code):
     positions = []
     try:
