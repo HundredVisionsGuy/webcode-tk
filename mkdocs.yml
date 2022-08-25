@@ -19,6 +19,10 @@ nav:
   - webcode-tk Docs: index.md
   - tutorials.md
   - reference.md
+    - reference.md#htmlpy
+    - reference.md#csspy
+    - reference.md#colortools
+    - reference.md#validatorpy
   - explanation.md
 
 # If I make changes to mkdocs, I need to test, revise, rebuild and re-deploy
