@@ -18,11 +18,10 @@ plugins:
 nav:
   - webcode-tk Docs: index.md
   - tutorials.md
-  - reference:
-    - html.py: reference.md#htmlpy
-    - css.py: reference.md#csspy
-    - colortools.py: reference.md#colortools
-    - validator.py: reference.md#validatorpy
+  - html.py: reference/html.md
+  - css.py: reference/css.md
+  - colortools.py: reference/colortools.md
+  - validator.py: reference/validator.md
   - explanation.md
 
 # If I make changes to mkdocs, I need to test, revise, rebuild and re-deploy
