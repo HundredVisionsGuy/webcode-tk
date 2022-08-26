@@ -3,6 +3,7 @@ This module is a set of tools to analyze CSS syntax as well as properties
 and values.
 """
 import re
+from typing import Union
 
 from webcode_tk import color_keywords as keyword
 from webcode_tk import colortools
@@ -632,7 +633,25 @@ def minify_code(text: str) -> str:
     return text
 
 
-def get_comment_positions(code):
+def get_comment_positions(code: (str)) -> Union[list, None]:
+    """looks for index positions of first opening and closing comment.
+
+    From this function, you can create a slice of a comment from the
+    code. You would do this if you want to extract the comments from
+    the code, or if you wanted to inspect what was in the comments, or
+    even identify if there are comments.
+
+    Note: this only works for the first comment in code. You would
+    want to loop through the code extracting each comment one at a
+    time using this function until it returns None.
+
+    Args:
+        code (str): the CSS code you want to extract comments from.
+
+    Returns:
+        list: a list of the index positions for the beginning and end
+            of the first occuring comment in the code.
+    """
     positions = []
     try:
         positions.append(code.index("/*"))
@@ -643,8 +662,20 @@ def get_comment_positions(code):
         return
 
 
-def separate_code(code):
-    """splits code into two lists: code & comments"""
+def separate_code(code: str) -> dict:
+    """splits code into two lists: code & comments
+
+    Args:
+        code (str): the stylesheet or style tag code
+
+    Returns:
+        splitzky: a dictionary with two lists: a list of code snippets
+            without comments, and a list of comments.
+
+    Raises:
+        ValueError: if there is only one comment symbol: either /* or
+            */ but not both (a syntax error)
+    """
     code = code.strip()
     splitzky = {"code": [], "comments": []}
 
@@ -669,24 +700,24 @@ def separate_code(code):
                 new_code.append(code)
                 code = ""
             else:
-                print("We have a problem with the code syntax.")
+                # we're here because we have only one valid comment
+                # symbol
+                if "/*" in code:
+                    has, has_not = (
+                        "opening comment symbol: /*",
+                        "closing comment symbol: */",
+                    )
+                else:
+                    has, has_not = (
+                        "closing comment symbol: */",
+                        "opening comment symbol: /*",
+                    )
+                msg = "There's a syntax issue with your code comments."
+                msg += " You have a {0} but no {1}.".format(has, has_not)
+                raise ValueError(msg)
     splitzky["code"] = new_code
     splitzky["comments"] = comments
     return splitzky
-
-
-def get_color_rulesets(objects):
-    color_rulesets = []
-    if objects:
-        for style_tag in objects:
-            if style_tag.color_rulesets:
-                for ruleset in style_tag.color_rulesets:
-                    for declaration in ruleset.declaration_block.declarations:
-                        if declaration.is_valid:
-                            if "color" in declaration.property.lower():
-                                if ruleset not in color_rulesets:
-                                    color_rulesets.append(ruleset)
-    return color_rulesets
 
 
 def get_specificity(selector):
