@@ -433,45 +433,40 @@ def test_get_colors_from_gradient_for_rgba():
     assert "rgba(200, 100, 100, 0.5)" in results
 
 
-def test_append_color_codes_for_none():
-    colors = []
+def test_get_color_codes_of_type_for_none():
     gradient = "linear-gradient(to bottom, rgba(169, "
     gradient += "235, 206,.25) 0%,rgba(42,60,87,.4) 200%"
-    css.append_color_codes("hsl", gradient, colors)
+    colors = css.get_color_codes_of_type("hsl", gradient)
     assert not colors
 
 
-def test_append_color_codes_for_rgba():
-    colors = []
+def test_get_color_codes_of_type_for_rgba():
     gradient = (
         "linear-gradient(to bottom, "
         "rgba(169, 235, 206,.25) 0%,rgba(42,60,87,.4) 200%"
     )
-    css.append_color_codes("rgb", gradient, colors)
+    colors = css.get_color_codes_of_type("rgb", gradient)
     assert "rgba(169, 235, 206,.25)" in colors
 
 
-def test_append_color_codes_for_rgb():
-    colors = []
+def test_get_color_codes_of_type_for_rgb():
     gradient = (
         "linear-gradient(to bottom, rgb(169, 235, "
         "206,.25) 0%,rgba(42,60,87,.4) 200%"
     )
-    css.append_color_codes("rgb", gradient, colors)
+    colors = css.get_color_codes_of_type("rgb", gradient)
     assert "rgb(169, 235, 206,.25)" in colors
 
 
-def test_append_color_codes_for_hex():
-    colors = []
+def test_get_color_codes_of_type_for_hex():
     gradient = "linear-gradient(-45deg, #46ABA6 0%, #092756 200%)"
-    css.append_color_codes("hex", gradient, colors)
+    colors = css.get_color_codes_of_type("hex", gradient)
     assert "#092756" in colors
 
 
-def test_append_color_codes_for_keyword_antiquewhite():
-    colors = []
+def test_get_color_codes_of_type_for_keyword_antiquewhite():
     gradient = "linear-gradient(-45deg, maroon 0%, #092756 200%)"
-    css.append_color_codes("keywords", gradient, colors)
+    colors = css.get_color_codes_of_type("keywords", gradient)
     assert "maroon" in colors
 
 
@@ -526,7 +521,7 @@ def test_has_repeat_selectors_for_true_layout(layout_css_stylesheet):
 
 
 def test_has_repeat_selectors_for_true(styles_with_multiple_selectors):
-    assert styles_with_multiple_selectors.has_repeat_selectors
+    assert styles_with_multiple_selectors
 
 
 # TODO: test stylesheet_with_gradients for color rulesets

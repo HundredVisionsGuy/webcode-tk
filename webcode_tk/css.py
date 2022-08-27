@@ -720,22 +720,74 @@ def separate_code(code: str) -> dict:
     return splitzky
 
 
-def get_specificity(selector):
+def get_specificity(selector: str) -> str:
+    """Gets the specificity score on the selector.
+
+    According to MDN's article on Specificity, Specificity is the
+    algorithm used by browsers to determine the CSS declaration that
+    is the most relevant to an element, which in turn, determines
+    the property value to apply to the element.
+
+    The specificity algorithm calculates the weight of a CSS selector
+    to determine which rule from competing CSS declarations gets
+    applied to an element.
+
+    The specificity score is basically a number, and if two selectors
+    target the same element, the selector with the highest specificity
+    score wins. The number is like a 3-digit number, where the "ones"
+    place is the number of type selectors, the "tens" place is the
+    number of class selectors, and the "hundreds" place is the number
+    of id selectors.
+
+    For example, the selector: `h1, h2, h3` has a specificity of `003`
+    because there are neither id nor class selectors, but there are 3
+    type selectors.
+
+    The selector: `nav#main ul` has a specificity of `102` because
+    there is one id selector (`#main`) and two type selectors (`nav`
+    and `ul`).
+
+    Args:
+        selector (str): the CSS selector in question.
+
+    Returns:
+        specificity: the specificity score.
+    """
     id_selector = get_id_score(selector)
     class_selector = get_class_score(selector)
     type_selector = get_type_score(selector)
-    return "{}{}{}".format(id_selector, class_selector, type_selector)
+    specificity = "{}{}{}".format(id_selector, class_selector, type_selector)
+    return specificity
 
 
-def get_id_score(selector):
-    """receives a selector and returns # of id selectors"""
+def get_id_score(selector: str) -> int:
+    """receives a selector and returns # of ID selectors
+
+    Args:
+        selector (str): the complete CSS selector
+
+    Returns:
+        score: the number of ID selectors.
+    """
     pattern = regex_patterns["id_selector"]
     id_selectors = re.findall(pattern, selector)
-    return len(id_selectors)
+    score = len(id_selectors)
+    return score
 
 
-def get_class_score(selector):
-    """receives a selector and returns # of class & psuedo-class selectors"""
+def get_class_score(selector: str) -> int:
+    """receives a selector and returns the class score
+
+    The class score represents the combined number of class,
+    pseudo-class, and attribute selectors.
+
+    Args:
+        selector (str): the complete CSS selector
+
+    Returns:
+        score: the number of class selectors, which includes attribute
+        and pseudoclass selectors.
+    """
     class_re = regex_patterns["class_selector"]
     selectors = re.findall(class_re, selector)
     pseudo_re = regex_patterns["pseudoclass_selector"]
@@ -744,18 +796,39 @@ def get_class_score(selector):
     attribute_re = regex_patterns["attribute_selector"]
     attribute_selectors = re.findall(attribute_re, selector)
     selectors += attribute_selectors
-    return len(selectors)
+    score = len(selectors)
+    return score
 
 
-def get_type_score(selector):
-    """receives a selector and returns # of type selectors"""
+def get_type_score(selector: str) -> int:
+    """receives a selector and returns the number of type selectors
+
+    Args:
+        selector: the complete CSS selector
+
+    Returns:
+        score: the number of type selectors.
+    """
     pattern = regex_patterns["type_selector"]
     selectors = re.findall(pattern, selector)
-    return len(selectors)
+    score = len(selectors)
+    return score
 
 
-def get_header_color_details(rulesets):
-    """receives rulesets and returns data on colors set by headers"""
+def get_header_color_details(rulesets: Union[list, tuple]) -> list:
+    """receives rulesets and returns data on colors set by headers
+
+    This function will look through all rules in a ruleset and extracts
+    the rules that target color or background color for a heading (h1
+    -h6).
+
+    Args:
+        rulesets: a list or tuple of Ruleset objects.
+
+    Returns:
+        header_rulesets: a list of dictionary objects that each contain
+            a selector, a background color, and a text color.
+    """
     header_rulesets = []
     for ruleset in rulesets:
         selector = ruleset.selector
@@ -790,8 +863,15 @@ def get_header_color_details(rulesets):
     return header_rulesets
 
 
-def get_header_selectors(selector):
-    """takes selector and returns any selector that selects an h1-h6"""
+def get_header_selectors(selector: str) -> list:
+    """takes selector and returns any selector that selects an h1-h6
+
+    Args:
+        selector: A CSS selector
+
+    Returns:
+        header_selectors: a list of selectors that target a heading.
+    """
     # NOTE the following:
     # a selector is only selecting a header if it's the last item
     # example: header h1 {} does but h1 a {} does not
@@ -807,8 +887,20 @@ def get_header_selectors(selector):
     return header_selectors
 
 
-def get_global_color_details(rulesets):
-    """receives rulesets and returns data on global colors"""
+def get_global_color_details(rulesets: Union[list, tuple]) -> list:
+    """receives rulesets and returns data on global colors
+
+    Note: a global selector is any selector that targets all elements
+    in the DOM. Examples include `html`, `body`, `:root`, and
+    the universal selector: `*`.
+
+    Args:
+        rulesets: a list or tuple of Ruleset objects
+
+    Returns:
+        global_rulesets: a list of dictionary objects that each contain
+            a selector, a background color, and a text color.
+    """
     # Are color and background color set on global selectors?
     global_selectors = ("html", "body", ":root", "*")
     global_rulesets = []
@@ -843,20 +935,59 @@ def get_global_color_details(rulesets):
     return global_rulesets
 
 
-def has_vendor_prefix(property):
+def has_vendor_prefix(property: str) -> bool:
+    """Checks a property to see if it uses a vendor prefix or not.
+
+    Args:
+        property: A CSS property in string format.
+
+    Returns:
+        has_prefix: whether the property uses a vendor prefix or not.
+    """
     vendor_prefixes = ("-webkit-", "-moz-", "-o-", "-ms-")
+    has_prefix = False
     for prefix in vendor_prefixes:
         if prefix in property:
-            return True
-    return False
+            has_prefix = True
+            break
+    return has_prefix
 
 
-def is_gradient(value):
-    return "gradient" in value
+def is_gradient(value: str) -> bool:
+    """checks a CSS value to see if it's using a gradient or not.
+
+    Args:
+        value (str): a CSS value.
+
+    Returns:
+        uses_gradient: whether it uses a gradient or not.
+    """
+    uses_gradient = "gradient" in value
+    return uses_gradient
 
 
 def process_gradient(code: str) -> list:
-    """returns list of all colors from gradient sorted light to dark"""
+    """returns list of all colors from gradient sorted light to dark
+
+    This function is a work in progress. The goal is to eventually use
+    it to determine whether a gradient meets color contrast
+    accessibility ratings when compared against another color or
+    color gradient.
+
+    In order to do this, the plan is to find
+    the lightest color and the darkest color, so we can check both
+    sides of the range. If the lightest or darkest color fails color
+    contrast, then it's a fail. If both pass, then all colors in
+    between will pass.
+
+    Note: we may be adding more to this and refactoring functionality.
+
+    Args:
+        code: the color gradient value
+
+    Returns:
+        only_colors: a list of just color codes sorted by luminance
+    """
     colors = []
     data = code.split("),")
 
@@ -885,8 +1016,16 @@ def process_gradient(code: str) -> list:
     return only_colors
 
 
-def sort_color_codes(codes):
-    """sorts color codes from light to dark (luminance)"""
+def sort_color_codes(codes: Union[list, tuple]) -> list:
+    """sorts color codes from light to dark (luminance)
+
+    Args:
+        codes: a list or tuple of color values.
+
+    Returns:
+        sorted: a list of initial color values but in order from
+            lightest to darkest (using luminance).
+    """
     # convert code to rgb then calculate luminance
     colors = []
     for c in codes:
@@ -918,8 +1057,22 @@ def sort_color_codes(codes):
     return sorted
 
 
-def remove_alpha(color_code):
-    """removes the alpha channel from rgba or hsla"""
+def remove_alpha(color_code: str) -> str:
+    """removes the alpha channel from rgba or hsla
+
+    Honestly, I'm not sure if this is even needed. I am looking to
+    eventually move over to the APCA algorithm for testing color
+    contrast accessibility, but at this point, I cannot find the
+    algorithm. If and when I do, I will work to replace the current
+    algorithm (WCAG AA/AAA rating).
+
+    Args:
+        color_code: the color code (hex, rgb, or hsl) with an alpha
+            channel.
+
+    Returns:
+        color_code: the color code without the alpha channel.
+    """
     color_code = color_code.split(",")
     a = color_code[0].index("a")
     color_code[0] = color_code[0][:a] + color_code[0][a + 1 :]
@@ -929,28 +1082,45 @@ def remove_alpha(color_code):
     return color_code
 
 
-def get_colors_from_gradient(gradient):
-    """extract all color codes from gradient"""
+def get_colors_from_gradient(gradient: str) -> list:
+    """extract all color codes from gradient
+
+    Args:
+        gradient: the CSS color gradient value.
+
+    Returns:
+        colors: a list of all colors found in the gradient.
+    """
     colors = []
     # use regex to pull all possible color codes first
-    append_color_codes("hsl", gradient, colors)
-    append_color_codes("rgb", gradient, colors)
-    append_color_codes("hex", gradient, colors)
-    append_color_codes("keywords", gradient, colors)
-
+    color_types = ("hsl", "rgb", "hex", "keywords")
+    for color_type in color_types:
+        items = get_color_codes_of_type(color_type, gradient)
+        if items:
+            colors += items
     return colors
 
 
-def append_color_codes(type, code, color_list):
-    if type == "hsl":
-        colors = re.findall(colortools.hsl_all_forms_re, code)
-    elif type == "rgb":
-        colors = re.findall(colortools.rgb_all_forms_re, code)
-    elif type == "hex":
-        colors = re.findall(colortools.hex_regex, code)
-    elif type == "keywords":
-        words = re.findall(r"[+a-z+A-Z]*", code)
-        colors = []
+def get_color_codes_of_type(color_type: str, gradient: str) -> list:
+    """returns all color codes of a particular type (hsl, rgb, etc.)
+
+    Args:
+        type: the type of color code it might be (hex, rgb, hsl, or
+            keyword)
+        gradient: the gradient code.
+
+    Returns:
+        colors: any color values that were found.
+    """
+    colors = []
+    if color_type == "hsl":
+        colors = re.findall(colortools.hsl_all_forms_re, gradient)
+    elif color_type == "rgb":
+        colors = re.findall(colortools.rgb_all_forms_re, gradient)
+    elif color_type == "hex":
+        colors = re.findall(colortools.hex_regex, gradient)
+    elif color_type == "keywords":
+        words = re.findall(r"[+a-z+A-Z]*", gradient)
         for i in words:
             # regex captures non-strings, so we don't process if empty
             if i:
@@ -961,19 +1131,37 @@ def append_color_codes(type, code, color_list):
     if colors:
         # strip each color code (if hex regex)
         colors = [i.strip(" ") for i in colors]
-        color_list += colors
+    return colors
 
 
 def is_required_selector(selector_type: str, selector: str) -> bool:
-    """checks selector to see if it's required type or not"""
+    """checks selector to see if it's required type or not
+
+    Args:
+        selector_type: the type of selector in question, such as
+            an id, class, type, etc.
+        selector: the selector we are checking.
+
+    Returns:
+        match: whether the selector matches the type.
+    """
     pattern = regex_patterns[selector_type]
-    return re.search(pattern, selector)
+    match = bool(re.search(pattern, selector))
+    return match
 
 
 def get_number_required_selectors(
     selector_type: str, sheet: Stylesheet
 ) -> int:
-    """returns # of a specific selector type in a stylesheet"""
+    """returns # of a specific selector type in a stylesheet
+
+    Args:
+        selector_type: what kind of selector we're looking for.
+        sheet: the Stylesheet object we're inspecting.
+
+    Returns:
+        count: the number of occurrences of the selector.
+    """
     count = 0
     pattern = regex_patterns[selector_type]
     for selector in sheet.selectors:
@@ -989,7 +1177,14 @@ def get_number_required_selectors(
 
 def has_required_property(property: str, sheet: Stylesheet) -> bool:
     """checks stylesheet for a particular property
-    to see if it's there or not"""
+
+    Args:
+        property: the property we're looking for
+        sheet (Stylesheet): the Stylesheet object we're inspecting
+
+    Returns:
+        has_property: whether the Stylesheet has the property or not.
+    """
     has_property = False
     for rule in sheet.rulesets:
         for declaration in rule.declaration_block.declarations:
