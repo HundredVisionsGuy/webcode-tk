@@ -10,8 +10,9 @@ It can also check for a particular HTML element, and in soon to be released vers
 2. [html.py](reference/html.md)
 3. [css.py](reference/css.md)
 4. [colortools.py](reference/colortools.md)
-5. [validator.py](reference/validator.md)
-3. [Explanation](explanation.md)
+5. [color_keywords.py](reference/color_keywords.md)
+6. [validator.py](reference/validator.md)
+7. [Explanation](explanation.md)
 
 Quickly find what you're looking for depending on
 your use case by looking at the different pages.
