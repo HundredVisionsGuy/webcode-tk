@@ -12,4 +12,4 @@ Modules exported by this package:
 - `validator`: sends HTML or CSS code to the W3C Validator to check
           for errors.
 """
-__version__ = "0.3.5"
+__version__ = "0.3.6"
