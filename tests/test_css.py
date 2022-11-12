@@ -213,21 +213,18 @@ def test_valid_color_declaration_is_valid(valid_color_declaration):
 
 
 def test_invalid1_declaration_for_value_error_no_colon():
-    with pytest.raises(ValueError) as exc_info:
-        css.Declaration(declarations["invalid1"])
-    assert "missing a colon" in str(exc_info.value)
+    declaration = css.Declaration(declarations["invalid1"])
+    assert "missing a colon" in declaration.invalid_message
 
 
 def test_invalid2_declaration_for_value_error_no_value():
-    with pytest.raises(ValueError) as exc_info:
-        css.Declaration(declarations["invalid2"])
-    assert "missing a value" in str(exc_info.value)
+    declaration = css.Declaration(declarations["invalid2"])
+    assert "missing a value" in declaration.invalid_message
 
 
 def test_invalid3_declaration_for_value_error_due_to_missing_value():
-    with pytest.raises(ValueError) as exc_info:
-        css.Declaration(declarations["invalid3"])
-    assert "no text after" in str(exc_info.value)
+    declaration = css.Declaration(declarations["invalid3"])
+    assert "no text after" in declaration.invalid_message
 
 
 def test_nested_at_rules_for_three(layout_css):

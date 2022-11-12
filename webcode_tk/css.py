@@ -463,10 +463,10 @@ class Declaration:
         try:
             self.validate_declaration()
             self.is_valid = True
+            self.set_declaration()
         except ValueError as e:
             self.is_valid = False
             self.invalid_message = str(e)
-        self.set_declaration()
 
     def set_declaration(self):
         """Sets the property and value based on the text (CSS code).
