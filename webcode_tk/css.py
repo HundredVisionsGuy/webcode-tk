@@ -451,20 +451,21 @@ class Declaration:
         property (str): the thing you want to change (like `color`
             or `border-width`.
         value (str): what you want to change it to (like `aquamarine`
-            or `5px`
-
-    Raises:
-        ValueError: if the Declaration is not a valid declaration, it
-            should raise a ValueError"""
+            or `5px`"""
 
     def __init__(self, text):
         """Inits a Declaration object."""
         self.__text = text
         self.property = ""
         self.value = ""
+        self.invalid_message = ""
         # validate before trying to set the declaration.
-        self.validate_declaration()
-        self.is_valid = True
+        try:
+            self.validate_declaration()
+            self.is_valid = True
+        except ValueError as e:
+            self.is_valid = False
+            self.invalid_message = str(e)
         self.set_declaration()
 
     def set_declaration(self):
