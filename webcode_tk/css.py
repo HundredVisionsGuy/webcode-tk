@@ -187,9 +187,9 @@ class Stylesheet:
                 in some way, but just with the color-based declarations.
         """
         color_rulesets = []
-        if (
-            ruleset.declaration_block
-            and "color:" in ruleset.declaration_block.text
+        if ruleset.declaration_block and (
+            "color:" in ruleset.declaration_block.text
+            or "background" in ruleset.declaration_block.text
         ):
             selector = ruleset.selector
             for declaration in ruleset.declaration_block.declarations:

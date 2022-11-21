@@ -86,6 +86,14 @@ rgba(42,60,87,.4) 200%),
 linear-gradient(-45deg, #46ABA6 0%, #092756 200%)'
 """
 
+css_with_bg_and_gradient = """
+h4 {
+            background: rgb(2,0,36);
+            background: linear-gradient(90deg, rgba(2,0,36,1) 0%,
+            rgba(9,9,121,1) 35%, rgba(0,212,255,1) 100%);
+        }
+"""
+
 path_to_gradients_project = "tests/test_files/"
 path_to_gradients_project += "projects/page_with_gradients_and_alpha/style.css"
 
@@ -428,6 +436,11 @@ def test_get_colors_from_gradient_for_rgba():
     )
     results = css.get_colors_from_gradient(gradient)
     assert "rgba(200, 100, 100, 0.5)" in results
+
+
+def test_stylesheet_for_color_rulesets_with_bg_and_gradient():
+    results = css.Stylesheet("test.html", css_with_bg_and_gradient, "tag")
+    assert results.color_rulesets
 
 
 def test_get_color_codes_of_type_for_none():
