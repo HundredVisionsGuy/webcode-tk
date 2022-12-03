@@ -200,8 +200,8 @@ class Stylesheet:
                     pos = segment[:2].index(";")
                     segment = segment[pos + 1 :]
                 split_text[i] = segment
-        # put text back in string form
-        text = "".join(split_text)
+            # put text back in string form
+            text = "".join(split_text)
         self.text = text
 
     def get_color_ruleset(self, ruleset) -> list:
