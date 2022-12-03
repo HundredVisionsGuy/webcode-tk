@@ -62,6 +62,28 @@ body { font-size: 120%; }
 /* other comment */
 h1 { font-family: serif;}
 """
+
+external_imports_css = """
+@import url('https://fonts.googleapis.com/css?family=Noto+Sans&display=swap');
+body {
+    background: rgb(19, 19, 19);
+    color: #fff;
+    font-family: 'Noto Sans', sans-serif;
+}
+"""
+
+external_two_imports_css = """
+@import url('https://fonts.googleapis.com/css?family=Noto+Sans&display=swap');
+body {
+    background: rgb(19, 19, 19);
+    color: #fff;
+}
+@import url("http://docs.python.org/3/_static/pygments.css");
+h1, h2, h3, h4 {
+    color: #336699;
+}
+"""
+
 # specificity of 303
 selectors_with_3_ids = "body #nav div#phred, p#red"
 # specificity of 014
@@ -102,6 +124,18 @@ path_to_gradients_project += "projects/page_with_gradients_and_alpha/style.css"
 def stylesheet_with_gradients():
     css_code = clerk.file_to_string(path_to_gradients_project)
     stylesheet = css.Stylesheet("style.css", css_code)
+    return stylesheet
+
+
+@pytest.fixture
+def css_with_external_imports():
+    stylesheet = css.Stylesheet("style tag", external_imports_css)
+    return stylesheet
+
+
+@pytest.fixture
+def css_with_two_external_imports():
+    stylesheet = css.Stylesheet("style tag", external_two_imports_css)
     return stylesheet
 
 
@@ -532,6 +566,14 @@ def test_has_repeat_selectors_for_true_layout(layout_css_stylesheet):
 
 def test_has_repeat_selectors_for_true(styles_with_multiple_selectors):
     assert styles_with_multiple_selectors
+
+
+def test_remove_external_imports(css_with_external_imports):
+    assert "http" not in css_with_external_imports.text
+
+
+def test_remove_two_external_imports(css_with_two_external_imports):
+    assert "http" not in css_with_two_external_imports.text
 
 
 # TODO: test stylesheet_with_gradients for color rulesets

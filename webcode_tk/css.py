@@ -93,6 +93,7 @@ class Stylesheet:
         self.has_repeat_selectors = False
         self.repeated_selectors = []
         self.__minify()
+        self.__remove_external_imports()
         self.__extract_comments()
         self.__extract_nested_at_rules()
         self.__extract_rulesets()
@@ -174,6 +175,34 @@ class Stylesheet:
                 ruleset = Ruleset(ruleset + "}")
                 self.rulesets.append(ruleset)
                 self.get_color_ruleset(ruleset)
+
+    def __remove_external_imports(self):
+        text = self.text
+        # look for external link by protocol (http or https)
+        external_import_re = r"@import url\(['\"]https://|"
+        external_import_re += r"@import url\(['\"]http://"
+
+        # remove external imports if there's a protocol
+        text = text.lower()
+        match = re.search(external_import_re, text)
+        if match:
+            # but only if it's in an @import url function
+            split_text = re.split(external_import_re, text)
+
+            # we now have 1 or more code segments without the
+            # beginnings of an @import url( segment
+            for i in range(1, len(split_text)):
+                segment = split_text[i]
+                # get everything after the first );
+                paren_pos = segment.index(")") + 1
+                segment = segment[paren_pos:]
+                if ";" in segment[:2]:
+                    pos = segment[:2].index(";")
+                    segment = segment[pos + 1 :]
+                split_text[i] = segment
+        # put text back in string form
+        text = "".join(split_text)
+        self.text = text
 
     def get_color_ruleset(self, ruleset) -> list:
         """Returns a list of all rules targetting color or background color.
