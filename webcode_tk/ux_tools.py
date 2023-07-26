@@ -15,7 +15,6 @@ of text
 * Use hypertext to split up long information into multiple pages"
 """
 from readability import Readability
-from textatistic import Textatistic
 
 
 def get_flesch_kincaid_grade_level(text: str) -> float:
@@ -35,11 +34,5 @@ def get_flesch_kincaid_grade_level(text: str) -> float:
     Returns:
         grade_level: the US grade level."""
     r = Readability(text)
-    t = Textatistic(text)
-    print(t.fleschkincaid_score)
     grade_level = r.flesch_kincaid()
-    ease = r.flesch()
-    stats = r.statistics()
-    print(ease)
-    print(stats)
-    return grade_level
+    return round(grade_level.score, 1)

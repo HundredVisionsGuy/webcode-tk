@@ -18,13 +18,13 @@ def css_basics():
     return sample
 
 
-def test_get_flesch_kincaid_grade_level_for_9_7(automate_text):
+def test_get_flesch_kincaid_grade_level_for_12(automate_text):
     results = ux_tools.get_flesch_kincaid_grade_level(automate_text)
-    expected = 9.7
+    expected = 12.1
     assert results == expected
 
 
 def test_get_flesch_kincaid_grade_level_for_4_5(css_basics):
     results = ux_tools.get_flesch_kincaid_grade_level(css_basics)
-    expected = 4.5
+    expected = 4.9
     assert results == expected
