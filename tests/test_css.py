@@ -274,7 +274,7 @@ def test_nested_at_rules_for_three(layout_css):
 
 
 def test_nested_at_rules_for_non_nested_at_rule():
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         css.NestedAtRule(declaration_block_with_selector)
 
 
