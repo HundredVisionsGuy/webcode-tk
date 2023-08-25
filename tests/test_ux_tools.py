@@ -14,7 +14,7 @@ def automate_path():
 @pytest.fixture
 def automate_text():
     text = clerk.file_to_string("tests/test_files/automate_paragraph_text.txt")
-    return text
+    return text.strip()
 
 
 @pytest.fixture
@@ -34,13 +34,13 @@ def large_project_path():
 
 def test_get_flesch_kincaid_grade_level_for_12(automate_path):
     results = ux_tools.get_flesch_kincaid_grade_level(automate_path)
-    expected = 12.1
+    expected = 10.8
     assert results == expected
 
 
 def test_get_flesch_kincaid_grade_level_for_5_2(css_basics_path):
     results = ux_tools.get_flesch_kincaid_grade_level(css_basics_path)
-    expected = 5.2
+    expected = 3.8
     assert results == expected
 
 

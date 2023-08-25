@@ -6,16 +6,16 @@ as checking for best practices in writing for the web.
 The primary source of information we will begin to use are from
 [Writing Compelling Digital Copy](https://www.nngroup.com/courses/writing/).
 
-According to the article, *Be Succinct! (Writing for the Web)*,
-"The 3 main guidelines for writing for the web are:
-    * Be succinct: write no more than 50% of the text you would have used in a
+According to the article...
+* Be Succinct! (Writing for the Web)
+* "The 3 main guidelines for writing for the web are:
+    - Be succinct: write no more than 50% of the text you would have used in a
     hardcopy publication
-    * Write for scannability: don't require users to read long continuous
+    - Write for scannability: don't require users to read long continuous
     blocks of text
-    * Use hypertext to split up long information into multiple pages"
+    - Use hypertext to split up long information into multiple pages"
 """
 from file_clerk import clerk
-from readability import Readability
 from textatistic import Textatistic
 
 from webcode_tk import html
@@ -35,14 +35,18 @@ def get_flesch_kincaid_grade_level(path: str) -> float:
         path: the path to the page or project that we are measuring.
 
     Returns:
-        grade_level: the US grade level."""
+        grade_level: the US grade level equivalent."""
 
+    # convert all paragraph content into a single string
     paragraphs = get_all_paragraphs(path)
-
     paragraph_text = get_paragraph_text(paragraphs)
-    r = Readability(paragraph_text)
-    grade_level = r.flesch_kincaid()
-    return round(grade_level.score, 1)
+
+    # get stats from textatistic
+    r = Textatistic(paragraph_text)
+    grade_level = r.fleschkincaid_score
+
+    # return grade level rounded to 1 decimal point
+    return round(grade_level, 1)
 
 
 def get_paragraph_text(paragraphs: list) -> str:
@@ -90,7 +94,7 @@ def get_all_paragraphs(path: str) -> list:
 def get_words_per_paragraph(path: str) -> float:
     """returns average number of words per paragraph
 
-    uses Readability stats"""
+    uses Textatistic stats"""
     paragraphs = get_all_paragraphs(path)
     text = get_paragraph_text(paragraphs)
     text = text.replace("\n", " ")
