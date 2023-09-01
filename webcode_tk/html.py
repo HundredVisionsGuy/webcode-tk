@@ -190,7 +190,7 @@ def get_element_content(el: Union[Tag, str]) -> str:
 
     Returns:
         content: the contents of the tag as a string. This is like
-            .innerText() method in JavaScript.
+            .innerText() method in JavaScript. It will include nested markup.
     """
     # Convert to tag if it's a string
     if isinstance(el, str):

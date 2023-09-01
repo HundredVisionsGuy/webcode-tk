@@ -3,6 +3,7 @@
 import pytest
 from file_clerk import clerk
 
+from webcode_tk import html
 from webcode_tk import ux_tools
 
 
@@ -30,6 +31,14 @@ def single_page_path():
 @pytest.fixture
 def large_project_path():
     return "tests/test_files/large_project/"
+
+
+@pytest.fixture
+def figcaption(large_project_path):
+    files = clerk.get_all_files_of_type(large_project_path, "html")
+    file = files[0]
+    markup = html.get_elements("figcaption", file)
+    return markup[0]
 
 
 def test_get_flesch_kincaid_grade_level_for_12(automate_path):
@@ -72,3 +81,22 @@ def test_simple_page_for_5_and_half_words_per_sentence(single_page_path):
     results = ux_tools.get_words_per_paragraph(single_page_path)
     expected = 19.0
     assert results == expected
+
+
+def test_get_text_from_elements_for_length_of_p_and_figcaption(
+    large_project_path,
+):
+    results = ux_tools.get_text_from_elements(
+        large_project_path, ["p", "figcaption"]
+    )
+    assert len(results) == 22
+
+
+def test_extract_text_for_no_nested_elements(large_project_path):
+    results = ux_tools.get_text_from_elements(large_project_path)
+    assert "<a href=" not in results[0]
+
+
+def test_extract_text_for_anchor_nested_in_paragraph(figcaption):
+    results = ux_tools.extract_text(figcaption)
+    assert "<a href=" not in results

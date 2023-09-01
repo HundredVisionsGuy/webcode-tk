@@ -15,6 +15,9 @@ According to the article...
     blocks of text
     - Use hypertext to split up long information into multiple pages"
 """
+from collections.abc import Sequence
+from typing import Union
+
 from file_clerk import clerk
 from textatistic import Textatistic
 
@@ -91,6 +94,65 @@ def get_all_paragraphs(path: str) -> list:
     return paragraphs
 
 
+def get_text_from_elements(
+    path: str, elements: Union[str, Sequence] = "p"
+) -> list:
+    """returns a list of text from elements (as strings) from a single file or
+    project folder.
+
+    It checks the path to determine if it's a path to a single page or a
+    project folder. It then uses the elements to determine from which
+    HTML element it will grab paragraphs.
+
+    By default, it will only pull paragraphs from the `<p>` tag, but you
+    can specify other elements (e.g. `<div>`, `<li>`, `<figcaption>`, etc.).
+
+    NOTE: When selecting other tags, pass it a list or tuple of strings. Only
+    specify the element without angle brackets (e.g. `['p', 'li', 'div']`)
+
+    Args:
+        path: a string path to either an html document or a project folder.
+        elements: the elements we want to pull our paragrphs from.
+    Returns:
+        paragraphs: a list of strings - text only without markup (for example
+        if an anchor is nested in a pargraph, the markup will be extracted, and
+        only the visible text on the page will be present."""
+
+    paragraphs = []
+    is_single_page = "html" == clerk.get_file_type(path)
+    if elements == "p":
+        elements = ["p"]
+    if not is_single_page:
+        # it's a project, so we need to process all html files in the folder
+        all_files = clerk.get_all_files_of_type(path, "html")
+        for file in all_files:
+            for element in elements:
+                markup = html.get_elements(element, file)
+                for tag in markup:
+                    text = extract_text(tag)
+                    paragraphs.append(text)
+    else:
+        for element in elements:
+            markup = html.get_elements(element, file)
+            for tag in markup:
+                text = extract_text(tag)
+                paragraphs.append(text)
+    return paragraphs
+
+
+def extract_text(tag) -> str:
+    """extracts only the text from a tag (no markup)
+
+    Args:
+        tag: this is a Tag (bs4)
+    Returns:
+        text: just the visible text from the element (with no
+        nested markup)."""
+    text = tag.text
+    text = " ".join(text.split())
+    return text
+
+
 def get_words_per_paragraph(path: str) -> float:
     """returns average number of words per paragraph
 
@@ -102,3 +164,11 @@ def get_words_per_paragraph(path: str) -> float:
     words = r.counts.get("word_count")
     num_paragraphs = len(paragraphs)
     return round(words / num_paragraphs, 1)
+
+
+if __name__ == "__main__":
+    # let's test some stuff out.
+    path = "tests/test_files/large_project/"
+    all = extract_text(path, ["p", "figcaption"])
+    all = get_paragraph_text(all)
+    print(all)
