@@ -204,7 +204,7 @@ class Stylesheet:
             text = "".join(split_text)
         self.text = text
 
-    def get_color_ruleset(self, ruleset) -> list:
+    def get_color_ruleset(self, ruleset: "Ruleset") -> list:
         """Returns a list of all rules targetting color or background color.
 
         Args:
@@ -1135,8 +1135,8 @@ def get_color_codes_of_type(color_type: str, gradient: str) -> list:
     """returns all color codes of a particular type (hsl, rgb, etc.)
 
     Args:
-        type: the type of color code it might be (hex, rgb, hsl, or
-            keyword)
+        color_type: the type of color code it might be (hex, rgb, hsl,
+            or keyword)
         gradient: the gradient code.
 
     Returns:

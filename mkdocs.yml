@@ -22,6 +22,7 @@ nav:
   - css.py: reference/css.md
   - color_keywords.py: reference/color_keywords.md
   - colortools.py: reference/colortools.md
+  - ux_tools.py: reference/ux_tools.md
   - validator.py: reference/validator.md
   - explanation.md
 
