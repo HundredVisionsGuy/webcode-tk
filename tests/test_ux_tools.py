@@ -34,9 +34,8 @@ def large_project_path():
 
 
 @pytest.fixture
-def figcaption(large_project_path):
-    files = clerk.get_all_files_of_type(large_project_path, "html")
-    file = files[0]
+def figcaption():
+    file = "tests/test_files/large_project/gallery.html"
     markup = html.get_elements("figcaption", file)
     return markup[0]
 
@@ -100,3 +99,39 @@ def test_extract_text_for_no_nested_elements(large_project_path):
 def test_extract_text_for_anchor_nested_in_paragraph(figcaption):
     results = ux_tools.extract_text(figcaption)
     assert "<a href=" not in results
+
+
+def test_get_readability_stats_for_2_paras_in_sample():
+    path = "tests/test_files/sample_no_errors.html"
+    results = ux_tools.get_readability_stats(path)
+    assert results.get("paragraph_count") == 2
+
+
+def test_get_readability_stats_for_11_words():
+    path = "tests/test_files/sample_no_errors.html"
+    results = ux_tools.get_readability_stats(path)
+    assert results.get("word_count") == 11
+
+
+def test_remove_extensions_for_two_file_names():
+    sample = "Hey, I just removed extensions from main.py and base.css."
+    expected = "Hey, I just removed extensions from main and base."
+    results = ux_tools.remove_extensions(sample)
+    assert results == expected
+
+
+def test_remove_extensions_for_no_file_names():
+    sample = "Sentence one, without a filename. Sentence two: no filename."
+    expected = sample
+    results = ux_tools.remove_extensions(sample)
+    assert results == expected
+
+
+def test_remove_extensions_for_many_symbols():
+    sample = "Image of Aurora Borealis (File:Virmalised 15.09.2017 - Aurora"
+    sample += "Borealis 15.09.2017 copy.jpg) by Kristian Pikner "
+    sample += "[CC BY-SA 4.0]."
+    expected = "Image of Aurora Borealis (File:Virmalised 15 - Aurora"
+    expected += "Borealis 15 copy) by Kristian Pikner [CC BY-SA 4]."
+    results = ux_tools.remove_extensions(sample)
+    assert results == expected

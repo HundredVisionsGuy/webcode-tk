@@ -1,9 +1,21 @@
-"""A set of tools to conduct some UX (User eXperience) checks.
+"""
+ux_tools
+--------
+A set of tools to conduct some UX (User eXperience) checks.
 
-As of now, I just want to check for best UX and SEO practices such
-as checking for best practices in writing for the web.
+This library is currently in its infancy state (I have no illusions
+about that). As of now, the functions are designed to get and analyze
+paragraph text for readability factors. It leverages the textatistic
+library.
 
-The primary source of information we will begin to use are from
+It can...
+* extract paragraphs (visible text only) from single files as well
+as entire project folders.
+* extract all visible text from a list of elements.
+* analyze just the visible text on the page.
+* get the flesch kincaid grade level equivalent of provided text.
+
+The primary goals of the library are inspired by come from
 [Writing Compelling Digital Copy](https://www.nngroup.com/courses/writing/).
 
 According to the article...
@@ -15,6 +27,7 @@ According to the article...
     blocks of text
     - Use hypertext to split up long information into multiple pages"
 """
+import re
 from collections.abc import Sequence
 from typing import Union
 
@@ -52,6 +65,45 @@ def get_flesch_kincaid_grade_level(path: str) -> float:
     return round(grade_level, 1)
 
 
+def get_readability_stats(
+    path: str, elements: Union[str, Sequence] = "p"
+) -> dict:
+    """returns a dictionary of various readability stats.
+
+    It will collect all stats from the textastic libary as well as add
+    a few of my own (words per sentence, sentences per paragraph).
+
+    Args:
+        path: the path to the file or folder (only looks at HTML files)
+        elements: by default we will only look at the text from paragraph
+            tags. You could supply other elements in the form of a list or
+            tuple (e.g. ['p', 'div', 'li', 'figcaption']).
+
+    Returns:
+        stats: a dictionary of stats on readability metrics.
+    """
+    stats = {}
+
+    # Get text and numbers
+    text = get_text_from_elements(path, elements)
+    num_lines = len(text)
+
+    # get stats from textatistic
+    text = "\n".join(text)
+    r = Textatistic(text)
+
+    for key, value in r.scores.items():
+        stats[key] = round(value, 2)
+    stats["character_count"] = r.char_count
+    stats["word_count"] = r.word_count
+    stats["sentence_count"] = r.sent_count
+    stats["paragraph_count"] = num_lines
+    stats["words_per_sentence"] = round(r.word_count / r.sent_count, 2)
+    stats["sent_per_paragraph"] = round(r.sent_count / num_lines, 2)
+
+    return stats
+
+
 def get_paragraph_text(paragraphs: list) -> str:
     """Returns a string of all the contents of the list of paragraphs
 
@@ -64,7 +116,7 @@ def get_paragraph_text(paragraphs: list) -> str:
     """
     paragraph_text = ""
     for paragraph in paragraphs:
-        paragraph_text += html.get_element_content(paragraph) + "\n"
+        paragraph_text += extract_text(paragraph) + "\n"
     return paragraph_text.strip()
 
 
@@ -130,14 +182,42 @@ def get_text_from_elements(
                 markup = html.get_elements(element, file)
                 for tag in markup:
                     text = extract_text(tag)
+                    text = remove_extensions(text)
                     paragraphs.append(text)
     else:
         for element in elements:
-            markup = html.get_elements(element, file)
+            markup = html.get_elements(element, path)
             for tag in markup:
                 text = extract_text(tag)
+                text = remove_extensions(text)
                 paragraphs.append(text)
     return paragraphs
+
+
+def remove_extensions(text: str) -> str:
+    """removes extension from filenames.
+
+    Filenames with extensions end up causing textatistic to count filenames
+    as two words instead of one, and we don't really need to count the
+    extensions when calculating readability stats.
+
+    Args:
+        text: the text which may or may not have filenames in them.
+
+    Returns:
+        newtext: the text without file extensions.
+    """
+    newtext = ""
+
+    # get the last character just in case it gets dropped with extension.
+    last_char = text[-1]
+    regex = r"\.[a-zA-Z0-9]+"
+    newtext = re.sub(regex, "", text)
+
+    # add back the last character if it was dropped.
+    if newtext[-1] != last_char:
+        newtext += last_char
+    return newtext
 
 
 def extract_text(tag) -> str:
@@ -169,6 +249,12 @@ def get_words_per_paragraph(path: str) -> float:
 if __name__ == "__main__":
     # let's test some stuff out.
     path = "tests/test_files/large_project/"
-    all = extract_text(path, ["p", "figcaption"])
-    all = get_paragraph_text(all)
-    print(all)
+    # get the stats for all p and figcaption elements
+    all_stats = get_readability_stats(path, ["p", "figcaption"])
+    for stat, value in all_stats.items():
+        print(f"{stat} = {value}")
+
+    # get just the paragraphs as a list and then a string
+    list_of_paragraphs = get_all_paragraphs(path)
+    all_paragraphs_text = get_paragraph_text(list_of_paragraphs)
+    print(all_paragraphs_text)
