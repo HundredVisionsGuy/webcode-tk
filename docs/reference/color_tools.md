@@ -1,2 +1,2 @@
 # colortools.py
-::: webcode_tk.colortools
+::: webcode_tk.color_tools
