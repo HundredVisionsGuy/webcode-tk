@@ -7,12 +7,12 @@ It can also check for a particular HTML element, and in soon to be released vers
 ## Table Of Contents
 
 1. [Tutorials](tutorials.md)
-2. [html.py](reference/html.md)
-3. [css.py](reference/css.md)
-4. [colortools.py](reference/colortools.md)
+2. [html_tools.py](reference/html_tools.md)
+3. [css_tools.py](reference/css_tools.md)
+4. [color_tools.py](reference/color_tools.md)
 5. [color_keywords.py](reference/color_keywords.md)
 6. [ux_tools.py](reference/ux_tools.md)
-7. [validator.py](reference/validator.md)
+7. [validator_tools.py](reference/validator_tools.md)
 8. [Explanation](explanation.md)
 
 Quickly find what you're looking for depending on

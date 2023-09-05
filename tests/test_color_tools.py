@@ -2,7 +2,7 @@
 """Tests for `colortools` package."""
 import pytest
 
-from webcode_tk import colortools as color
+from webcode_tk import color_tools as color
 
 # define some colors
 indigo = "#4b0082"

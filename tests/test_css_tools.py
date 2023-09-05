@@ -1,7 +1,7 @@
 import pytest
 from file_clerk import clerk
 
-from webcode_tk import css
+from webcode_tk import css_tools
 
 css_code_1_with_comments = """
 /* comment #1 */
@@ -123,61 +123,61 @@ path_to_gradients_project += "projects/page_with_gradients_and_alpha/style.css"
 @pytest.fixture
 def stylesheet_with_gradients():
     css_code = clerk.file_to_string(path_to_gradients_project)
-    stylesheet = css.Stylesheet("style.css", css_code)
+    stylesheet = css_tools.Stylesheet("style.css", css_code)
     return stylesheet
 
 
 @pytest.fixture
 def css_with_external_imports():
-    stylesheet = css.Stylesheet("style tag", external_imports_css)
+    stylesheet = css_tools.Stylesheet("style tag", external_imports_css)
     return stylesheet
 
 
 @pytest.fixture
 def css_with_two_external_imports():
-    stylesheet = css.Stylesheet("style tag", external_two_imports_css)
+    stylesheet = css_tools.Stylesheet("style tag", external_two_imports_css)
     return stylesheet
 
 
 @pytest.fixture
 def css_code_1_split():
-    code_split = css.separate_code(css_code_1_with_comments)
+    code_split = css_tools.separate_code(css_code_1_with_comments)
     return code_split
 
 
 @pytest.fixture
 def ruleset1():
-    ruleset = css.Ruleset(declaration_block_with_selector)
+    ruleset = css_tools.Ruleset(declaration_block_with_selector)
     return ruleset
 
 
 @pytest.fixture
 def invalid_ruleset():
-    ruleset = css.Ruleset(invalid_css)
+    ruleset = css_tools.Ruleset(invalid_css)
     return ruleset
 
 
 @pytest.fixture
 def valid_color_declaration():
-    dec = css.Declaration(declarations["valid1"])
+    dec = css_tools.Declaration(declarations["valid1"])
     return dec
 
 
 @pytest.fixture
 def stylesheet_with_one_declaration_block():
-    sheet = css.Stylesheet("local", declaration_block_with_selector, "")
+    sheet = css_tools.Stylesheet("local", declaration_block_with_selector, "")
     return sheet
 
 
 @pytest.fixture
 def declaration_block_no_selector():
-    block = css.DeclarationBlock(declaration_block_just_block)
+    block = css_tools.DeclarationBlock(declaration_block_just_block)
     return block
 
 
 @pytest.fixture
 def declaration_block_with_one_selector():
-    block = css.DeclarationBlock(declaration_block_with_selector)
+    block = css_tools.DeclarationBlock(declaration_block_with_selector)
     return block
 
 
@@ -191,7 +191,7 @@ def layout_css():
 
 @pytest.fixture
 def layout_css_stylesheet(layout_css):
-    css_sheet = css.Stylesheet("layout.css", layout_css)
+    css_sheet = css_tools.Stylesheet("layout.css", layout_css)
     return css_sheet
 
 
@@ -203,7 +203,7 @@ def layout_css_at_rules(layout_css_stylesheet):
 @pytest.fixture
 def styles_with_multiple_selectors():
     styles = clerk.file_to_string("tests/test_files/multiple_selectors.css")
-    sheet = css.Stylesheet("multiple_selectors.css", styles)
+    sheet = css_tools.Stylesheet("multiple_selectors.css", styles)
     yield sheet
 
 
@@ -212,7 +212,7 @@ def navigation_styles():
     path = "tests/test_files/large_project/css/"
     path += "navigation.css"
     styles = clerk.file_to_string(path)
-    sheet = css.Stylesheet("navigation.css", styles)
+    sheet = css_tools.Stylesheet("navigation.css", styles)
     yield sheet
 
 
@@ -255,17 +255,17 @@ def test_valid_color_declaration_is_valid(valid_color_declaration):
 
 
 def test_invalid1_declaration_for_value_error_no_colon():
-    declaration = css.Declaration(declarations["invalid1"])
+    declaration = css_tools.Declaration(declarations["invalid1"])
     assert "missing a colon" in declaration.invalid_message
 
 
 def test_invalid2_declaration_for_value_error_no_value():
-    declaration = css.Declaration(declarations["invalid2"])
+    declaration = css_tools.Declaration(declarations["invalid2"])
     assert "missing a value" in declaration.invalid_message
 
 
 def test_invalid3_declaration_for_value_error_due_to_missing_value():
-    declaration = css.Declaration(declarations["invalid3"])
+    declaration = css_tools.Declaration(declarations["invalid3"])
     assert "no text after" in declaration.invalid_message
 
 
@@ -275,7 +275,7 @@ def test_nested_at_rules_for_three(layout_css):
 
 def test_nested_at_rules_for_non_nested_at_rule():
     with pytest.raises(ValueError):
-        css.NestedAtRule(declaration_block_with_selector)
+        css_tools.NestedAtRule(declaration_block_with_selector)
 
 
 def test_nested_at_rules_for_rules(layout_css_at_rules):
@@ -285,8 +285,8 @@ def test_nested_at_rules_for_rules(layout_css_at_rules):
 
 
 def test_style_sheet_object_minify_method():
-    sheet = css.Stylesheet("local", declaration_block_with_selector)
-    results = css.minify_code(sheet.text)
+    sheet = css_tools.Stylesheet("local", declaration_block_with_selector)
+    results = css_tools.minify_code(sheet.text)
     assert results == minified_declaration_block_with_selector
 
 
@@ -326,103 +326,105 @@ def test_layout_css_stylesheet_for_multiple_selectors(layout_css_stylesheet):
 
 
 def test_has_required_property_for_display(layout_css_stylesheet):
-    assert css.has_required_property("display", layout_css_stylesheet)
+    assert css_tools.has_required_property("display", layout_css_stylesheet)
 
 
 def test_has_required_property_for_border_radius(layout_css_stylesheet):
-    assert css.has_required_property("border-radius", layout_css_stylesheet)
+    assert css_tools.has_required_property(
+        "border-radius", layout_css_stylesheet
+    )
 
 
 def test_get_id_score_for_3_ids():
-    results = css.get_id_score(selectors_with_3_ids)
+    results = css_tools.get_id_score(selectors_with_3_ids)
     assert results == 3
 
 
 def test_get_id_score_for_no_ids():
-    results = css.get_id_score(selectors_with_no_ids)
+    results = css_tools.get_id_score(selectors_with_no_ids)
     assert not results
 
 
 def test_get_type_score_for_3_type_selectors():
-    results = css.get_type_score(selectors_with_3_ids)
+    results = css_tools.get_type_score(selectors_with_3_ids)
     assert results == 3
 
 
 def test_get_type_score_for_4_type_selectors():
-    results = css.get_type_score(selectors_with_no_ids)
+    results = css_tools.get_type_score(selectors_with_no_ids)
     assert results == 4
 
 
 def test_get_type_score_for_descendant_selectors():
     selector = "header h1"
-    results = css.get_type_score(selector)
+    results = css_tools.get_type_score(selector)
     assert results == 2
 
 
 def test_get_class_score_for_0_results():
-    results = css.get_class_score(selectors_with_3_ids)
+    results = css_tools.get_class_score(selectors_with_3_ids)
     assert results == 0
 
 
 def test_get_class_score_for_3_results():
     selector = "a:hover, a:link, input[type=text]"
-    results = css.get_class_score(selector)
+    results = css_tools.get_class_score(selector)
     assert results == 3
 
 
 def test_get_specificity_for_303():
-    results = css.get_specificity(specificity303)
+    results = css_tools.get_specificity(specificity303)
     assert results == "303"
 
 
 def test_get_specificity_for_014():
-    results = css.get_specificity(specificity014)
+    results = css_tools.get_specificity(specificity014)
     assert results == "014"
 
 
 def test_get_specificity_for_033():
     selector = "a:hover, a:link, input[type=text]"
-    results = css.get_specificity(selector)
+    results = css_tools.get_specificity(selector)
     assert results == "033"
 
 
 def test_get_specificity_for_002():
     selector = "header h1"
-    results = css.get_specificity(selector)
+    results = css_tools.get_specificity(selector)
     assert results == "002"
 
 
 def test_has_vendor_prefix_for_false():
     selector = "transition"
-    results = css.has_vendor_prefix(selector)
+    results = css_tools.has_vendor_prefix(selector)
     expected = False
     assert results == expected
 
 
 def test_has_vendor_prefix_for_webkit():
     selector = "-webkit-transition"
-    results = css.has_vendor_prefix(selector)
+    results = css_tools.has_vendor_prefix(selector)
     expected = True
     assert results == expected
 
 
 def test_has_vendor_prefix_for_moz():
     selector = "-moz-transition"
-    results = css.has_vendor_prefix(selector)
+    results = css_tools.has_vendor_prefix(selector)
     expected = True
     assert results == expected
 
 
 def test_has_vendor_prefix_for_property_with_dash_not_prefix():
     selector = "background-color"
-    results = css.has_vendor_prefix(selector)
+    results = css_tools.has_vendor_prefix(selector)
     expected = False
     assert results == expected
 
 
 def test_is_gradient_for_false():
     value = "rgba(155, 155, 155, 0)"
-    results = css.is_gradient(value)
+    results = css_tools.is_gradient(value)
     assert not results
 
 
@@ -432,12 +434,12 @@ def test_is_gradient_for_true():
     value += "40%),-moz-linear-gradient(top, rgba(169, 235, 206,"
     value += ".25) 0%, rgba(42,60,87,.4) 200%), "
     value += "-moz-linear-gradient(-45deg, #46ABA6 0%, #092756 200%)"
-    results = css.is_gradient(value)
+    results = css_tools.is_gradient(value)
     assert results
 
 
 def test_process_gradient_for_insane_css_for_four_returned_colors():
-    colors = css.process_gradient(insane_gradient)
+    colors = css_tools.process_gradient(insane_gradient)
     results = len(colors)
     expected = 4
     assert results == expected
@@ -446,21 +448,21 @@ def test_process_gradient_for_insane_css_for_four_returned_colors():
 def test_sort_color_codes_for_two_rgbas():
     colors = ["rgba(143, 193, 242, 0.22)", "rgba(240, 205, 247,0)"]
     expected = ["rgba(240, 205, 247,0)", "rgba(143, 193, 242, 0.22)"]
-    results = css.sort_color_codes(colors)
+    results = css_tools.sort_color_codes(colors)
     assert results == expected
 
 
 def test_sort_color_codes_for_three_hexes():
     colors = ["#336699", "#ff0000", "#4C3A51"]
     expected = ["#ff0000", "#336699", "#4C3A51"]
-    results = css.sort_color_codes(colors)
+    results = css_tools.sort_color_codes(colors)
     assert results == expected
 
 
 def test_get_colors_from_gradient_for_hex():
     gradient = "linear-gradient(-45deg, #46ABA6 0%, #092756 200%)"
     expected = ["#46ABA6", "#092756"]
-    results = css.get_colors_from_gradient(gradient)
+    results = css_tools.get_colors_from_gradient(gradient)
     assert expected == results
 
 
@@ -468,19 +470,21 @@ def test_get_colors_from_gradient_for_rgba():
     gradient = (
         "linear-gradient(-45deg, rgba(200, 100, 100, 0.5) 0% #336699 100%)"
     )
-    results = css.get_colors_from_gradient(gradient)
+    results = css_tools.get_colors_from_gradient(gradient)
     assert "rgba(200, 100, 100, 0.5)" in results
 
 
 def test_stylesheet_for_color_rulesets_with_bg_and_gradient():
-    results = css.Stylesheet("test.html", css_with_bg_and_gradient, "tag")
+    results = css_tools.Stylesheet(
+        "test.html", css_with_bg_and_gradient, "tag"
+    )
     assert results.color_rulesets
 
 
 def test_get_color_codes_of_type_for_none():
     gradient = "linear-gradient(to bottom, rgba(169, "
     gradient += "235, 206,.25) 0%,rgba(42,60,87,.4) 200%"
-    colors = css.get_color_codes_of_type("hsl", gradient)
+    colors = css_tools.get_color_codes_of_type("hsl", gradient)
     assert not colors
 
 
@@ -489,7 +493,7 @@ def test_get_color_codes_of_type_for_rgba():
         "linear-gradient(to bottom, "
         "rgba(169, 235, 206,.25) 0%,rgba(42,60,87,.4) 200%"
     )
-    colors = css.get_color_codes_of_type("rgb", gradient)
+    colors = css_tools.get_color_codes_of_type("rgb", gradient)
     assert "rgba(169, 235, 206,.25)" in colors
 
 
@@ -498,58 +502,60 @@ def test_get_color_codes_of_type_for_rgb():
         "linear-gradient(to bottom, rgb(169, 235, "
         "206,.25) 0%,rgba(42,60,87,.4) 200%"
     )
-    colors = css.get_color_codes_of_type("rgb", gradient)
+    colors = css_tools.get_color_codes_of_type("rgb", gradient)
     assert "rgb(169, 235, 206,.25)" in colors
 
 
 def test_get_color_codes_of_type_for_hex():
     gradient = "linear-gradient(-45deg, #46ABA6 0%, #092756 200%)"
-    colors = css.get_color_codes_of_type("hex", gradient)
+    colors = css_tools.get_color_codes_of_type("hex", gradient)
     assert "#092756" in colors
 
 
 def test_get_color_codes_of_type_for_keyword_antiquewhite():
     gradient = "linear-gradient(-45deg, maroon 0%, #092756 200%)"
-    colors = css.get_color_codes_of_type("keywords", gradient)
+    colors = css_tools.get_color_codes_of_type("keywords", gradient)
     assert "maroon" in colors
 
 
 def test_is_required_selector_for_not_required():
-    results = css.is_required_selector("id_selector", "nav ul {")
+    results = css_tools.is_required_selector("id_selector", "nav ul {")
     assert not results
 
 
 def test_is_required_selector_for_id_selector():
     selector = "main#main nav a.active"
-    assert css.is_required_selector("id_selector", selector)
+    assert css_tools.is_required_selector("id_selector", selector)
 
 
 def test_is_required_selector_for_class_selector():
     selector = "main#main nav a.active"
-    assert css.is_required_selector("class_selector", selector)
+    assert css_tools.is_required_selector("class_selector", selector)
 
 
 def test_is_required_selector_for_type_selector():
     selector = "main#main nav a.active"
-    assert css.is_required_selector("type_selector", selector)
+    assert css_tools.is_required_selector("type_selector", selector)
 
 
 def test_is_required_selector_for_grouped_selectors():
     selector = "h1, h2, h3 {"
-    assert css.is_required_selector("grouped_selector", selector)
+    assert css_tools.is_required_selector("grouped_selector", selector)
 
 
 def test_get_num_required_selectors_for_3_ids():
     css_code = "body #nav div#phred, p#red"
     css_code += "{ color: green;}"
-    style_sheet = css.Stylesheet("styletag", css_code)
-    results = css.get_number_required_selectors("id_selector", style_sheet)
+    style_sheet = css_tools.Stylesheet("styletag", css_code)
+    results = css_tools.get_number_required_selectors(
+        "id_selector", style_sheet
+    )
     expected = 3
     assert results == expected
 
 
 def test_get_num_required_selectors_for_layout_sheet(layout_css_stylesheet):
-    results = css.get_number_required_selectors(
+    results = css_tools.get_number_required_selectors(
         "class_selector", layout_css_stylesheet
     )
     expected = 29
