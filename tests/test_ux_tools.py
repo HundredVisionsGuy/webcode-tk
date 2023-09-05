@@ -3,7 +3,7 @@
 import pytest
 from file_clerk import clerk
 
-from webcode_tk import html
+from webcode_tk import html_tools
 from webcode_tk import ux_tools
 
 
@@ -36,7 +36,7 @@ def large_project_path():
 @pytest.fixture
 def figcaption():
     file = "tests/test_files/large_project/gallery.html"
-    markup = html.get_elements("figcaption", file)
+    markup = html_tools.get_elements("figcaption", file)
     return markup[0]
 
 

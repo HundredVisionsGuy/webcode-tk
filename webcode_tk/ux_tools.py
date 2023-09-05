@@ -1,21 +1,9 @@
-"""
-ux_tools
---------
-A set of tools to conduct some UX (User eXperience) checks.
+"""A set of tools to conduct some UX (User eXperience) checks.
 
-This library is currently in its infancy state (I have no illusions
-about that). As of now, the functions are designed to get and analyze
-paragraph text for readability factors. It leverages the textatistic
-library.
+As of now, I just want to check for best UX and SEO practices such
+as checking for best practices in writing for the web.
 
-It can...
-* extract paragraphs (visible text only) from single files as well
-as entire project folders.
-* extract all visible text from a list of elements.
-* analyze just the visible text on the page.
-* get the flesch kincaid grade level equivalent of provided text.
-
-The primary goals of the library are inspired by come from
+The primary source of information we will begin to use are from
 [Writing Compelling Digital Copy](https://www.nngroup.com/courses/writing/).
 
 According to the article...
@@ -34,7 +22,7 @@ from typing import Union
 from file_clerk import clerk
 from textatistic import Textatistic
 
-from webcode_tk import html
+from webcode_tk import html_tools
 
 
 def get_flesch_kincaid_grade_level(path: str) -> float:
@@ -116,7 +104,7 @@ def get_paragraph_text(paragraphs: list) -> str:
     """
     paragraph_text = ""
     for paragraph in paragraphs:
-        paragraph_text += extract_text(paragraph) + "\n"
+        paragraph_text += html_tools.get_element_content(paragraph) + "\n"
     return paragraph_text.strip()
 
 
@@ -140,9 +128,9 @@ def get_all_paragraphs(path: str) -> list:
         # it's a project, so we need to process all html files in the folder
         all_files = clerk.get_all_files_of_type(path, "html")
         for file in all_files:
-            paragraphs += html.get_elements("p", file)
+            paragraphs += html_tools.get_elements("p", file)
     else:
-        paragraphs += html.get_elements("p", path)
+        paragraphs += html_tools.get_elements("p", path)
     return paragraphs
 
 
@@ -179,17 +167,15 @@ def get_text_from_elements(
         all_files = clerk.get_all_files_of_type(path, "html")
         for file in all_files:
             for element in elements:
-                markup = html.get_elements(element, file)
+                markup = html_tools.get_elements(element, file)
                 for tag in markup:
                     text = extract_text(tag)
-                    text = remove_extensions(text)
                     paragraphs.append(text)
     else:
         for element in elements:
-            markup = html.get_elements(element, path)
+            markup = html_tools.get_elements(element, path)
             for tag in markup:
                 text = extract_text(tag)
-                text = remove_extensions(text)
                 paragraphs.append(text)
     return paragraphs
 
@@ -249,12 +235,6 @@ def get_words_per_paragraph(path: str) -> float:
 if __name__ == "__main__":
     # let's test some stuff out.
     path = "tests/test_files/large_project/"
-    # get the stats for all p and figcaption elements
-    all_stats = get_readability_stats(path, ["p", "figcaption"])
-    for stat, value in all_stats.items():
-        print(f"{stat} = {value}")
-
-    # get just the paragraphs as a list and then a string
-    list_of_paragraphs = get_all_paragraphs(path)
-    all_paragraphs_text = get_paragraph_text(list_of_paragraphs)
-    print(all_paragraphs_text)
+    all = extract_text(path, ["p", "figcaption"])
+    all = get_paragraph_text(all)
+    print(all)

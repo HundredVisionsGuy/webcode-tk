@@ -1,6 +1,6 @@
 import pytest
 
-from webcode_tk import validator as val
+from webcode_tk import validator_tools as val
 
 html_files = val.get_html_file_names()
 browser = val.browser

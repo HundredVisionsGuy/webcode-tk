@@ -6,7 +6,7 @@ import re
 from typing import Union
 
 from webcode_tk import color_keywords as keyword
-from webcode_tk import colortools
+from webcode_tk import color_tools
 
 # regex patterns for various selectors
 regex_patterns: dict = {
@@ -232,7 +232,7 @@ class Stylesheet:
                     if has_vendor_prefix(value):
                         continue
                     # skip if not valid color value
-                    if not colortools.is_color_value(value):
+                    if not color_tools.is_color_value(value):
                         continue
                     # make sure the value is a color (not other)
                     rule = {selector: {property: value}}
@@ -1061,23 +1061,23 @@ def sort_color_codes(codes: Union[list, tuple]) -> list:
     for c in codes:
         # get the color type and convert to hsl
         temp_c = c
-        color_type = colortools.get_color_type(c)
-        has_alpha = colortools.has_alpha_channel(c)
-        is_hex = colortools.is_hex(temp_c)
+        color_type = color_tools.get_color_type(c)
+        has_alpha = color_tools.has_alpha_channel(c)
+        is_hex = color_tools.is_hex(temp_c)
         if has_alpha and not is_hex:
             temp_c = remove_alpha(c)
         if "hsl" not in color_type:
             if is_hex:
-                rgb = colortools.hex_to_rgb(temp_c)
+                rgb = color_tools.hex_to_rgb(temp_c)
             else:
                 rgb = temp_c
         else:
-            rgb = colortools.hsl_to_rgb(c)
+            rgb = color_tools.hsl_to_rgb(c)
         if "<class 'str'>" == str(type(rgb)):
-            r, g, b = colortools.extract_rgb_from_string(rgb)
-            light = colortools.luminance((int(r), int(g), int(b)))
+            r, g, b = color_tools.extract_rgb_from_string(rgb)
+            light = color_tools.luminance((int(r), int(g), int(b)))
         else:
-            light = colortools.luminance(rgb)
+            light = color_tools.luminance(rgb)
         colors.append([light, c])
     colors.sort()
     colors.reverse()
@@ -1144,11 +1144,11 @@ def get_color_codes_of_type(color_type: str, gradient: str) -> list:
     """
     colors = []
     if color_type == "hsl":
-        colors = re.findall(colortools.hsl_all_forms_re, gradient)
+        colors = re.findall(color_tools.hsl_all_forms_re, gradient)
     elif color_type == "rgb":
-        colors = re.findall(colortools.rgb_all_forms_re, gradient)
+        colors = re.findall(color_tools.rgb_all_forms_re, gradient)
     elif color_type == "hex":
-        colors = re.findall(colortools.hex_regex, gradient)
+        colors = re.findall(color_tools.hex_regex, gradient)
     elif color_type == "keywords":
         words = re.findall(r"[+a-z+A-Z]*", gradient)
         for i in words:
