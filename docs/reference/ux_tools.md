@@ -1,2 +1,2 @@
 # ux_tools.py
-::: ux_tools.html
+::: webcode_tk.ux_tools

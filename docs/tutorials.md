@@ -8,9 +8,9 @@ Be sure you have installed and imported webcode-tk (I prefer poetry: `poetry ins
 Place your web documents in the project folder.
 
 Be sure to import one or more of the webcode-tk scripts:
-`from webcode_tk import html`
+`from webcode_tk import html_tools`
 or
-`from webcode_tk import validator`
+`from webcode_tk import validator_tools`
 
 In your Python script, set the project folder as a path:
 `project_path = "project"`
