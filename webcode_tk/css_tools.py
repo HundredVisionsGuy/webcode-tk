@@ -663,6 +663,31 @@ def minify_code(text: str) -> str:
     return text
 
 
+def get_class_score(selector: str) -> int:
+    """receives a selector and returns the class score
+
+    The class score represents the combined number of class,
+    pseudo-class, and attribute selectors.
+
+    Args:
+        selector (str): the complete CSS selector
+
+    Returns:
+        score: the number of class selectors, which includes attribute
+        and pseudoclass selectors.
+    """
+    class_re = regex_patterns["class_selector"]
+    selectors = re.findall(class_re, selector)
+    pseudo_re = regex_patterns["pseudoclass_selector"]
+    pseudo_selectors = re.findall(pseudo_re, selector)
+    selectors += pseudo_selectors
+    attribute_re = regex_patterns["attribute_selector"]
+    attribute_selectors = re.findall(attribute_re, selector)
+    selectors += attribute_selectors
+    score = len(selectors)
+    return score
+
+
 def get_comment_positions(code: (str)) -> Union[list, None]:
     """looks for index positions of first opening and closing comment.
 
@@ -692,62 +717,38 @@ def get_comment_positions(code: (str)) -> Union[list, None]:
         return
 
 
-def separate_code(code: str) -> dict:
-    """splits code into two lists: code & comments
+def get_font_families(sheet: Stylesheet) -> list:
+    """returns a list of all font families targeted in a stylesheet
 
     Args:
-        code (str): the stylesheet or style tag code
+        sheet: a stylesheet object, which could be a style tag or entire
+            stylesheet (*.css file)
 
     Returns:
-        splitzky: a dictionary with two lists: a list of code snippets
-            without comments, and a list of comments.
-
-    Raises:
-        ValueError: if there is only one comment symbol: either /* or
-            */ but not both (a syntax error)
+        font_families: a list of dictionary objects that contain all selectors
+            and their values (but only if the value is a font family)
     """
-    code = code.strip()
-    splitzky = {"code": [], "comments": []}
+    font_families = []
+    for ruleset in sheet.rulesets:
+        block = ruleset.declaration_block
+        families = get_families(block)
+        if families:
+            # create dict of selector and family
+            selector = ruleset.selector
 
-    new_code = []
-    comments = []
-    # Get positions of comments and place all code up to the comments
-    # in code and comments in comments
-    # do this till all code has been separated
-    while code:
-        positions = get_comment_positions(code)
-        if positions and len(positions) == 2:
-            start = positions[0]
-            stop = positions[1]
-            if code[:start]:
-                new_code.append(code[:start])
-            if code[start : stop + 2]:
-                comments.append(code[start : stop + 2])
-            code = code[stop + 2 :]
-            code = code.strip()
-        else:
-            if "/*" not in code and "*/" not in code:
-                new_code.append(code)
-                code = ""
-            else:
-                # we're here because we have only one valid comment
-                # symbol
-                if "/*" in code:
-                    has, has_not = (
-                        "opening comment symbol: /*",
-                        "closing comment symbol: */",
-                    )
-                else:
-                    has, has_not = (
-                        "closing comment symbol: */",
-                        "opening comment symbol: /*",
-                    )
-                msg = "There's a syntax issue with your code comments."
-                msg += " You have a {0} but no {1}.".format(has, has_not)
-                raise ValueError(msg)
-    splitzky["code"] = new_code
-    splitzky["comments"] = comments
-    return splitzky
+            # always take the last family as it would be an override in CSS
+            family = families[-1]
+            font_families.append({"selector": selector,
+                                  "family": family})
+    return font_families
+
+
+def get_families(declaration_block):
+    families = []
+    for ruleset in declaration_block.declarations:
+        if ruleset.property in ("font", "font-family"):
+            families.append(ruleset.value)
+    return families
 
 
 def get_specificity(selector: str) -> str:
@@ -802,31 +803,6 @@ def get_id_score(selector: str) -> int:
     pattern = regex_patterns["id_selector"]
     id_selectors = re.findall(pattern, selector)
     score = len(id_selectors)
-    return score
-
-
-def get_class_score(selector: str) -> int:
-    """receives a selector and returns the class score
-
-    The class score represents the combined number of class,
-    pseudo-class, and attribute selectors.
-
-    Args:
-        selector (str): the complete CSS selector
-
-    Returns:
-        score: the number of class selectors, which includes attribute
-        and pseudoclass selectors.
-    """
-    class_re = regex_patterns["class_selector"]
-    selectors = re.findall(class_re, selector)
-    pseudo_re = regex_patterns["pseudoclass_selector"]
-    pseudo_selectors = re.findall(pseudo_re, selector)
-    selectors += pseudo_selectors
-    attribute_re = regex_patterns["attribute_selector"]
-    attribute_selectors = re.findall(attribute_re, selector)
-    selectors += attribute_selectors
-    score = len(selectors)
     return score
 
 
@@ -1044,6 +1020,64 @@ def process_gradient(code: str) -> list:
                 only_colors += color_codes
     only_colors = sort_color_codes(only_colors)
     return only_colors
+
+
+def separate_code(code: str) -> dict:
+    """splits code into two lists: code & comments
+
+    Args:
+        code (str): the stylesheet or style tag code
+
+    Returns:
+        splitzky: a dictionary with two lists: a list of code snippets
+            without comments, and a list of comments.
+
+    Raises:
+        ValueError: if there is only one comment symbol: either /* or
+            */ but not both (a syntax error)
+    """
+    code = code.strip()
+    splitzky = {"code": [], "comments": []}
+
+    new_code = []
+    comments = []
+    # Get positions of comments and place all code up to the comments
+    # in code and comments in comments
+    # do this till all code has been separated
+    while code:
+        positions = get_comment_positions(code)
+        if positions and len(positions) == 2:
+            start = positions[0]
+            stop = positions[1]
+            if code[:start]:
+                new_code.append(code[:start])
+            if code[start : stop + 2]:
+                comments.append(code[start : stop + 2])
+            code = code[stop + 2 :]
+            code = code.strip()
+        else:
+            if "/*" not in code and "*/" not in code:
+                new_code.append(code)
+                code = ""
+            else:
+                # we're here because we have only one valid comment
+                # symbol
+                if "/*" in code:
+                    has, has_not = (
+                        "opening comment symbol: /*",
+                        "closing comment symbol: */",
+                    )
+                else:
+                    has, has_not = (
+                        "closing comment symbol: */",
+                        "opening comment symbol: /*",
+                    )
+                msg = "There's a syntax issue with your code comments."
+                msg += " You have a {0} but no {1}.".format(has, has_not)
+                raise ValueError(msg)
+    splitzky["code"] = new_code
+    splitzky["comments"] = comments
+    return splitzky
 
 
 def sort_color_codes(codes: Union[list, tuple]) -> list:
