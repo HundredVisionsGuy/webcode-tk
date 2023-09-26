@@ -738,12 +738,12 @@ def get_font_families(sheet: Stylesheet) -> list:
 
             # always take the last family as it would be an override in CSS
             family = families[-1]
-            font_families.append({"selector": selector,
-                                  "family": family})
+            font_families.append({"selector": selector, "family": family})
     return font_families
 
 
-def get_families(declaration_block):
+def get_families(declaration_block: DeclarationBlock) -> list:
+    """returns a list of all font families in a declaration block"""
     families = []
     for ruleset in declaration_block.declarations:
         if ruleset.property in ("font", "font-family"):

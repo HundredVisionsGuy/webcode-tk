@@ -592,20 +592,16 @@ def test_remove_two_external_imports(css_with_two_external_imports):
 
 def test_get_font_families_for_one(css_with_external_imports):
     results = css_tools.get_font_families(css_with_external_imports)
-    assert "noto sans" in results[0].get('family')
+    assert "noto sans" in results[0].get("family")
 
 
 def test_get_families_for_declaration_block():
     stylesheet = css_tools.Stylesheet("sample.css", css_code_1_with_comments)
     ruleset = stylesheet.rulesets[1]
     results = css_tools.get_families(ruleset.declaration_block)
-    assert 'sans-serif' in results
+    assert "sans-serif" in results
 
 
 def test_get_font_families_for_two(general_stylesheet):
     results = css_tools.get_font_families(general_stylesheet)
     assert len(results) == 2
-
-
-# TODO: test stylesheet_with_gradients for color rulesets
-# not sure what we want out of it.
