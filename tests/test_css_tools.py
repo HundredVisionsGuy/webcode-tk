@@ -110,15 +110,23 @@ linear-gradient(-45deg, #46ABA6 0%, #092756 200%)'
 
 css_with_bg_and_gradient = """
 h4 {
-            background: rgb(2,0,36);
-            background: linear-gradient(90deg, rgba(2,0,36,1) 0%,
-            rgba(9,9,121,1) 35%, rgba(0,212,255,1) 100%);
-        }
+        background: rgb(2,0,36);
+        background: linear-gradient(90deg, rgba(2,0,36,1) 0%,
+        rgba(9,9,121,1) 35%, rgba(0,212,255,1) 100%);
+    }
 """
 
 path_to_gradients_project = "tests/test_files/"
 path_to_gradients_project += "projects/page_with_gradients_and_alpha/style.css"
+path_to_general_css = "tests/test_files/large_project/css/general.css"
 gallery_path = "tests/test_files/large_project/gallery.html"
+
+
+@pytest.fixture
+def general_stylesheet():
+    css_code = clerk.file_to_string(path_to_general_css)
+    stylesheet = css_tools.Stylesheet("general.css", css_code)
+    return stylesheet
 
 
 @pytest.fixture
@@ -593,5 +601,18 @@ def test_get_all_stylesheets_for_style_tag():
     assert "styletag" in results[0].type
 
 
-# TODO: test stylesheet_with_gradients for color rulesets
-# not sure what we want out of it.
+def test_get_font_families_for_one(css_with_external_imports):
+    results = css_tools.get_font_families(css_with_external_imports)
+    assert "noto sans" in results[0].get("family")
+
+
+def test_get_families_for_declaration_block():
+    stylesheet = css_tools.Stylesheet("sample.css", css_code_1_with_comments)
+    ruleset = stylesheet.rulesets[1]
+    results = css_tools.get_families(ruleset.declaration_block)
+    assert "sans-serif" in results
+
+
+def test_get_font_families_for_two(general_stylesheet):
+    results = css_tools.get_font_families(general_stylesheet)
+    assert len(results) == 2
