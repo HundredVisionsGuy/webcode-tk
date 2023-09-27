@@ -118,6 +118,7 @@ h4 {
 
 path_to_gradients_project = "tests/test_files/"
 path_to_gradients_project += "projects/page_with_gradients_and_alpha/style.css"
+gallery_path = "tests/test_files/large_project/gallery.html"
 
 
 @pytest.fixture
@@ -580,6 +581,16 @@ def test_remove_external_imports(css_with_external_imports):
 
 def test_remove_two_external_imports(css_with_two_external_imports):
     assert "http" not in css_with_two_external_imports.text
+
+
+def test_get_all_stylesheets_by_file_for_4_sheets():
+    results = css_tools.get_all_stylesheets_by_file(gallery_path)
+    assert len(results) == 4
+
+
+def test_get_all_stylesheets_for_style_tag():
+    results = css_tools.get_all_stylesheets_by_file(gallery_path)
+    assert "styletag" in results[0].type
 
 
 # TODO: test stylesheet_with_gradients for color rulesets
