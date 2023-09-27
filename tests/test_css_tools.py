@@ -110,15 +110,23 @@ linear-gradient(-45deg, #46ABA6 0%, #092756 200%)'
 
 css_with_bg_and_gradient = """
 h4 {
-            background: rgb(2,0,36);
-            background: linear-gradient(90deg, rgba(2,0,36,1) 0%,
-            rgba(9,9,121,1) 35%, rgba(0,212,255,1) 100%);
-        }
+        background: rgb(2,0,36);
+        background: linear-gradient(90deg, rgba(2,0,36,1) 0%,
+        rgba(9,9,121,1) 35%, rgba(0,212,255,1) 100%);
+    }
 """
 
 path_to_gradients_project = "tests/test_files/"
 path_to_gradients_project += "projects/page_with_gradients_and_alpha/style.css"
 gallery_path = "tests/test_files/large_project/gallery.html"
+path_to_general_css = "tests/test_files/large_project/css/general.css"
+
+
+@pytest.fixture
+def general_stylesheet():
+    css_code = clerk.file_to_string(path_to_general_css)
+    stylesheet = css_tools.Stylesheet("general.css", css_code)
+    return stylesheet
 
 
 @pytest.fixture
