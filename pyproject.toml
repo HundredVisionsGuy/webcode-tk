@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "webcode-tk"
-version = "0.5.4"
+version = "0.5.5"
 description = ""
 authors = ["hundredvisionsguy <cwinikka@gmail.com>"]
 keywords = ["html", "validation", "css", ]
@@ -33,7 +33,7 @@ mkgendocs = "*"
 pytest-cov = "*"
 mkdocs-material = "*"
 flake8 = "^5.0.4"
-pre-commit = "^2.20.0"
+pre-commit = "*"
 autoflake8 = "^0.3.2"
 pip-licenses = "^3.5.4"
 
