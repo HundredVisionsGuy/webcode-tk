@@ -120,6 +120,7 @@ path_to_gradients_project = "tests/test_files/"
 path_to_gradients_project += "projects/page_with_gradients_and_alpha/style.css"
 gallery_path = "tests/test_files/large_project/gallery.html"
 path_to_general_css = "tests/test_files/large_project/css/general.css"
+gallery_path = "tests/test_files/large_project/gallery.html"
 
 
 @pytest.fixture
@@ -594,6 +595,11 @@ def test_remove_two_external_imports(css_with_two_external_imports):
 def test_get_all_stylesheets_by_file_for_4_sheets():
     results = css_tools.get_all_stylesheets_by_file(gallery_path)
     assert len(results) == 4
+
+
+def test_get_font_families_for_one(css_with_external_imports):
+    results = css_tools.get_font_families(css_with_external_imports)
+    assert "noto sans" in results[0].get("family")
 
 
 def test_get_all_stylesheets_for_style_tag():
