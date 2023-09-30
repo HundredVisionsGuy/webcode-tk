@@ -5,8 +5,11 @@ and values.
 import re
 from typing import Union
 
+from file_clerk import clerk
+
 from webcode_tk import color_keywords as keyword
 from webcode_tk import color_tools
+from webcode_tk import html_tools
 
 # regex patterns for various selectors
 regex_patterns: dict = {
@@ -1257,9 +1260,49 @@ def has_required_property(property: str, sheet: Stylesheet) -> bool:
     return has_property
 
 
-if __name__ == "__main__":
-    from file_clerk import clerk
+def get_all_stylesheets_by_file(file_path: str) -> list:
+    """returns a list of all Stylesheet objects from an HTML file in order of
+    appearance.
 
+    This will check an HTML file for any links to stylesheets or style tags,
+    and get each stylesheet in the order in which they were called (in case
+    there is a CSS override).
+
+    It will only accept links to local stylesheets and ignore any external
+    stylesheets called with an http or https.
+
+    Args:
+        file_path: the path to an HTML file.
+
+    Returns:
+        all_styles: a list of dictionary objects in the order in which they
+            are called (as a link or style tag).
+    """
+    all_styles = []
+    head_tags = html_tools.get_elements("head", file_path)
+    for item in head_tags:
+        for tag in item.contents:
+            if tag == "\n":
+                continue
+            if tag.name == "link":
+                href = tag.attrs.get("href")
+                if ".css" in href:
+                    if "http" not in href[:5]:
+                        # remove html filename with sheet href
+                        path_list = clerk.get_path_list(file_path)
+                        path_list.pop()
+                        path_list.append(href)
+                        sheet_path = "/".join(path_list)
+                        code = clerk.file_to_string(sheet_path)
+                        css_sheet = Stylesheet(sheet_path, code)
+                        all_styles.append(css_sheet)
+            if tag.name == "style":
+                css_sheet = Stylesheet(file_path, tag.text, "styletag")
+                all_styles.append(css_sheet)
+    return all_styles
+
+
+if __name__ == "__main__":
     insane_gradient = """
     -moz-radial-gradient(0% 200%, ellipse cover,
     rgba(143, 193, 242, 0.22) 10%,rgba(240, 205, 247,0) 40%),
