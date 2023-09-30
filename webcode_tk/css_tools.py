@@ -1295,8 +1295,8 @@ linear-gradient(-45deg, #46ABA6 0%, #092756 200%)'
 """
     results = process_gradient(insane_gradient)
     print(results)
-    project_path = "projects/single-page/"
-    css_path = project_path + "style.css"
+    project_path = "tests/test_files/large_project/"
+    css_path = project_path + "css/general.css"
     html_path = project_path + "index.html"
     css_code = clerk.file_to_string(css_path)
     html_code = clerk.file_to_string(html_path)
