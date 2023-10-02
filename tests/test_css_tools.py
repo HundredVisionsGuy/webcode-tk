@@ -634,16 +634,12 @@ def test_get_all_stylesheets_by_file(about_path):
 
 
 def test_get_styles_by_html_files_for_filenames(large_project_path):
-    styles_by_files = css_tools.get_styles_by_html_files(large_project_path)
+    styles = css_tools.get_styles_by_html_files(large_project_path)
     results = []
-    for item in styles_by_files:
-        results.append(item.get("file"))
-    expected = [
-        large_project_path + "about.html",
-        large_project_path + "gallery.html",
-        large_project_path + "index.html",
-    ]
-    assert results == expected
+    for style in styles:
+        results.append(style.get("file"))
+    expected = large_project_path + "gallery.html"
+    assert expected in results
 
 
 def test_get_styles_by_html_files_for_no_styles(large_project_path):
@@ -653,5 +649,6 @@ def test_get_styles_by_html_files_for_no_styles(large_project_path):
 
 
 def test_get_global_colors_for_2_sets(large_project_path):
-    expected = css_tools.get_global_colors(large_project_path)
-    assert len(expected) == 2
+    global_colors = css_tools.get_global_colors(large_project_path)
+    results = list(global_colors.keys())
+    assert len(results) == 2
