@@ -634,9 +634,12 @@ def test_get_all_stylesheets_by_file(about_path):
 
 
 def test_get_styles_by_html_files_for_filenames(large_project_path):
-    results = css_tools.get_styles_by_html_files(large_project_path)
+    styles = css_tools.get_styles_by_html_files(large_project_path)
+    results = []
+    for style in styles:
+        results.append(style.get("file"))
     expected = large_project_path + "gallery.html"
-    assert expected == results[1].get("file")
+    assert expected in results
 
 
 def test_get_styles_by_html_files_for_no_styles(large_project_path):
