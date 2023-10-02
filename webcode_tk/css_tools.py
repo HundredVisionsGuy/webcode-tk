@@ -1275,7 +1275,7 @@ def get_all_stylesheets_by_file(file_path: str) -> list:
         file_path: the path to an HTML file.
 
     Returns:
-        all_styles: a list of dictionary objects in the order in which they
+        all_styles: a list of stylesheet objects in the order in which they
             are called (as a link or style tag).
     """
     all_styles = []
@@ -1300,6 +1300,150 @@ def get_all_stylesheets_by_file(file_path: str) -> list:
                 css_sheet = Stylesheet(file_path, tag.text, "styletag")
                 all_styles.append(css_sheet)
     return all_styles
+
+
+def get_all_styles_in_order(project_path: str) -> list:
+    """returns a list of all files' stylesheets in order of appearance.
+
+    The goal is to allows user to identify the cascade order of selectors
+    and their values. This will allow one to determine if one ruleset
+    overrides another (same specificity)
+
+    Iterates through each html file in a project folder and extracts
+    any style tags and local stylesheets. Each styletag or stylesheet
+    is converted into a Stylesheet object and appended to a dictionary
+    of file names.
+
+    Args:
+        project_path: the path to the main project folder.
+
+    Returns:
+        styles_by_html_files: a list of dictionary objects. Each dictionary
+            has two keys: file and stylesheets.
+    """
+    styles_by_html_files = []
+    html_files = html_tools.get_all_html_files(project_path)
+    for file in html_files:
+        file_data = get_all_stylesheets_by_file(file)
+        styles_by_html_files.append({"file": file, "stylesheets": file_data})
+    return styles_by_html_files
+
+
+def get_styles_by_html_files(project_path: str) -> list:
+    """Returns a list of filenames with their stylesheets in order of
+    appearance.
+
+    This will identify all HTML documents in the project folder. For
+    each HTML document, it will create a dictionary with two keys:
+    filename for the HTML document and stylesheets for a list of the
+    css styles created through link tags or style tags.
+
+    As it uses get_all_stylesheets_by_files, you can be sure that no
+    external stylesheets (https://...) will be included in the list.
+
+    Args:
+        project_path: a string of the path to the project folder you
+            want to test.
+
+    Returns:
+        styles_by_html_files: a list of dictionary objects indicating
+            each html document and its styles in order of appearance.
+    """
+    styles_by_html_files = []
+    html_files = html_tools.get_all_html_files(project_path)
+    for file in html_files:
+        file_data = get_all_stylesheets_by_file(file)
+        styles_by_html_files.append({"file": file, "stylesheets": file_data})
+    return styles_by_html_files
+
+
+def get_global_colors(project_path: str) -> dict:
+    """Returns a dictionary of color rules applied the entire document.
+
+    Global colors (in this context) are colors that apply to an entire
+    document. Selectors that target the entire document are *, html,
+    and body.
+
+    Since it's possible that an author could accidentally override
+    a color or background color, this function will remove any
+    previous rules that are overridden in a file.
+
+    NOTE: This should not consider an override if the would-be
+    selector is in an @media ruleset, we won't treat it as an
+    override.
+
+    Args:
+        project_path: the project folder path.
+
+    Returns:
+        global_color_rules: a dictionary of filenames and their global
+            rulesets.
+    """
+    global_color_rules = {}
+    styles_by_files = get_styles_by_html_files(project_path)
+    for file in styles_by_files:
+        filename = file.get("file")
+        sheets = file.get("stylesheets")
+        if sheets:
+            for sheet in sheets:
+                rules = sheet.rulesets
+                global_colors = get_global_color_details(rules)
+                if global_colors:
+                    # Have we added the file to the global rules?
+                    if not global_color_rules.get(filename):
+                        global_color_rules[filename] = []
+                    for gc in global_colors:
+                        global_color_rules[filename].append(gc)
+        if sheets and len(global_color_rules.get(filename)) > 1:
+            # figure out the override
+            global_colors = adjust_overrides(filename, global_color_rules)
+            adjusted_rule = global_colors.get(filename)
+            global_color_rules[filename] = adjusted_rule
+    return global_color_rules
+
+
+def adjust_overrides(file_path: str, rules: dict) -> dict:
+    """Returns a dictionary with a single global ruleset.
+
+    Gets the final computed value of all rulesets in a file. It loops
+    through the rulesets, and whenever there is an override (due to a
+    repeat selector), it replaces whichever value is in the repeated
+    selector.
+
+    Args:
+        file_path: path to the file in question, to be used as a
+            key in the adjusted rule
+        rules: a dictionary where the key is the filename and the value
+            is a list of rules.
+
+    Returns:
+        adjusted_rule: a dictionary where the key is the same, but
+            there is only one ruleset (the computed ruleset).
+    """
+    adjusted_rule = {}
+    old_rules = list(rules.get(file_path))
+    pre_selector, pre_bg_color, pre_color = ("", "", "")
+    for rule in old_rules:
+        selector = rule.get("selector")
+        bg_color = rule.get("background-color")
+        color = rule.get("color")
+        if pre_selector:
+            # we have looped at least once.
+            # check to see if we have the same selector or not
+            if selector == pre_selector:
+                # same selector, it's time to check our stats
+                # for an override
+                if bg_color and bg_color != pre_bg_color:
+                    adjusted_rule[file_path]["background-color"] = bg_color
+                if color and color != pre_color:
+                    adjusted_rule[file_path]["color"] = color
+        else:
+            # this is the first time we are looping
+            adjusted_rule[file_path] = rule
+            pre_selector = selector
+            pre_bg_color = bg_color
+            pre_color = color
+    return adjusted_rule
 
 
 if __name__ == "__main__":
