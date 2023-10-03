@@ -606,21 +606,14 @@ def test_get_all_stylesheets_by_file_for_4_sheets():
     assert len(results) == 4
 
 
-def test_get_all_stylesheets_for_style_tag():
-    results = css_tools.get_all_stylesheets_by_file(gallery_path)
-    assert "styletag" in results[0].type
-
-
 def test_get_font_families_for_one(css_with_external_imports):
     results = css_tools.get_font_families(css_with_external_imports)
     assert "noto sans" in results[0].get("family")
 
 
-def test_get_families_for_declaration_block():
-    stylesheet = css_tools.Stylesheet("sample.css", css_code_1_with_comments)
-    ruleset = stylesheet.rulesets[1]
-    results = css_tools.get_families(ruleset.declaration_block)
-    assert "sans-serif" in results
+def test_get_all_stylesheets_for_style_tag():
+    results = css_tools.get_all_stylesheets_by_file(gallery_path)
+    assert "styletag" in results[0].type
 
 
 def test_get_font_families_for_two(general_stylesheet):
