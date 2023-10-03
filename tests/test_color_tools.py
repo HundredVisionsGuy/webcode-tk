@@ -45,6 +45,20 @@ def indigo_rgb():
     return indigo_rgb
 
 
+@pytest.mark.parametrize(
+    "input,output",
+    [
+        ("#336699", "#336699"),
+        ("black", "#000000"),
+        ("rgb(255,255,255)", "#ffffff"),
+        ("hsl(0, 100%, 50%)", "#ff0000"),
+    ],
+)
+def test_get_hex_for_various_values(input, output):
+    expected = color.get_hex(input)
+    assert expected == output
+
+
 def test_get_hsl_from_string():
     results = color.get_hsl_from_string(hsl_string_1)
     expected = (355, 96, 46)
