@@ -21,6 +21,8 @@ be a useful tool in my web grading projects, and there you have it:
 """
 import re
 
+from webcode_tk import color_keywords
+
 hex_map = {
     "0": 0,
     "1": 1,
@@ -113,6 +115,38 @@ def get_color_contrast_report(hex1: str, hex2: str) -> dict:
         passes = "Pass" if contrast >= item else "Fail"
         report[key] = passes
     return report
+
+
+def get_hex(value: str) -> str:
+    """Gets any color code value and returns as hex value.
+
+    Color value must be hex, rgb, hsl, or a color keyword.
+    Determines what type of color code it is, converts it to hex
+    if necessary, and returns a hex value.
+
+    Args:
+        code: a CSS color code value (any type)
+
+    Returns:
+        hex: a hex equivalent of the color code
+    """
+    hex = ""
+    if is_hex(value):
+        hex = value
+    elif is_rgb(value):
+        hex = rgb_to_hex(value)
+    elif is_hsl(value):
+        values = re.findall(r"\d+", value)
+        ints_not_strings = [eval(i) for i in values]
+        hsl = tuple(ints_not_strings)
+        rgb = hsl_to_rgb(hsl)
+        rgb = "rgb" + str(rgb)
+        hex = rgb_to_hex(rgb)
+    else:
+        # is it a color keyword?
+        if color_keywords.is_a_keyword(value):
+            hex = color_keywords.get_hex_by_keyword(value)
+    return hex
 
 
 def rgb_to_hex(*args) -> str:

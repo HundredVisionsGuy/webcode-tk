@@ -123,6 +123,16 @@ gallery_path = "tests/test_files/large_project/gallery.html"
 
 
 @pytest.fixture
+def large_project_path():
+    return "tests/test_files/large_project/"
+
+
+@pytest.fixture
+def about_path(large_project_path):
+    return large_project_path + "about.html"
+
+
+@pytest.fixture
 def general_stylesheet():
     css_code = clerk.file_to_string(path_to_general_css)
     stylesheet = css_tools.Stylesheet("general.css", css_code)
@@ -596,23 +606,42 @@ def test_get_all_stylesheets_by_file_for_4_sheets():
     assert len(results) == 4
 
 
-def test_get_all_stylesheets_for_style_tag():
-    results = css_tools.get_all_stylesheets_by_file(gallery_path)
-    assert "styletag" in results[0].type
-
-
 def test_get_font_families_for_one(css_with_external_imports):
     results = css_tools.get_font_families(css_with_external_imports)
     assert "noto sans" in results[0].get("family")
 
 
-def test_get_families_for_declaration_block():
-    stylesheet = css_tools.Stylesheet("sample.css", css_code_1_with_comments)
-    ruleset = stylesheet.rulesets[1]
-    results = css_tools.get_families(ruleset.declaration_block)
-    assert "sans-serif" in results
+def test_get_all_stylesheets_for_style_tag():
+    results = css_tools.get_all_stylesheets_by_file(gallery_path)
+    assert "styletag" in results[0].type
 
 
 def test_get_font_families_for_two(general_stylesheet):
     results = css_tools.get_font_families(general_stylesheet)
+    assert len(results) == 2
+
+
+def test_get_all_stylesheets_by_file(about_path):
+    expected = css_tools.get_all_stylesheets_by_file(about_path)
+    assert len(expected) == 4
+
+
+def test_get_styles_by_html_files_for_filenames(large_project_path):
+    styles = css_tools.get_styles_by_html_files(large_project_path)
+    results = []
+    for style in styles:
+        results.append(style.get("file"))
+    expected = large_project_path + "gallery.html"
+    assert expected in results
+
+
+def test_get_styles_by_html_files_for_no_styles(large_project_path):
+    styles_by_files = css_tools.get_styles_by_html_files(large_project_path)
+    results = styles_by_files[-1].get("styleheets")
+    assert not results
+
+
+def test_get_global_colors_for_2_sets(large_project_path):
+    global_colors = css_tools.get_global_colors(large_project_path)
+    results = list(global_colors.keys())
     assert len(results) == 2
