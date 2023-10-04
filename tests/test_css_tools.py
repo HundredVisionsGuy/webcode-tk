@@ -660,4 +660,4 @@ def test_get_unique_font_rules_for_0_sets_in_index(large_project_path):
     results = results[-1]
     results = results.get("rules")
     expected = 0
-    assert (len(results)) == expected
+    assert len(results) == expected
