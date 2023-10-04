@@ -645,3 +645,19 @@ def test_get_global_colors_for_2_sets(large_project_path):
     global_colors = css_tools.get_global_colors(large_project_path)
     results = list(global_colors.keys())
     assert len(results) == 2
+
+
+def test_get_unique_font_rules_for_2_sets_in_about(large_project_path):
+    results = css_tools.get_unique_font_rules(large_project_path)
+    results = results[0]
+    results = results.get("rules")
+    expected = 2
+    assert (len(results)) == expected
+
+
+def test_get_unique_font_rules_for_0_sets_in_index(large_project_path):
+    results = css_tools.get_unique_font_rules(large_project_path)
+    results = results[-1]
+    results = results.get("rules")
+    expected = 0
+    assert (len(results)) == expected
