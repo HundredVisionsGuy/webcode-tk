@@ -754,6 +754,50 @@ def get_families(declaration_block: DeclarationBlock) -> list:
     return families
 
 
+def get_unique_font_rules(project_folder: str) -> list:
+    """Returns list of files with only unique font rules applied.
+
+    Args:
+        project_folder: a string path to the project folder we are testing.
+
+    Returns:
+        project_font_data: a list of dictionary objects that each store
+            the file where styles are applied and their unique font-related
+            rules.
+    """
+    styles_by_html_files = get_styles_by_html_files(project_folder)
+    font_families_tests = []
+    for file in styles_by_html_files:
+        style_sheets = file.get("stylesheets")
+        unique_rules = []
+        unique_font_values = []
+        unique_font_selectors = []
+        font_rules = []
+        for sheet in style_sheets:
+            font_families = get_font_families(sheet)
+            if font_families:
+                for family in font_families:
+                    font_rules.append(family)
+        # Let's build results for this page
+        for rule in font_rules:
+            if rule:
+                if rule not in unique_rules:
+                    unique_rules.append(rule)
+                    selector = rule.get("selector")
+                    value = rule.get("family")
+                    if selector not in unique_font_selectors:
+                        unique_font_selectors.append(selector)
+                    if value not in unique_font_values:
+                        unique_font_values.append(value)
+                else:
+                    print()
+        # apply the file, unique rules, unique selectors, and unique values
+        filename = file.get("file")
+        file_data = {"file": filename, "rules": unique_rules}
+        font_families_tests.append(file_data)
+    return font_families_tests
+
+
 def get_specificity(selector: str) -> str:
     """Gets the specificity score on the selector.
 
