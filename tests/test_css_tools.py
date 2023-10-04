@@ -118,7 +118,6 @@ h4 {
 
 path_to_gradients_project = "tests/test_files/"
 path_to_gradients_project += "projects/page_with_gradients_and_alpha/style.css"
-gallery_path = "tests/test_files/large_project/gallery.html"
 path_to_general_css = "tests/test_files/large_project/css/general.css"
 gallery_path = "tests/test_files/large_project/gallery.html"
 
@@ -657,8 +656,10 @@ def test_get_unique_font_rules_for_2_sets_in_about(large_project_path):
 
 
 def test_get_unique_font_rules_for_0_sets_in_index(large_project_path):
-    results = css_tools.get_unique_font_rules(large_project_path)
-    results = results[-1]
-    results = results.get("rules")
+    files = css_tools.get_unique_font_rules(large_project_path)
+    for file in files:
+        desired_file_name = "tests/test_files/large_project/index.html"
+        if file.get("file") == desired_file_name:
+            results = file.get("rules")
     expected = 0
-    assert (len(results)) == expected
+    assert len(results) == expected
