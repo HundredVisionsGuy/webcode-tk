@@ -96,6 +96,7 @@ class Stylesheet:
         self.has_repeat_selectors = False
         self.repeated_selectors = []
         self.__minify()
+        self.__replace_variables()
         self.__remove_external_imports()
         self.__extract_comments()
         self.__extract_nested_at_rules()
@@ -105,6 +106,22 @@ class Stylesheet:
     def __minify(self):
         """Removes all whitespace, line returns, and tabs from text."""
         self.text = minify_code(self.text)
+
+    def __replace_variables(self):
+        """Looks for and replaces any variables set in stylesheet with
+        the variable's values."""
+        # get a list of all variables and their values
+        variable_list = get_variables(self.text)
+
+        # Loop through the variable list and do a find
+        # and replace on all occurrances of the variable
+        new_text = self.text
+        for variable in variable_list:
+            var = variable.get("variable")
+            value = variable.get("value")
+            var = r"var\(" + var + r"\)"
+            new_text = re.sub(var, value, new_text)
+        self.text = new_text
 
     def __extract_comments(self):
         """Gets all comments from the code and stores in a list."""
@@ -1444,6 +1461,36 @@ def get_global_colors(project_path: str) -> dict:
             adjusted_rule = global_colors.get(filename)
             global_color_rules[filename] = adjusted_rule
     return global_color_rules
+
+
+def get_variables(text: str) -> list:
+    """returns a list of css variables and their values.
+
+    This will extract any variables if they exist, copy the
+    variable name and its value and create a dictionary object
+    and append to list.
+
+    Args:
+        text: full text of css stylesheet
+
+    Returns:
+        variables: a list of variable dictionaries each with a
+            key for the variable and a value for its value.
+    """
+    variables = []
+    variable_split = text.split(":root {")
+    if len(variable_split) == 1:
+        return []
+    variable_text = variable_split[1].strip()
+    variables_list = variable_text.strip().split(";")
+    for var in variables_list:
+        var = var.strip()
+        if "}" in var:
+            break
+        variable, value = var.split(":")
+        var_dict = {"variable": variable, "value": value}
+        variables.append(var_dict)
+    return variables
 
 
 def adjust_overrides(file_path: str, rules: dict) -> dict:
