@@ -37,6 +37,15 @@ article#gallery {
     margin: 0 auto;
 }"""
 
+variables = """
+:root {
+    --bg-text:#303030;
+    --alt-text:#2ba5bd;
+    --alt-bg:#ffb020;
+    --light-bg:#2F6BA7;
+    --border:#2ba5bd;
+}"""
+
 minified_declaration_block_with_selector = "article#gallery "
 minified_declaration_block_with_selector += "{display: flex;flex-wrap: "
 minified_declaration_block_with_selector += "wrap;width: 96vw;margin: 0 auto;}"
@@ -233,6 +242,25 @@ def navigation_styles():
     styles = clerk.file_to_string(path)
     sheet = css_tools.Stylesheet("navigation.css", styles)
     yield sheet
+
+
+def test_css_with_variables_for_replaced_var_functions():
+    file_path = "tests/test_files/css_with_variables.css"
+    code = clerk.file_to_string(file_path)
+    sheet = css_tools.Stylesheet("css_with_variables", code, "file")
+    expected = sheet.rulesets[1].declaration_block.text
+    assert "var(--bg-text)" not in expected
+
+
+def test_get_variables_for_list_of_variables():
+    expected = css_tools.get_variables(variables)
+    assert len(expected) == 5
+
+
+def test_get_variables_for_nonexistant_variables():
+    """It should not crash if there are no variables"""
+    expected = css_tools.get_variables(css_with_bg_and_gradient)
+    assert not expected
 
 
 def test_separate_code_for_3_comments(css_code_1_split):
