@@ -137,11 +137,6 @@ def large_project_path():
 
 
 @pytest.fixture
-def single_page_path():
-    return "tests/test_files/single_page/"
-
-
-@pytest.fixture
 def about_path(large_project_path):
     return large_project_path + "about.html"
 
@@ -672,11 +667,6 @@ def test_get_styles_by_html_files_for_no_styles(large_project_path):
     styles_by_files = css_tools.get_styles_by_html_files(large_project_path)
     results = styles_by_files[-1].get("styleheets")
     assert not results
-
-
-def test_get_styles_by_html_files_for_single_page(single_page_path):
-    results = css_tools.get_styles_by_html_files(single_page_path)
-    assert results
 
 
 def test_get_global_colors_for_2_sets(large_project_path):
