@@ -52,6 +52,7 @@ def indigo_rgb():
         ("black", "#000000"),
         ("rgb(255,255,255)", "#ffffff"),
         ("hsl(0, 100%, 50%)", "#ff0000"),
+        ("darkslategrey", "#2F4F4F"),
     ],
 )
 def test_get_hex_for_various_values(input, output):
