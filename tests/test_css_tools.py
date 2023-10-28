@@ -287,6 +287,15 @@ def test_declaration_block_with_selector(declaration_block_with_one_selector):
     assert len(declaration_block_with_one_selector.declarations) == 4
 
 
+def test_declaration_is_color_for_true(valid_color_declaration):
+    assert valid_color_declaration.is_color
+
+
+def test_declaration_is_color_for_false(ruleset1):
+    declarations = ruleset1.declaration_block.declarations
+    assert not declarations[0].is_color
+
+
 def test_declaration_block_without_selector(declaration_block_no_selector):
     assert len(declaration_block_no_selector.declarations) == 5
 

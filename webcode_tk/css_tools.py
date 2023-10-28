@@ -508,11 +508,13 @@ class Declaration:
         self.property = ""
         self.value = ""
         self.invalid_message = ""
+        self.is_color = False
         # validate before trying to set the declaration.
         try:
             self.validate_declaration()
             self.is_valid = True
             self.set_declaration()
+            self.is_color_property()
         except ValueError as e:
             self.is_valid = False
             self.invalid_message = str(e)
@@ -631,6 +633,11 @@ class Declaration:
 
         declaration = self.property + ": " + self.value
         return declaration
+
+    def is_color_property(self):
+        if self.value[-1] == ";":
+            value = self.value[:-1]
+        self.is_color = color_tools.is_color_value(value)
 
 
 def restore_braces(split: list) -> list:
@@ -1230,7 +1237,7 @@ def get_colors_from_gradient(gradient: str) -> list:
 
 
 def get_color_codes_of_type(color_type: str, gradient: str) -> list:
-    """returns all color codes of a particular type (hsl, rgb, etc.)
+    """returns all color codes of a particular type from a gradient
 
     Args:
         color_type: the type of color code it might be (hex, rgb, hsl,
@@ -1535,6 +1542,16 @@ def adjust_overrides(file_path: str, rules: dict) -> dict:
             pre_bg_color = bg_color
             pre_color = color
     return adjusted_rule
+
+
+def get_all_color_rules(stylesheet: Stylesheet) -> list:
+    """Gets all color-based rules from a stylesheet.
+
+    Args:
+        stylesheet: Stylesheet object.
+
+    Returns:
+        rules: a list of color-based rules"""
 
 
 if __name__ == "__main__":
