@@ -635,6 +635,7 @@ class Declaration:
         return declaration
 
     def is_color_property(self):
+        value = self.value
         if self.value[-1] == ";":
             value = self.value[:-1]
         self.is_color = color_tools.is_color_value(value)
@@ -1552,6 +1553,86 @@ def get_all_color_rules(stylesheet: Stylesheet) -> list:
 
     Returns:
         rules: a list of color-based rules"""
+    rules = []
+    for ruleset in stylesheet.rulesets:
+        declaration_block = ruleset.declaration_block
+        declarations = declaration_block.declarations
+        for declaration in declarations:
+            property = declaration.property
+            if property == "color" or "background" in property:
+                selector = ruleset.selector
+                value = declaration.value
+                if property == "background":
+                    background_color = get_background_color(declaration)
+                    if not background_color:
+                        continue
+                    else:
+                        value = background_color
+                rules.append((selector, property, value))
+    return rules
+
+
+def get_background_color(declaration: Declaration) -> Union[str, None]:
+    """Returns a color value from a declaration with a property of background
+
+    Args:
+        declaration: the declaration we want to test.
+
+    Returns:
+        color_value: either a valid color value, None, or gradient - if it's a
+            gradient"""
+    color_value = None
+    is_rgb = color_tools.is_rgb(declaration.value)
+    if is_rgb:
+        return declaration.value
+    values = declaration.value.split()
+    for val in values:
+        color = color_tools.is_color_value(val)
+        if color:
+            color_value = val
+            break
+        is_keyword = val in color_tools.color_keywords.get_all_keywords()
+        if is_keyword:
+            color_value = val
+            break
+        gradient = is_gradient(val)
+        if gradient:
+            color_value = "gradient"
+            break
+    return color_value
+
+
+def condense_the_rules(rules):
+    condensed = []
+    for rule in rules:
+        file, sel, prop, val = rule
+        color = {}
+        background = {}
+        declaration = get_bg_or_color(prop)
+        if declaration.get("type") == "color":
+            color = declaration
+        elif declaration.get("type") == "background":
+            background = declaration
+        if not condensed:
+            condensed.append([file, sel, color, background, val])
+        else:
+            for rule in condensed:
+                cur_file, cur_sel, cur_col, cur_bg_col, cur_val = rule
+                if file == cur_file and sel == cur_sel:
+                    # add the property that is missing (if it is missing)
+                    print("It's time to work.")
+    return condensed
+
+
+def get_bg_or_color(prop):
+    declaration = {"type": {}, "declaration": {}}
+    if prop == "color":
+        declaration["type"] = "color"
+        declaration["declaration"] = {"color": prop}
+    if "background" in prop:
+        declaration["type"] = "background"
+        declaration["declaration"] = {"background": prop}
+    return declaration
 
 
 if __name__ == "__main__":

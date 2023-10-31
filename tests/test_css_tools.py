@@ -125,8 +125,6 @@ h4 {
     }
 """
 
-path_to_gradients_project = "tests/test_files/"
-path_to_gradients_project += "projects/page_with_gradients_and_alpha/style.css"
 path_to_general_css = "tests/test_files/large_project/css/general.css"
 gallery_path = "tests/test_files/large_project/gallery.html"
 
@@ -145,13 +143,6 @@ def about_path(large_project_path):
 def general_stylesheet():
     css_code = clerk.file_to_string(path_to_general_css)
     stylesheet = css_tools.Stylesheet("general.css", css_code)
-    return stylesheet
-
-
-@pytest.fixture
-def stylesheet_with_gradients():
-    css_code = clerk.file_to_string(path_to_gradients_project)
-    stylesheet = css_tools.Stylesheet("style.css", css_code)
     return stylesheet
 
 
@@ -700,3 +691,40 @@ def test_get_unique_font_rules_for_0_sets_in_index(large_project_path):
             results = file.get("rules")
     expected = 0
     assert len(results) == expected
+
+
+def test_get_all_color_rules_for_11_declarations(
+    styles_with_multiple_selectors,
+):
+    results = css_tools.get_all_color_rules(styles_with_multiple_selectors)
+    assert len(results) == 11
+
+
+def test_get_background_color_for_gradient():
+    styles = css_tools.Stylesheet("page.html", css_with_bg_and_gradient)
+    declaration = styles.rulesets[0].declaration_block.declarations[1]
+    results = css_tools.get_background_color(declaration)
+    assert results == "gradient"
+
+
+def test_get_background_color_for_rgb_color():
+    styles = css_tools.Stylesheet("style tag", external_imports_css)
+    declaration = styles.rulesets[0].declaration_block.declarations[0]
+    results = css_tools.get_background_color(declaration)
+    assert results == "rgb(19, 19, 19)"
+
+
+def test_get_background_color_for_hex(general_stylesheet):
+    declaration_block = general_stylesheet.rulesets[1].declaration_block
+    declaration = declaration_block.declarations[2]
+    results = css_tools.get_background_color(declaration)
+    assert results == "#bbddff"
+
+
+def test_get_background_color_for_none(general_stylesheet):
+    code = "body { background: url('bg.jpg') left top; }"
+    styles = css_tools.Stylesheet("style tag", code)
+    declaration_block = styles.rulesets[0].declaration_block
+    declaration = declaration_block.declarations[0]
+    results = css_tools.get_background_color(declaration)
+    assert not results

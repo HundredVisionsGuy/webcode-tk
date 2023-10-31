@@ -6,6 +6,7 @@ header {
   height: 5rem;
   background-color: rgb(114, 101, 87);
   -moz-background-clip: border-box;
+  background-clip: border-box;
 }
 header h1 {
   background-color: rgb(114, 101, 87);

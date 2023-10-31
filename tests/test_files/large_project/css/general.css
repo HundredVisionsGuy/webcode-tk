@@ -13,6 +13,7 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Righteous', sans-serif;
   color: rgb(54, 79, 117);
+  background: #bbddff;
   margin: 0;
   padding: 1rem .5rem;
 }
