@@ -685,9 +685,13 @@ def test_get_global_colors_for_2_sets(large_project_path):
 
 
 def test_get_unique_font_rules_for_2_sets_in_about(large_project_path):
-    results = css_tools.get_unique_font_rules(large_project_path)
-    results = results[0]
-    results = results.get("rules")
+    files_data = css_tools.get_unique_font_rules(large_project_path)
+    results = []
+    for file in files_data:
+        filename = file.get("file")
+        if "about.html" in filename:
+            results = file.get("rules")
+            break
     expected = 2
     assert (len(results)) == expected
 
