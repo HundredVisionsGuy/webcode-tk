@@ -37,6 +37,15 @@ article#gallery {
     margin: 0 auto;
 }"""
 
+variables = """
+:root {
+    --bg-text:#303030;
+    --alt-text:#2ba5bd;
+    --alt-bg:#ffb020;
+    --light-bg:#2F6BA7;
+    --border:#2ba5bd;
+}"""
+
 minified_declaration_block_with_selector = "article#gallery "
 minified_declaration_block_with_selector += "{display: flex;flex-wrap: "
 minified_declaration_block_with_selector += "wrap;width: 96vw;margin: 0 auto;}"
@@ -116,8 +125,6 @@ h4 {
     }
 """
 
-path_to_gradients_project = "tests/test_files/"
-path_to_gradients_project += "projects/page_with_gradients_and_alpha/style.css"
 path_to_general_css = "tests/test_files/large_project/css/general.css"
 gallery_path = "tests/test_files/large_project/gallery.html"
 
@@ -136,13 +143,6 @@ def about_path(large_project_path):
 def general_stylesheet():
     css_code = clerk.file_to_string(path_to_general_css)
     stylesheet = css_tools.Stylesheet("general.css", css_code)
-    return stylesheet
-
-
-@pytest.fixture
-def stylesheet_with_gradients():
-    css_code = clerk.file_to_string(path_to_gradients_project)
-    stylesheet = css_tools.Stylesheet("style.css", css_code)
     return stylesheet
 
 
@@ -235,6 +235,25 @@ def navigation_styles():
     yield sheet
 
 
+def test_css_with_variables_for_replaced_var_functions():
+    file_path = "tests/test_files/css_with_variables.css"
+    code = clerk.file_to_string(file_path)
+    sheet = css_tools.Stylesheet("css_with_variables", code, "file")
+    expected = sheet.rulesets[1].declaration_block.text
+    assert "var(--bg-text)" not in expected
+
+
+def test_get_variables_for_list_of_variables():
+    expected = css_tools.get_variables(variables)
+    assert len(expected) == 5
+
+
+def test_get_variables_for_nonexistant_variables():
+    """It should not crash if there are no variables"""
+    expected = css_tools.get_variables(css_with_bg_and_gradient)
+    assert not expected
+
+
 def test_separate_code_for_3_comments(css_code_1_split):
     assert len(css_code_1_split["comments"]) == 3
 
@@ -257,6 +276,15 @@ def test_ruleset1_for_validity(ruleset1):
 
 def test_declaration_block_with_selector(declaration_block_with_one_selector):
     assert len(declaration_block_with_one_selector.declarations) == 4
+
+
+def test_declaration_is_color_for_true(valid_color_declaration):
+    assert valid_color_declaration.is_color
+
+
+def test_declaration_is_color_for_false(ruleset1):
+    declarations = ruleset1.declaration_block.declarations
+    assert not declarations[0].is_color
 
 
 def test_declaration_block_without_selector(declaration_block_no_selector):
@@ -606,21 +634,14 @@ def test_get_all_stylesheets_by_file_for_4_sheets():
     assert len(results) == 4
 
 
-def test_get_all_stylesheets_for_style_tag():
-    results = css_tools.get_all_stylesheets_by_file(gallery_path)
-    assert "styletag" in results[0].type
-
-
 def test_get_font_families_for_one(css_with_external_imports):
     results = css_tools.get_font_families(css_with_external_imports)
     assert "noto sans" in results[0].get("family")
 
 
-def test_get_families_for_declaration_block():
-    stylesheet = css_tools.Stylesheet("sample.css", css_code_1_with_comments)
-    ruleset = stylesheet.rulesets[1]
-    results = css_tools.get_families(ruleset.declaration_block)
-    assert "sans-serif" in results
+def test_get_all_stylesheets_for_style_tag():
+    results = css_tools.get_all_stylesheets_by_file(gallery_path)
+    assert "styletag" in results[0].type
 
 
 def test_get_font_families_for_two(general_stylesheet):
@@ -652,3 +673,58 @@ def test_get_global_colors_for_2_sets(large_project_path):
     global_colors = css_tools.get_global_colors(large_project_path)
     results = list(global_colors.keys())
     assert len(results) == 2
+
+
+def test_get_unique_font_rules_for_2_sets_in_about(large_project_path):
+    results = css_tools.get_unique_font_rules(large_project_path)
+    results = results[0]
+    results = results.get("rules")
+    expected = 2
+    assert (len(results)) == expected
+
+
+def test_get_unique_font_rules_for_0_sets_in_index(large_project_path):
+    files = css_tools.get_unique_font_rules(large_project_path)
+    for file in files:
+        desired_file_name = "tests/test_files/large_project/index.html"
+        if file.get("file") == desired_file_name:
+            results = file.get("rules")
+    expected = 0
+    assert len(results) == expected
+
+
+def test_get_all_color_rules_for_11_declarations(
+    styles_with_multiple_selectors,
+):
+    results = css_tools.get_all_color_rules(styles_with_multiple_selectors)
+    assert len(results) == 11
+
+
+def test_get_background_color_for_gradient():
+    styles = css_tools.Stylesheet("page.html", css_with_bg_and_gradient)
+    declaration = styles.rulesets[0].declaration_block.declarations[1]
+    results = css_tools.get_background_color(declaration)
+    assert results == "gradient"
+
+
+def test_get_background_color_for_rgb_color():
+    styles = css_tools.Stylesheet("style tag", external_imports_css)
+    declaration = styles.rulesets[0].declaration_block.declarations[0]
+    results = css_tools.get_background_color(declaration)
+    assert results == "rgb(19, 19, 19)"
+
+
+def test_get_background_color_for_hex(general_stylesheet):
+    declaration_block = general_stylesheet.rulesets[1].declaration_block
+    declaration = declaration_block.declarations[2]
+    results = css_tools.get_background_color(declaration)
+    assert results == "#bbddff"
+
+
+def test_get_background_color_for_none(general_stylesheet):
+    code = "body { background: url('bg.jpg') left top; }"
+    styles = css_tools.Stylesheet("style tag", code)
+    declaration_block = styles.rulesets[0].declaration_block
+    declaration = declaration_block.declarations[0]
+    results = css_tools.get_background_color(declaration)
+    assert not results

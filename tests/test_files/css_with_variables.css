@@ -1,0 +1,29 @@
+/* set up variables for colors */
+:root {
+    --bg-text:#303030;
+    --alt-text:#2ba5bd;
+    --alt-bg:#ffb020;
+    --light-bg:#2F6BA7;
+    --border:#2ba5bd;
+}
+
+/* Generic Page Layout styles */
+body {
+    background-color: var(--bg-text);
+    color: var(--alt-text);
+    margin: 0px;
+}
+
+h1 {
+    font-family: header;
+    color: var(--bg-text);
+    text-align: center;
+}
+
+h2, h3 {
+    font-family: header;
+    color: var(--light-bg);
+    text-align: center;
+    font-size: 2rem;
+    font-weight: lighter;
+}

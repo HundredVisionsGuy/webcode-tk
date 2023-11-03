@@ -96,6 +96,7 @@ class Stylesheet:
         self.has_repeat_selectors = False
         self.repeated_selectors = []
         self.__minify()
+        self.__replace_variables()
         self.__remove_external_imports()
         self.__extract_comments()
         self.__extract_nested_at_rules()
@@ -105,6 +106,22 @@ class Stylesheet:
     def __minify(self):
         """Removes all whitespace, line returns, and tabs from text."""
         self.text = minify_code(self.text)
+
+    def __replace_variables(self):
+        """Looks for and replaces any variables set in stylesheet with
+        the variable's values."""
+        # get a list of all variables and their values
+        variable_list = get_variables(self.text)
+
+        # Loop through the variable list and do a find
+        # and replace on all occurrances of the variable
+        new_text = self.text
+        for variable in variable_list:
+            var = variable.get("variable")
+            value = variable.get("value")
+            var = r"var\(" + var + r"\)"
+            new_text = re.sub(var, value, new_text)
+        self.text = new_text
 
     def __extract_comments(self):
         """Gets all comments from the code and stores in a list."""
@@ -491,11 +508,13 @@ class Declaration:
         self.property = ""
         self.value = ""
         self.invalid_message = ""
+        self.is_color = False
         # validate before trying to set the declaration.
         try:
             self.validate_declaration()
             self.is_valid = True
             self.set_declaration()
+            self.is_color_property()
         except ValueError as e:
             self.is_valid = False
             self.invalid_message = str(e)
@@ -614,6 +633,12 @@ class Declaration:
 
         declaration = self.property + ": " + self.value
         return declaration
+
+    def is_color_property(self):
+        value = self.value
+        if self.value[-1] == ";":
+            value = self.value[:-1]
+        self.is_color = color_tools.is_color_value(value)
 
 
 def restore_braces(split: list) -> list:
@@ -752,6 +777,50 @@ def get_families(declaration_block: DeclarationBlock) -> list:
         if ruleset.property in ("font", "font-family"):
             families.append(ruleset.value)
     return families
+
+
+def get_unique_font_rules(project_folder: str) -> list:
+    """Returns list of files with only unique font rules applied.
+
+    Args:
+        project_folder: a string path to the project folder we are testing.
+
+    Returns:
+        project_font_data: a list of dictionary objects that each store
+            the file where styles are applied and their unique font-related
+            rules.
+    """
+    styles_by_html_files = get_styles_by_html_files(project_folder)
+    font_families_tests = []
+    for file in styles_by_html_files:
+        style_sheets = file.get("stylesheets")
+        unique_rules = []
+        unique_font_values = []
+        unique_font_selectors = []
+        font_rules = []
+        for sheet in style_sheets:
+            font_families = get_font_families(sheet)
+            if font_families:
+                for family in font_families:
+                    font_rules.append(family)
+        # Let's build results for this page
+        for rule in font_rules:
+            if rule:
+                if rule not in unique_rules:
+                    unique_rules.append(rule)
+                    selector = rule.get("selector")
+                    value = rule.get("family")
+                    if selector not in unique_font_selectors:
+                        unique_font_selectors.append(selector)
+                    if value not in unique_font_values:
+                        unique_font_values.append(value)
+                else:
+                    print()
+        # apply the file, unique rules, unique selectors, and unique values
+        filename = file.get("file")
+        file_data = {"file": filename, "rules": unique_rules}
+        font_families_tests.append(file_data)
+    return font_families_tests
 
 
 def get_specificity(selector: str) -> str:
@@ -1169,7 +1238,7 @@ def get_colors_from_gradient(gradient: str) -> list:
 
 
 def get_color_codes_of_type(color_type: str, gradient: str) -> list:
-    """returns all color codes of a particular type (hsl, rgb, etc.)
+    """returns all color codes of a particular type from a gradient
 
     Args:
         color_type: the type of color code it might be (hex, rgb, hsl,
@@ -1402,6 +1471,36 @@ def get_global_colors(project_path: str) -> dict:
     return global_color_rules
 
 
+def get_variables(text: str) -> list:
+    """returns a list of css variables and their values.
+
+    This will extract any variables if they exist, copy the
+    variable name and its value and create a dictionary object
+    and append to list.
+
+    Args:
+        text: full text of css stylesheet
+
+    Returns:
+        variables: a list of variable dictionaries each with a
+            key for the variable and a value for its value.
+    """
+    variables = []
+    variable_split = text.split(":root {")
+    if len(variable_split) == 1:
+        return []
+    variable_text = variable_split[1].strip()
+    variables_list = variable_text.strip().split(";")
+    for var in variables_list:
+        var = var.strip()
+        if "}" in var:
+            break
+        variable, value = var.split(":")
+        var_dict = {"variable": variable, "value": value}
+        variables.append(var_dict)
+    return variables
+
+
 def adjust_overrides(file_path: str, rules: dict) -> dict:
     """Returns a dictionary with a single global ruleset.
 
@@ -1444,6 +1543,96 @@ def adjust_overrides(file_path: str, rules: dict) -> dict:
             pre_bg_color = bg_color
             pre_color = color
     return adjusted_rule
+
+
+def get_all_color_rules(stylesheet: Stylesheet) -> list:
+    """Gets all color-based rules from a stylesheet.
+
+    Args:
+        stylesheet: Stylesheet object.
+
+    Returns:
+        rules: a list of color-based rules"""
+    rules = []
+    for ruleset in stylesheet.rulesets:
+        declaration_block = ruleset.declaration_block
+        declarations = declaration_block.declarations
+        for declaration in declarations:
+            property = declaration.property
+            if property == "color" or "background" in property:
+                selector = ruleset.selector
+                value = declaration.value
+                if property == "background":
+                    background_color = get_background_color(declaration)
+                    if not background_color:
+                        continue
+                    else:
+                        value = background_color
+                rules.append((selector, property, value))
+    return rules
+
+
+def get_background_color(declaration: Declaration) -> Union[str, None]:
+    """Returns a color value from a declaration with a property of background
+
+    Args:
+        declaration: the declaration we want to test.
+
+    Returns:
+        color_value: either a valid color value, None, or gradient - if it's a
+            gradient"""
+    color_value = None
+    is_rgb = color_tools.is_rgb(declaration.value)
+    if is_rgb:
+        return declaration.value
+    values = declaration.value.split()
+    for val in values:
+        color = color_tools.is_color_value(val)
+        if color:
+            color_value = val
+            break
+        is_keyword = val in color_tools.color_keywords.get_all_keywords()
+        if is_keyword:
+            color_value = val
+            break
+        gradient = is_gradient(val)
+        if gradient:
+            color_value = "gradient"
+            break
+    return color_value
+
+
+def condense_the_rules(rules):
+    condensed = []
+    for rule in rules:
+        file, sel, prop, val = rule
+        color = {}
+        background = {}
+        declaration = get_bg_or_color(prop)
+        if declaration.get("type") == "color":
+            color = declaration
+        elif declaration.get("type") == "background":
+            background = declaration
+        if not condensed:
+            condensed.append([file, sel, color, background, val])
+        else:
+            for rule in condensed:
+                cur_file, cur_sel, cur_col, cur_bg_col, cur_val = rule
+                if file == cur_file and sel == cur_sel:
+                    # add the property that is missing (if it is missing)
+                    print("It's time to work.")
+    return condensed
+
+
+def get_bg_or_color(prop):
+    declaration = {"type": {}, "declaration": {}}
+    if prop == "color":
+        declaration["type"] = "color"
+        declaration["declaration"] = {"color": prop}
+    if "background" in prop:
+        declaration["type"] = "background"
+        declaration["declaration"] = {"background": prop}
+    return declaration
 
 
 if __name__ == "__main__":
