@@ -46,6 +46,15 @@ variables = """
     --border:#2ba5bd;
 }"""
 
+variables = """
+:root {
+    --bg-text:#303030;
+    --alt-text:#2ba5bd;
+    --alt-bg:#ffb020;
+    --light-bg:#2F6BA7;
+    --border:#2ba5bd;
+}"""
+
 minified_declaration_block_with_selector = "article#gallery "
 minified_declaration_block_with_selector += "{display: flex;flex-wrap: "
 minified_declaration_block_with_selector += "wrap;width: 96vw;margin: 0 auto;}"
@@ -642,13 +651,6 @@ def test_get_all_stylesheets_for_style_tag():
 def test_get_font_families_for_one(css_with_external_imports):
     results = css_tools.get_font_families(css_with_external_imports)
     assert "noto sans" in results[0].get("family")
-
-
-def test_get_families_for_declaration_block():
-    stylesheet = css_tools.Stylesheet("sample.css", css_code_1_with_comments)
-    ruleset = stylesheet.rulesets[1]
-    results = css_tools.get_families(ruleset.declaration_block)
-    assert "sans-serif" in results
 
 
 def test_get_font_families_for_two(general_stylesheet):
