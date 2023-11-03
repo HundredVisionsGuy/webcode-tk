@@ -46,6 +46,15 @@ variables = """
     --border:#2ba5bd;
 }"""
 
+variables = """
+:root {
+    --bg-text:#303030;
+    --alt-text:#2ba5bd;
+    --alt-bg:#ffb020;
+    --light-bg:#2F6BA7;
+    --border:#2ba5bd;
+}"""
+
 minified_declaration_block_with_selector = "article#gallery "
 minified_declaration_block_with_selector += "{display: flex;flex-wrap: "
 minified_declaration_block_with_selector += "wrap;width: 96vw;margin: 0 auto;}"
@@ -634,14 +643,14 @@ def test_get_all_stylesheets_by_file_for_4_sheets():
     assert len(results) == 4
 
 
-def test_get_font_families_for_one(css_with_external_imports):
-    results = css_tools.get_font_families(css_with_external_imports)
-    assert "noto sans" in results[0].get("family")
-
-
 def test_get_all_stylesheets_for_style_tag():
     results = css_tools.get_all_stylesheets_by_file(gallery_path)
     assert "styletag" in results[0].type
+
+
+def test_get_font_families_for_one(css_with_external_imports):
+    results = css_tools.get_font_families(css_with_external_imports)
+    assert "noto sans" in results[0].get("family")
 
 
 def test_get_font_families_for_two(general_stylesheet):
@@ -676,9 +685,13 @@ def test_get_global_colors_for_2_sets(large_project_path):
 
 
 def test_get_unique_font_rules_for_2_sets_in_about(large_project_path):
-    results = css_tools.get_unique_font_rules(large_project_path)
-    results = results[0]
-    results = results.get("rules")
+    files_data = css_tools.get_unique_font_rules(large_project_path)
+    results = []
+    for file in files_data:
+        filename = file.get("file")
+        if "about.html" in filename:
+            results = file.get("rules")
+            break
     expected = 2
     assert (len(results)) == expected
 
