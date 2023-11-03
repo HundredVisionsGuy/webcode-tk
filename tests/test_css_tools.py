@@ -37,6 +37,15 @@ article#gallery {
     margin: 0 auto;
 }"""
 
+variables = """
+:root {
+    --bg-text:#303030;
+    --alt-text:#2ba5bd;
+    --alt-bg:#ffb020;
+    --light-bg:#2F6BA7;
+    --border:#2ba5bd;
+}"""
+
 minified_declaration_block_with_selector = "article#gallery "
 minified_declaration_block_with_selector += "{display: flex;flex-wrap: "
 minified_declaration_block_with_selector += "wrap;width: 96vw;margin: 0 auto;}"
@@ -235,6 +244,25 @@ def navigation_styles():
     yield sheet
 
 
+def test_css_with_variables_for_replaced_var_functions():
+    file_path = "tests/test_files/css_with_variables.css"
+    code = clerk.file_to_string(file_path)
+    sheet = css_tools.Stylesheet("css_with_variables", code, "file")
+    expected = sheet.rulesets[1].declaration_block.text
+    assert "var(--bg-text)" not in expected
+
+
+def test_get_variables_for_list_of_variables():
+    expected = css_tools.get_variables(variables)
+    assert len(expected) == 5
+
+
+def test_get_variables_for_nonexistant_variables():
+    """It should not crash if there are no variables"""
+    expected = css_tools.get_variables(css_with_bg_and_gradient)
+    assert not expected
+
+
 def test_separate_code_for_3_comments(css_code_1_split):
     assert len(css_code_1_split["comments"]) == 3
 
@@ -257,6 +285,15 @@ def test_ruleset1_for_validity(ruleset1):
 
 def test_declaration_block_with_selector(declaration_block_with_one_selector):
     assert len(declaration_block_with_one_selector.declarations) == 4
+
+
+def test_declaration_is_color_for_true(valid_color_declaration):
+    assert valid_color_declaration.is_color
+
+
+def test_declaration_is_color_for_false(ruleset1):
+    declarations = ruleset1.declaration_block.declarations
+    assert not declarations[0].is_color
 
 
 def test_declaration_block_without_selector(declaration_block_no_selector):
@@ -652,3 +689,21 @@ def test_get_global_colors_for_2_sets(large_project_path):
     global_colors = css_tools.get_global_colors(large_project_path)
     results = list(global_colors.keys())
     assert len(results) == 2
+
+
+def test_get_unique_font_rules_for_2_sets_in_about(large_project_path):
+    results = css_tools.get_unique_font_rules(large_project_path)
+    results = results[0]
+    results = results.get("rules")
+    expected = 2
+    assert (len(results)) == expected
+
+
+def test_get_unique_font_rules_for_0_sets_in_index(large_project_path):
+    files = css_tools.get_unique_font_rules(large_project_path)
+    for file in files:
+        desired_file_name = "tests/test_files/large_project/index.html"
+        if file.get("file") == desired_file_name:
+            results = file.get("rules")
+    expected = 0
+    assert len(results) == expected
