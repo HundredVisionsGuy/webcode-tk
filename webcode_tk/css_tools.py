@@ -636,8 +636,8 @@ class Declaration:
 
     def is_color_property(self):
         value = self.value
-        if self.value[-1] == ";":
-            value = self.value[:-1]
+        if value[-1] == ";":
+            value = value[:-1]
         self.is_color = color_tools.is_color_value(value)
 
 
