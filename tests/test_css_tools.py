@@ -706,10 +706,12 @@ def test_get_unique_font_rules_for_0_sets_in_index(large_project_path):
     assert len(results) == expected
 
 
-def test_get_all_color_rules_for_11_declarations(
+def test_get_color_rules_from_stylesheet_for_11_declarations(
     styles_with_multiple_selectors,
 ):
-    results = css_tools.get_all_color_rules(styles_with_multiple_selectors)
+    results = css_tools.get_color_rules_from_stylesheet(
+        styles_with_multiple_selectors
+    )
     assert len(results) == 11
 
 
@@ -741,3 +743,12 @@ def test_get_background_color_for_none(general_stylesheet):
     declaration = declaration_block.declarations[0]
     results = css_tools.get_background_color(declaration)
     assert not results
+
+
+def test_condense_the_rules(about_path):
+    non_condensed = [
+        (about_path, "body", "color", "aliceblue"),
+        (about_path, "body", "background-color", "darkred"),
+    ]
+    results = css_tools.condense_the_rules(non_condensed)
+    assert results["body"]["color"] == "aliceblue"

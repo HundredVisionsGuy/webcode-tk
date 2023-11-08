@@ -1545,7 +1545,7 @@ def adjust_overrides(file_path: str, rules: dict) -> dict:
     return adjusted_rule
 
 
-def get_all_color_rules(stylesheet: Stylesheet) -> list:
+def get_color_rules_from_stylesheet(stylesheet: Stylesheet) -> list:
     """Gets all color-based rules from a stylesheet.
 
     Args:
@@ -1562,7 +1562,7 @@ def get_all_color_rules(stylesheet: Stylesheet) -> list:
             if property == "color" or "background" in property:
                 selector = ruleset.selector
                 value = declaration.value
-                if property == "background":
+                if "background" in property:
                     background_color = get_background_color(declaration)
                     if not background_color:
                         continue
@@ -1570,6 +1570,37 @@ def get_all_color_rules(stylesheet: Stylesheet) -> list:
                         value = background_color
                 rules.append((selector, property, value))
     return rules
+
+
+def get_all_color_rules(file: str) -> list:
+    """gets all colur rulesets from html file
+
+    Gets all color rulesets applied to an HTML file, whether that be
+    through a style tag or linked stylesheet and condensing them.
+
+    Creates a list of tuples that include filename, selector, color,
+    and background color, and adjusts for overrides. In other words,
+    it should be each selector and the final color applied.
+
+    Caveats: It does not yet account for inheritance. That would require
+    traversing the DOM. It also does not yet account for @media rules. As
+    of now, it's ignoring any @media breakpoint rule.
+
+    Args:
+        file: an html file
+
+    Returns:
+        all_color_rules: a dictionary of all color rulesets applied to an
+        html document."""
+    all_color_rules = []
+    styles_by_file = get_all_stylesheets_by_file(file)
+    for style in styles_by_file:
+        rules = get_color_rules_from_stylesheet(style)
+        if rules:
+            for rule in rules:
+                all_color_rules.append((file,) + rule)
+    condensed_rules = condense_the_rules(all_color_rules)
+    return condensed_rules
 
 
 def get_background_color(declaration: Declaration) -> Union[str, None]:
@@ -1602,25 +1633,26 @@ def get_background_color(declaration: Declaration) -> Union[str, None]:
     return color_value
 
 
-def condense_the_rules(rules):
-    condensed = []
+def condense_the_rules(rules: list) -> dict:
+    """takes a list of color rules and returns only the unique color rulesets
+
+    Brings together both background and foreground color for each selector
+    (when present)
+    """
+    file = rules[0][0]
+    condensed = {"file": file}
     for rule in rules:
         file, sel, prop, val = rule
-        color = {}
-        background = {}
-        declaration = get_bg_or_color(prop)
-        if declaration.get("type") == "color":
-            color = declaration
-        elif declaration.get("type") == "background":
-            background = declaration
-        if not condensed:
-            condensed.append([file, sel, color, background, val])
-        else:
-            for rule in condensed:
-                cur_file, cur_sel, cur_col, cur_bg_col, cur_val = rule
-                if file == cur_file and sel == cur_sel:
-                    # add the property that is missing (if it is missing)
-                    print("It's time to work.")
+        if not condensed.get("file"):
+            condensed["file"] = file
+        if not condensed.get(sel):
+            # we don't yet have the selector in place
+            condensed[sel] = {}
+        # set the color or background color here
+        if prop == "color":
+            condensed[sel]["color"] = val
+        if prop == "background-color":
+            condensed[sel]["background-color"] = val
     return condensed
 
 
@@ -1674,6 +1706,7 @@ linear-gradient(-45deg, #46ABA6 0%, #092756 200%)'
     project_path = "tests/test_files/large_project/"
     css_path = project_path + "css/general.css"
     html_path = project_path + "index.html"
+    test_stuff = get_all_color_rules(project_path + "about.html")
     css_code = clerk.file_to_string(css_path)
     html_code = clerk.file_to_string(html_path)
 
