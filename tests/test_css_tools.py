@@ -135,12 +135,16 @@ h4 {
 """
 
 path_to_general_css = "tests/test_files/large_project/css/general.css"
-gallery_path = "tests/test_files/large_project/gallery.html"
 
 
 @pytest.fixture
 def large_project_path():
     return "tests/test_files/large_project/"
+
+
+@pytest.fixture
+def gallery_path():
+    return "tests/test_files/large_project/gallery.html"
 
 
 @pytest.fixture
@@ -638,12 +642,12 @@ def test_remove_two_external_imports(css_with_two_external_imports):
     assert "http" not in css_with_two_external_imports.text
 
 
-def test_get_all_stylesheets_by_file_for_4_sheets():
+def test_get_all_stylesheets_by_file_for_4_sheets(gallery_path):
     results = css_tools.get_all_stylesheets_by_file(gallery_path)
     assert len(results) == 4
 
 
-def test_get_all_stylesheets_for_style_tag():
+def test_get_all_stylesheets_for_style_tag(gallery_path):
     results = css_tools.get_all_stylesheets_by_file(gallery_path)
     assert "styletag" in results[0].type
 
@@ -678,10 +682,22 @@ def test_get_styles_by_html_files_for_no_styles(large_project_path):
     assert not results
 
 
-def test_get_global_colors_for_2_sets(large_project_path):
-    global_colors = css_tools.get_global_colors(large_project_path)
+def test_get_project_global_colors_for_2_sets(large_project_path):
+    global_colors = css_tools.get_project_global_colors(large_project_path)
     results = list(global_colors.keys())
     assert len(results) == 2
+
+
+def test_get_global_colors_for_single_file(gallery_path):
+    global_colors = css_tools.get_global_colors(gallery_path)
+    results = global_colors[gallery_path].get("background-color")
+    expected = "rgb(206, 208, 198)"
+    assert results == expected
+
+
+def test_passes_global_color_contrast_for_gallery(gallery_path):
+    results = css_tools.passes_global_color_contrast(gallery_path)
+    assert results
 
 
 def test_get_unique_font_rules_for_2_sets_in_about(large_project_path):
@@ -706,10 +722,12 @@ def test_get_unique_font_rules_for_0_sets_in_index(large_project_path):
     assert len(results) == expected
 
 
-def test_get_all_color_rules_for_11_declarations(
+def test_get_color_rules_from_stylesheet_for_11_declarations(
     styles_with_multiple_selectors,
 ):
-    results = css_tools.get_all_color_rules(styles_with_multiple_selectors)
+    results = css_tools.get_color_rules_from_stylesheet(
+        styles_with_multiple_selectors
+    )
     assert len(results) == 11
 
 
@@ -741,3 +759,36 @@ def test_get_background_color_for_none(general_stylesheet):
     declaration = declaration_block.declarations[0]
     results = css_tools.get_background_color(declaration)
     assert not results
+
+
+def test_condense_the_rules(about_path):
+    non_condensed = [
+        (about_path, "body", "color", "aliceblue"),
+        (about_path, "body", "background-color", "darkred"),
+    ]
+    results = css_tools.condense_the_rules(non_condensed)
+    assert results["body"]["color"] == "aliceblue"
+
+
+def test_get_project_color_contrast_for_header_h1_in_large(large_project_path):
+    contrast_results = css_tools.get_project_color_contrast(large_project_path)
+    expected = []
+    for result in contrast_results:
+        matching_result = (
+            "about.html" in result[0] and result[1] == "header h1"
+        )
+        if matching_result:
+            is_large = result[2] == "Large AAA"
+            expected.append(is_large)
+            contrast_is_correct = result[5] == 4.46
+            expected.append(contrast_is_correct)
+            break
+    if expected:
+        assert expected[0] and expected[1]
+    else:
+        assert expected
+
+
+def test_file_applies_property_for_h1_applied(about_path):
+    results = css_tools.file_applies_property(about_path, "h1", "padding")
+    assert results
