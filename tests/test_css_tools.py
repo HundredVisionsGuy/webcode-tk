@@ -787,3 +787,8 @@ def test_get_project_color_contrast_for_header_h1_in_large(large_project_path):
         assert expected[0] and expected[1]
     else:
         assert expected
+
+
+def test_file_applies_property_for_h1_applied(about_path):
+    results = css_tools.file_applies_property(about_path, "h1", "padding")
+    assert results

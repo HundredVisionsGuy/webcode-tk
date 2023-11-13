@@ -1817,6 +1817,64 @@ def get_project_color_contrast(
     return results
 
 
+def file_applies_property(
+    file_path: str, selector: str, property: str
+) -> bool:
+    """determines whether a specific property is applied to selector or not.
+
+    Args:
+        file_path: path to html doc in question.
+        selector: CSS selector (or element) that the property is applied.
+        property: the CSS property we are looking for.
+
+    Returns:
+        applies_property: whether that selector applies the property or not.
+    """
+    applies_property = False
+    style_sheets = get_all_stylesheets_by_file(file_path)
+
+    # look for the selector get all declaration block
+    declarations = []
+    for sheet in style_sheets:
+        declaration_block = get_declaration_block_from_selector(
+            selector, sheet
+        )
+        if declaration_block:
+            declarations.append(declaration_block)
+    combined_declaration_block = "\n".join(declarations)
+    if combined_declaration_block:
+        # check for property in declaration_block
+        declarations = combined_declaration_block.split(";")
+        for declaration in declarations:
+            try:
+                prop, value = declaration.split(":")
+                if property in prop:
+                    applies_property = True
+                    break
+            except Exception:
+                print("We seem to be missing a colon.")
+    return applies_property
+
+
+def get_declaration_block_from_selector(
+    selector: str, style_sheet: Stylesheet
+) -> str:
+    declaration_block = ""
+    for ruleset in style_sheet.rulesets:
+        cur_selector = ruleset.selector
+        if selector in cur_selector:
+            # Check for descendant selectors
+            if " " in cur_selector:
+                # we have a descendant selector
+                selectors = cur_selector.split()
+                if selector not in selectors[-1]:
+                    # selector must be at the end of descendant selector
+                    # or it doesn't count
+                    continue
+            declaration_block += ruleset.declaration_block.text + "\n"
+    return declaration_block
+
+
 if __name__ == "__main__":
     insane_gradient = """
     -moz-radial-gradient(0% 200%, ellipse cover,
