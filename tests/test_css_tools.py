@@ -787,3 +787,41 @@ def test_get_project_color_contrast_for_header_h1_in_large(large_project_path):
         assert expected[0] and expected[1]
     else:
         assert expected
+
+
+def test_file_applies_property_by_selector_for_h1_applied(about_path):
+    results = css_tools.file_applies_property_by_selector(
+        about_path, "h1", "padding"
+    )
+    assert results
+
+
+def test_get_declaration_block_from_selector_for_h1(general_stylesheet):
+    results = css_tools.get_declaration_block_from_selector(
+        "h1", general_stylesheet
+    )
+    assert "righteous" in results.lower()
+
+
+def test_is_selector_at_end_of_descendant_for_selector_plus_class():
+    results = css_tools.is_selector_at_end_of_descendant(
+        "h1", "header div h1.main"
+    )
+    assert results
+
+
+def test_get_declaration_value_by_property_for_string(
+    declaration_block_with_one_selector,
+):
+    declaration = declaration_block_with_one_selector.text
+    results = css_tools.get_declaration_value_by_property(declaration, "width")
+    assert "96vw" == results
+
+
+def test_test_get_declaration_value_by_property_for_declaration_block(
+    declaration_block_with_one_selector,
+):
+    results = css_tools.get_declaration_value_by_property(
+        declaration_block_with_one_selector, "display"
+    )
+    assert "flex" == results
