@@ -1935,6 +1935,47 @@ def get_declaration_value_by_property(
     return value
 
 
+def has_link_selector(sheet: Stylesheet) -> bool:
+    """returns whether any style in a stylesheet targets a hyperlink
+
+    There could be one or more link selectors. This will check each possible
+    link selector (or psuedoselector). It only has to target a link and not
+    a descendant of a link.
+
+    Args:
+        sheet: the stylesheet object.
+
+    Returns:
+        has_selector: whether there is a selector that targets a link"""
+    return False
+
+
+def get_all_link_selectors(sheet: Stylesheet) -> list:
+    """returns all selectors that target a link
+
+    Args:
+        sheet: the stylesheet object.
+
+    Returns:
+        selectors: a list of all selectors that target a link"""
+    selectors = []
+    return selectors
+
+
+def get_all_link_rules(sheet: Stylesheet) -> list:
+    """returns all rules that target a hyperlink
+
+    returns all rules that target a link
+
+    Args:
+        sheet: the stylesheet object.
+
+    Returns:
+        rules: a list of all selectors that target a link"""
+    rules = []
+    return rules
+
+
 if __name__ == "__main__":
     insane_gradient = """
     -moz-radial-gradient(0% 200%, ellipse cover,
