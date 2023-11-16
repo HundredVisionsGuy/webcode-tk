@@ -452,9 +452,23 @@ def is_color_value(val: str) -> bool:
         is_valid = True
     elif is_rgb(val):
         is_valid = True
+    elif is_keyword(val):
+        is_valid = True
     else:
         is_valid = False
     return is_valid
+
+
+def is_keyword(val: str) -> bool:
+    """checks to see if a value is a color keyword or not
+
+    Args:
+        val: the CSS value in question.
+
+    Returns:
+        is_keyword: if the value is a color keyword or not."""
+    is_keyword = val in color_keywords.get_all_keywords()
+    return is_keyword
 
 
 def get_relative_luminance(val: int) -> float:

@@ -10,9 +10,20 @@ from webcode_tk import html_tools
 file_with_inline_styles = "tests/test_files/sample_with_inline_styles.html"
 no_inline_styles = "tests/test_files/sample_no_inline_styles.html"
 project_path = "tests/test_files/project"
+large_project_path = "tests/test_files/large_project/"
 sports_path = "tests/test_files/project/sports.html"
 windows_path = "tests\\test_files\\project\\sports.html"
 div_markup = '<div id="listdiv"><ul><li>this and</li><li>that</li></ul></div>'
+
+
+@pytest.fixture
+def sample_with_inline_path():
+    return file_with_inline_styles
+
+
+@pytest.fixture
+def about_file_path():
+    return large_project_path + "about.html"
 
 
 @pytest.fixture
@@ -73,7 +84,7 @@ def test_get_html_for_soup_contents(html_soup):
 
 def test_get_num_elements_in_file():
     num_lis = html_tools.get_num_elements_in_file("p", file_with_inline_styles)
-    assert num_lis == 2
+    assert num_lis == 3
 
 
 def test_get_num_elements_in_file_for_FNF_exception():
@@ -171,3 +182,31 @@ def test_string_to_tag_with_preceeding_space_no_error():
     results = html_tools.string_to_tag(html_string_with_opening_space)
     expected = "<h1>Well formed html</h1>"
     assert str(results) == expected
+
+
+def test_get_style_attribute_data_for_wrong_file_type():
+    with pytest.raises(ValueError):
+        html_tools.get_style_attribute_data("file/to/non-existent.css")
+
+
+def test_get_style_attribute_data_for_expected_tags(sample_with_inline_path):
+    results = html_tools.get_style_attribute_data(sample_with_inline_path)
+    expected = len(results) == 2
+    expected = expected and results[0][1] == "body"
+    expected = expected and results[1][1] == "p"
+    assert expected
+
+
+def test_has_style_attribute_data_for_wrong_file_type():
+    with pytest.raises(ValueError):
+        html_tools.has_style_attribute_data("file/to/non-existent.css")
+
+
+def test_has_style_attribute_data_for_true(sample_with_inline_path):
+    results = html_tools.has_style_attribute_data(sample_with_inline_path)
+    assert results
+
+
+def test_has_style_attribute_data_for_false(about_file_path):
+    results = html_tools.has_style_attribute_data(about_file_path)
+    assert not results

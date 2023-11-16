@@ -25,6 +25,7 @@ from lxml import html
 STARTS_WITH_OPENING_TAG_RE = "^<[^/]+?>"
 OPENING_TAG_RE = "<[^/]+?>"
 CLOSING_TAG_RE = "</.+?>"
+STYLE_TAG_RE = r"<(\w+)\s[^>]*?style=([\"|\']).*?\2\s?[^>]*?(\/?)>"
 
 
 def get_all_html_files(dir_path: str) -> list:
@@ -255,6 +256,80 @@ def uses_inline_styles(markup: Union[Tag, str]) -> bool:
     tags_with_inline_styles = tree.xpath("//@style")
     has_inline_styles = bool(tags_with_inline_styles)
     return has_inline_styles
+
+
+def get_style_attribute_data(file: str) -> list:
+    """returns a list of all tags that contain a style attribute
+
+    Checks to make sure file path goes to HTML doc and raises an
+    exception if not. It will return a list of tuples. The tuples
+    each contain filename, tag, and style attribute value (for
+    reference).
+
+    Args:
+        file: path to an html document.
+
+    Returns:
+        data: a list of style attribute data (filename, tag, and
+            attribute value) or st
+
+    Raises:
+        ValueError: to get a list of attribute values, the file must
+            be an HTML document
+    """
+    data = []
+    file_type = clerk.get_file_type(file)
+    if file_type != "html":
+        raise ValueError(f"{file} is not an HTML document")
+    html_soup = get_html(file)
+
+    # check the html and body for style attribute
+    html_tag = html_soup.find("html")
+    style_value = html_tag.attrs.get("style")
+    if style_value:
+        data.append((file, "html", style_value))
+    body_tag = html_soup.find("body")
+    style_value = body_tag.attrs.get("style")
+    if style_value:
+        data.append((file, "body", style_value))
+
+    # Check all other tags in the body for style attributes
+    for tag in body_tag.children:
+        # deal with any "tag" that is a navigable string
+        tag_string = str(tag).strip()
+        if not tag_string:
+            continue
+        value = tag.attrs.get("style")
+        if not value:
+            continue
+        element = tag.name
+        data.append((file, element, value))
+    return data
+
+
+def has_style_attribute_data(file: str) -> bool:
+    """returns whether a file has style attributes or not
+
+    Makes use of get_style_attribute_data(), and if there is any
+    data, returns True; otherwise, False
+
+    Args:
+        file: path to an html document.
+
+    Returns:
+        has_style_attribute: a boolean (has or has not) a style
+            attribute.
+
+    Raises:
+        ValueError: to get a list of attribute values, the file must
+            be an HTML document
+    """
+    file_type = clerk.get_file_type(file)
+    if file_type != "html":
+        raise ValueError(f"{file} is not an HTML document")
+    results = get_style_attribute_data(file)
+    has_style_attribute = bool(results)
+    return has_style_attribute
 
 
 if __name__ == "__main__":

@@ -125,15 +125,17 @@ h4 {
     }
 """
 
-path_to_gradients_project = "tests/test_files/"
-path_to_gradients_project += "projects/page_with_gradients_and_alpha/style.css"
 path_to_general_css = "tests/test_files/large_project/css/general.css"
-gallery_path = "tests/test_files/large_project/gallery.html"
 
 
 @pytest.fixture
 def large_project_path():
     return "tests/test_files/large_project/"
+
+
+@pytest.fixture
+def gallery_path():
+    return "tests/test_files/large_project/gallery.html"
 
 
 @pytest.fixture
@@ -145,13 +147,6 @@ def about_path(large_project_path):
 def general_stylesheet():
     css_code = clerk.file_to_string(path_to_general_css)
     stylesheet = css_tools.Stylesheet("general.css", css_code)
-    return stylesheet
-
-
-@pytest.fixture
-def stylesheet_with_gradients():
-    css_code = clerk.file_to_string(path_to_gradients_project)
-    stylesheet = css_tools.Stylesheet("style.css", css_code)
     return stylesheet
 
 
@@ -285,6 +280,15 @@ def test_ruleset1_for_validity(ruleset1):
 
 def test_declaration_block_with_selector(declaration_block_with_one_selector):
     assert len(declaration_block_with_one_selector.declarations) == 4
+
+
+def test_declaration_is_color_for_true(valid_color_declaration):
+    assert valid_color_declaration.is_color
+
+
+def test_declaration_is_color_for_false(ruleset1):
+    declarations = ruleset1.declaration_block.declarations
+    assert not declarations[0].is_color
 
 
 def test_declaration_block_without_selector(declaration_block_no_selector):
@@ -629,19 +633,19 @@ def test_remove_two_external_imports(css_with_two_external_imports):
     assert "http" not in css_with_two_external_imports.text
 
 
-def test_get_all_stylesheets_by_file_for_4_sheets():
+def test_get_all_stylesheets_by_file_for_4_sheets(gallery_path):
     results = css_tools.get_all_stylesheets_by_file(gallery_path)
     assert len(results) == 4
+
+
+def test_get_all_stylesheets_for_style_tag(gallery_path):
+    results = css_tools.get_all_stylesheets_by_file(gallery_path)
+    assert "styletag" in results[0].type
 
 
 def test_get_font_families_for_one(css_with_external_imports):
     results = css_tools.get_font_families(css_with_external_imports)
     assert "noto sans" in results[0].get("family")
-
-
-def test_get_all_stylesheets_for_style_tag():
-    results = css_tools.get_all_stylesheets_by_file(gallery_path)
-    assert "styletag" in results[0].type
 
 
 def test_get_font_families_for_two(general_stylesheet):
@@ -669,16 +673,32 @@ def test_get_styles_by_html_files_for_no_styles(large_project_path):
     assert not results
 
 
-def test_get_global_colors_for_2_sets(large_project_path):
-    global_colors = css_tools.get_global_colors(large_project_path)
+def test_get_project_global_colors_for_2_sets(large_project_path):
+    global_colors = css_tools.get_project_global_colors(large_project_path)
     results = list(global_colors.keys())
     assert len(results) == 2
 
 
+def test_get_global_colors_for_single_file(gallery_path):
+    global_colors = css_tools.get_global_colors(gallery_path)
+    results = global_colors[gallery_path].get("background-color")
+    expected = "rgb(206, 208, 198)"
+    assert results == expected
+
+
+def test_passes_global_color_contrast_for_gallery(gallery_path):
+    results = css_tools.passes_global_color_contrast(gallery_path)
+    assert results
+
+
 def test_get_unique_font_rules_for_2_sets_in_about(large_project_path):
-    results = css_tools.get_unique_font_rules(large_project_path)
-    results = results[0]
-    results = results.get("rules")
+    files_data = css_tools.get_unique_font_rules(large_project_path)
+    results = []
+    for file in files_data:
+        filename = file.get("file")
+        if "about.html" in filename:
+            results = file.get("rules")
+            break
     expected = 2
     assert (len(results)) == expected
 
@@ -691,3 +711,108 @@ def test_get_unique_font_rules_for_0_sets_in_index(large_project_path):
             results = file.get("rules")
     expected = 0
     assert len(results) == expected
+
+
+def test_get_color_rules_from_stylesheet_for_11_declarations(
+    styles_with_multiple_selectors,
+):
+    results = css_tools.get_color_rules_from_stylesheet(
+        styles_with_multiple_selectors
+    )
+    assert len(results) == 11
+
+
+def test_get_background_color_for_gradient():
+    styles = css_tools.Stylesheet("page.html", css_with_bg_and_gradient)
+    declaration = styles.rulesets[0].declaration_block.declarations[1]
+    results = css_tools.get_background_color(declaration)
+    assert results == "gradient"
+
+
+def test_get_background_color_for_rgb_color():
+    styles = css_tools.Stylesheet("style tag", external_imports_css)
+    declaration = styles.rulesets[0].declaration_block.declarations[0]
+    results = css_tools.get_background_color(declaration)
+    assert results == "rgb(19, 19, 19)"
+
+
+def test_get_background_color_for_hex(general_stylesheet):
+    declaration_block = general_stylesheet.rulesets[1].declaration_block
+    declaration = declaration_block.declarations[2]
+    results = css_tools.get_background_color(declaration)
+    assert results == "#bbddff"
+
+
+def test_get_background_color_for_none(general_stylesheet):
+    code = "body { background: url('bg.jpg') left top; }"
+    styles = css_tools.Stylesheet("style tag", code)
+    declaration_block = styles.rulesets[0].declaration_block
+    declaration = declaration_block.declarations[0]
+    results = css_tools.get_background_color(declaration)
+    assert not results
+
+
+def test_condense_the_rules(about_path):
+    non_condensed = [
+        (about_path, "body", "color", "aliceblue"),
+        (about_path, "body", "background-color", "darkred"),
+    ]
+    results = css_tools.condense_the_rules(non_condensed)
+    assert results["body"]["color"] == "aliceblue"
+
+
+def test_get_project_color_contrast_for_header_h1_in_large(large_project_path):
+    contrast_results = css_tools.get_project_color_contrast(large_project_path)
+    expected = []
+    for result in contrast_results:
+        matching_result = (
+            "about.html" in result[0] and result[1] == "header h1"
+        )
+        if matching_result:
+            is_large = result[2] == "Large AAA"
+            expected.append(is_large)
+            contrast_is_correct = result[5] == 4.46
+            expected.append(contrast_is_correct)
+            break
+    if expected:
+        assert expected[0] and expected[1]
+    else:
+        assert expected
+
+
+def test_file_applies_property_by_selector_for_h1_applied(about_path):
+    results = css_tools.file_applies_property_by_selector(
+        about_path, "h1", "padding"
+    )
+    assert results
+
+
+def test_get_declaration_block_from_selector_for_h1(general_stylesheet):
+    results = css_tools.get_declaration_block_from_selector(
+        "h1", general_stylesheet
+    )
+    assert "righteous" in results.lower()
+
+
+def test_is_selector_at_end_of_descendant_for_selector_plus_class():
+    results = css_tools.is_selector_at_end_of_descendant(
+        "h1", "header div h1.main"
+    )
+    assert results
+
+
+def test_get_declaration_value_by_property_for_string(
+    declaration_block_with_one_selector,
+):
+    declaration = declaration_block_with_one_selector.text
+    results = css_tools.get_declaration_value_by_property(declaration, "width")
+    assert "96vw" == results
+
+
+def test_test_get_declaration_value_by_property_for_declaration_block(
+    declaration_block_with_one_selector,
+):
+    results = css_tools.get_declaration_value_by_property(
+        declaration_block_with_one_selector, "display"
+    )
+    assert "flex" == results

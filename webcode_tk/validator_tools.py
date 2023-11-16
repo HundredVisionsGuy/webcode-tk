@@ -38,6 +38,8 @@ def clean_error_msg(msg: str) -> str:
     msg = msg.replace("\n", "")
     msg = re.sub(r"[ ]{2,}", " ", msg)
     msg = msg.replace(" :", ":")
+    msg = msg.replace("“", '"')
+    msg = msg.replace("”", '"')
     msg = msg.strip()
     return msg
 
