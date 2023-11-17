@@ -2042,7 +2042,6 @@ def get_link_color_data(project_path: str) -> list:
             continue
         # it must be a link selector, let's get our data
         link_styles.append(item)
-
     return link_styles
 
 

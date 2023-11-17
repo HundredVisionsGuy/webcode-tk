@@ -850,6 +850,13 @@ def test_get_link_color_data_for_large_project(large_project_path):
 
 def test_get_link_color_data_for_nav_li_a_failure(large_project_path):
     color_data = css_tools.get_link_color_data(large_project_path)
-    results = color_data[0][5]
-    expected = 5.1
-    assert results == expected
+    results = (
+        "tests/test_files/large_project/about.html",
+        "nav li a",
+        "Normal AAA",
+        "rgb(114, 101, 87)",
+        "beige",
+        5.1,
+        False,
+    ) in color_data
+    assert results
