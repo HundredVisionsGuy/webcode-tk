@@ -1981,20 +1981,25 @@ def get_all_link_selectors(sheet: Stylesheet) -> list:
     selectors = []
     all_selectors = sheet.selectors
     for selector in all_selectors:
-        selector_copy = selector
-        if " " in selector:
-            # we need to add a space at the end for the split to work
-            selector = selector.strip() + " "
-            selector_split = selector.split()
-            selector_copy = selector_split[-1]
-        if selector_copy == "a":
-            selectors.append(selector.strip())
-        # Check selector_copy to see if it's an anchor
-        regex_pattern = regex_patterns.get("advanced_link_selector")
-        selector_match = re.search(regex_pattern, selector_copy)
+        selector_match = is_link_selector(selector)
         if selector_match:
             selectors.append(selector.strip())
     return selectors
+
+
+def is_link_selector(selector):
+    selector_copy = selector
+    if " " in selector:
+        # we need to add a space at the end for the split to work
+        selector = selector.strip() + " "
+        selector_split = selector.split()
+        selector_copy = selector_split[-1]
+    if selector_copy == "a":
+        return True
+        # Check selector_copy to see if it's an anchor
+    regex_pattern = regex_patterns.get("advanced_link_selector")
+    selector_match = re.search(regex_pattern, selector_copy)
+    return selector_match
 
 
 def get_all_link_rules(sheet: Stylesheet) -> list:
@@ -2017,13 +2022,28 @@ def get_all_link_rules(sheet: Stylesheet) -> list:
     return rules
 
 
-def get_all_link_colors(sheet: Stylesheet) -> list:
+def get_link_color_data(project_path: str) -> list:
     """returns all colors applied to links.
 
     Identifies all selectors that target a link, and gets a
-    list of dictionaries that identify colors"""
-    color_styles = []
-    return color_styles
+    list of dictionaries that identify colors.
+
+    Args:
+        project_path: path to project folder
+
+    Returns:
+        link_styles: a list of link color data applied to each
+            file that includes a link color data"""
+    link_styles = []
+    color_contrast_data = get_project_color_contrast(project_path)
+    for item in color_contrast_data:
+        selector = item[1]
+        if not is_link_selector(selector):
+            continue
+        # it must be a link selector, let's get our data
+        link_styles.append(item)
+
+    return link_styles
 
 
 if __name__ == "__main__":

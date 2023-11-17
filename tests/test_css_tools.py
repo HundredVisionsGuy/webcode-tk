@@ -841,3 +841,15 @@ def test_get_all_link_selectors_for_two(navigation_styles):
 def test_get_all_link_rules_for_two(navigation_styles):
     results = css_tools.get_all_link_rules(navigation_styles)
     assert len(results) == 2
+
+
+def test_get_link_color_data_for_large_project(large_project_path):
+    results = css_tools.get_link_color_data(large_project_path)
+    assert len(results) == 4
+
+
+def test_get_link_color_data_for_nav_li_a_failure(large_project_path):
+    color_data = css_tools.get_link_color_data(large_project_path)
+    results = color_data[0][5]
+    expected = 5.1
+    assert results == expected
