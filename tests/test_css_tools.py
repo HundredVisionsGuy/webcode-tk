@@ -816,3 +816,28 @@ def test_test_get_declaration_value_by_property_for_declaration_block(
         declaration_block_with_one_selector, "display"
     )
     assert "flex" == results
+
+
+def test_has_link_selector_for_false(general_stylesheet):
+    results = css_tools.has_link_selector(general_stylesheet)
+    assert not results
+
+
+def test_has_link_selector_for_single_a(styles_with_multiple_selectors):
+    results = css_tools.has_link_selector(styles_with_multiple_selectors)
+    assert results
+
+
+def test_has_link_selector_for_multiple_links(navigation_styles):
+    results = css_tools.has_link_selector(navigation_styles)
+    assert results
+
+
+def test_get_all_link_selectors_for_two(navigation_styles):
+    results = css_tools.get_all_link_selectors(navigation_styles)
+    assert len(results) == 2
+
+
+def test_get_all_link_rules_for_two(navigation_styles):
+    results = css_tools.get_all_link_rules(navigation_styles)
+    assert len(results) == 2

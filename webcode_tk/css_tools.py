@@ -25,6 +25,7 @@ regex_patterns: dict = {
     "adjacent_sibling_combinator": r"\w+\s*\+\s*\w+",
     "general_sibling_combinator": r"\w+\s*~\s*\w+",
     "grouped_selector": r"\w+\s*,\s*\w+",
+    "advanced_link_selector": r"(a[:.#\[]\w+)",
 }
 
 # all relevant at-rules.
@@ -1948,7 +1949,25 @@ def has_link_selector(sheet: Stylesheet) -> bool:
 
     Returns:
         has_selector: whether there is a selector that targets a link"""
-    return False
+    has_selector = False
+    all_selectors = sheet.selectors
+    for selector in all_selectors:
+        selector_copy = selector
+        if " " in selector:
+            # we need to add a space at the end for the split to work
+            selector = selector.strip() + " "
+            selector_split = selector.split()
+            selector_copy = selector_split[-1]
+        if selector_copy == "a":
+            has_selector = True
+            break
+        # Check selector_copy to see if it's an anchor
+        regex_pattern = regex_patterns.get("advanced_link_selector")
+        selector_match = re.search(regex_pattern, selector_copy)
+        if selector_match:
+            has_selector = True
+            break
+    return has_selector
 
 
 def get_all_link_selectors(sheet: Stylesheet) -> list:
@@ -1960,6 +1979,21 @@ def get_all_link_selectors(sheet: Stylesheet) -> list:
     Returns:
         selectors: a list of all selectors that target a link"""
     selectors = []
+    all_selectors = sheet.selectors
+    for selector in all_selectors:
+        selector_copy = selector
+        if " " in selector:
+            # we need to add a space at the end for the split to work
+            selector = selector.strip() + " "
+            selector_split = selector.split()
+            selector_copy = selector_split[-1]
+        if selector_copy == "a":
+            selectors.append(selector.strip())
+        # Check selector_copy to see if it's an anchor
+        regex_pattern = regex_patterns.get("advanced_link_selector")
+        selector_match = re.search(regex_pattern, selector_copy)
+        if selector_match:
+            selectors.append(selector.strip())
     return selectors
 
 
@@ -1972,9 +2006,24 @@ def get_all_link_rules(sheet: Stylesheet) -> list:
         sheet: the stylesheet object.
 
     Returns:
-        rules: a list of all selectors that target a link"""
+        rules: a list of all rules that target a link"""
     rules = []
+    link_selectors = get_all_link_selectors(sheet)
+    all_rulesets = sheet.rulesets
+    for rule in all_rulesets:
+        current_selector = rule.selector
+        if current_selector in link_selectors:
+            rules.append(rule)
     return rules
+
+
+def get_all_link_colors(sheet: Stylesheet) -> list:
+    """returns all colors applied to links.
+
+    Identifies all selectors that target a link, and gets a
+    list of dictionaries that identify colors"""
+    color_styles = []
+    return color_styles
 
 
 if __name__ == "__main__":
