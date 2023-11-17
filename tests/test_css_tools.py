@@ -46,15 +46,6 @@ variables = """
     --border:#2ba5bd;
 }"""
 
-variables = """
-:root {
-    --bg-text:#303030;
-    --alt-text:#2ba5bd;
-    --alt-bg:#ffb020;
-    --light-bg:#2F6BA7;
-    --border:#2ba5bd;
-}"""
-
 minified_declaration_block_with_selector = "article#gallery "
 minified_declaration_block_with_selector += "{display: flex;flex-wrap: "
 minified_declaration_block_with_selector += "wrap;width: 96vw;margin: 0 auto;}"
@@ -825,3 +816,47 @@ def test_test_get_declaration_value_by_property_for_declaration_block(
         declaration_block_with_one_selector, "display"
     )
     assert "flex" == results
+
+
+def test_has_link_selector_for_false(general_stylesheet):
+    results = css_tools.has_link_selector(general_stylesheet)
+    assert not results
+
+
+def test_has_link_selector_for_single_a(styles_with_multiple_selectors):
+    results = css_tools.has_link_selector(styles_with_multiple_selectors)
+    assert results
+
+
+def test_has_link_selector_for_multiple_links(navigation_styles):
+    results = css_tools.has_link_selector(navigation_styles)
+    assert results
+
+
+def test_get_all_link_selectors_for_two(navigation_styles):
+    results = css_tools.get_all_link_selectors(navigation_styles)
+    assert len(results) == 2
+
+
+def test_get_all_link_rules_for_two(navigation_styles):
+    results = css_tools.get_all_link_rules(navigation_styles)
+    assert len(results) == 2
+
+
+def test_get_link_color_data_for_large_project(large_project_path):
+    results = css_tools.get_link_color_data(large_project_path)
+    assert len(results) == 4
+
+
+def test_get_link_color_data_for_nav_li_a_failure(large_project_path):
+    color_data = css_tools.get_link_color_data(large_project_path)
+    results = (
+        "tests/test_files/large_project/about.html",
+        "nav li a",
+        "Normal AAA",
+        "rgb(114, 101, 87)",
+        "beige",
+        5.1,
+        False,
+    ) in color_data
+    assert results
