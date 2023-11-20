@@ -757,8 +757,11 @@ def test_condense_the_rules(about_path):
         (about_path, "body", "color", "aliceblue"),
         (about_path, "body", "background-color", "darkred"),
     ]
-    results = css_tools.condense_the_rules(non_condensed)
-    assert results["body"]["color"] == "aliceblue"
+    results = css_tools.condense_the_rules(non_condensed, about_path)
+    assert (
+        results["body"]["color"] == "aliceblue"
+        and results["body"]["background-color"] == "darkred"
+    )
 
 
 def test_get_project_color_contrast_for_header_h1_in_large(large_project_path):
@@ -860,3 +863,11 @@ def test_get_link_color_data_for_nav_li_a_failure(large_project_path):
         False,
     ) in color_data
     assert results
+
+
+def test_get_all_color_rules_for_hover_link_inheritance():
+    wonka = "tests/test_files/wiliwonka.html"
+    color_rules = css_tools.get_all_color_rules(wonka)
+    a_hover = color_rules.get("a:hover")
+    results = a_hover.get("background-color")
+    assert results == "darkblue"
