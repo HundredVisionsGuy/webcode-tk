@@ -399,9 +399,14 @@ def get_possible_selectors_by_tag(file_path: str, tag: str) -> list:
     return all_selectors
 
 
-def add_if_not_in(all_selectors, selector):
-    if selector not in all_selectors:
-        all_selectors.append(selector)
+def add_if_not_in(my_list: list, item: str) -> None:
+    """inserts an item into a list but only if not already in said list
+
+    Args:
+        my_list: the list in question.
+        item: the string in the list"""
+    if item not in my_list:
+        my_list.append(item)
 
 
 if __name__ == "__main__":
