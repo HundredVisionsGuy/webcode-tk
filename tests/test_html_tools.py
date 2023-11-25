@@ -210,3 +210,21 @@ def test_has_style_attribute_data_for_true(sample_with_inline_path):
 def test_has_style_attribute_data_for_false(about_file_path):
     results = html_tools.has_style_attribute_data(about_file_path)
     assert not results
+
+
+def test_get_possible_selectors_by_tag_for_two_selectors(about_file_path):
+    expected = True
+    results = html_tools.get_possible_selectors_by_tag(about_file_path, "nav")
+    expected = len(results) == 7
+    expected = expected and "nav.closed" in results
+    expected = expected and ".primary-nav.closed" in results
+    assert expected
+
+
+def test_get_possible_selectors_by_tag_for_multiple_ids_and_classes():
+    wonka = "tests/test_files/wiliwonka.html"
+    results = html_tools.get_possible_selectors_by_tag(wonka, "table")
+    expected = len(results) == 18
+    expected = expected and "table#t2.visible" in results
+    expected = expected and "#t1.test.visible" in results
+    assert expected
