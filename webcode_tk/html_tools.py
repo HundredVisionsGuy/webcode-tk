@@ -351,6 +351,7 @@ def get_possible_selectors_by_tag(file_path: str, tag: str) -> list:
     all_selectors = [
         tag,
     ]
+    variants_with_id = []
     # Get all occurences of the tag
     tags = get_elements(tag, file_path)
     for el in tags:
@@ -367,35 +368,40 @@ def get_possible_selectors_by_tag(file_path: str, tag: str) -> list:
                 variants_with_id.append("#" + id_attributes)
                 variants_with_id.append(tag + "#" + id_attributes)
             for variant in variants_with_id:
-                all_selectors.append(variant)
+                add_if_not_in(all_selectors, variant)
         if classes:
             if len(classes) == 1:
                 selector = "." + classes[0]
-                if selector not in all_selectors:
-                    all_selectors.append(selector)
-                all_selectors.append(tag + "." + classes[0])
+                add_if_not_in(all_selectors, selector)
+                selector = tag + "." + classes[0]
+                add_if_not_in(all_selectors, selector)
                 for variant in variants_with_id:
                     selector = "." + classes[0]
-                    if selector not in all_selectors:
-                        all_selectors.append(selector)
-                    all_selectors.append(variant + "." + classes[0])
+                    add_if_not_in(all_selectors, selector)
+                    selector = variant + "." + classes[0]
+                    add_if_not_in(all_selectors, selector)
             else:
                 together = "." + ".".join(classes)
-                all_selectors.append(together)
-                all_selectors.append(tag + together)
+                add_if_not_in(all_selectors, together)
+                tag_with_selector = tag + together
+                add_if_not_in(all_selectors, tag_with_selector)
                 for sel in classes:
                     selector = "." + sel
-                    if selector not in all_selectors:
-                        all_selectors.append(selector)
+                    add_if_not_in(all_selectors, selector)
+                    selector = tag + "." + sel
+                    add_if_not_in(all_selectors, selector)
                     for variant in variants_with_id:
                         new_selector = variant + "." + sel
-                        if new_selector not in all_selectors:
-                            all_selectors.append(new_selector)
+                        add_if_not_in(all_selectors, new_selector)
                         new_selector = variant + together
-                        if new_selector not in all_selectors:
-                            all_selectors.append(new_selector)
+                        add_if_not_in(all_selectors, new_selector)
     all_selectors.sort()
     return all_selectors
+
+
+def add_if_not_in(all_selectors, selector):
+    if selector not in all_selectors:
+        all_selectors.append(selector)
 
 
 if __name__ == "__main__":

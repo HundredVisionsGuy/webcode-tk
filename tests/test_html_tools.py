@@ -224,7 +224,19 @@ def test_get_possible_selectors_by_tag_for_two_selectors(about_file_path):
 def test_get_possible_selectors_by_tag_for_multiple_ids_and_classes():
     wonka = "tests/test_files/wiliwonka.html"
     results = html_tools.get_possible_selectors_by_tag(wonka, "table")
-    expected = len(results) == 18
+    expected = len(results) == 19
     expected = expected and "table#t2.visible" in results
     expected = expected and "#t1.test.visible" in results
     assert expected
+
+
+def test_add_if_not_in_for_already_in():
+    selectors = ["body", "body.visible", "body#test"]
+    html_tools.add_if_not_in(selectors, "body.visible")
+    assert selectors.count("body.visible") == 1
+
+
+def test_add_if_not_in_for_not_yet_in():
+    selectors = ["body", "body.visible", "body#test"]
+    html_tools.add_if_not_in(selectors, "body.invisible")
+    assert len(selectors) == 4 and "body.invisible" in selectors
