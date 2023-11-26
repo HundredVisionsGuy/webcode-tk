@@ -1844,6 +1844,9 @@ def get_project_color_contrast(
         global_details = global_color_rules.get(file)
         all_color_rules = get_all_color_rules(file)
         if global_details:
+            if isinstance(global_details, list):
+                if len(global_details) == 1:
+                    global_details = global_details[0]
             global_color = global_details.get("color")
             global_bg = global_details.get("background-color")
         items = list(all_color_rules.keys())
