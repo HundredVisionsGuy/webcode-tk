@@ -332,6 +332,83 @@ def has_style_attribute_data(file: str) -> bool:
     return has_style_attribute
 
 
+def get_possible_selectors_by_tag(file_path: str, tag: str) -> list:
+    """Returns all possible selectors for a particular tag.
+
+    Gets all tag ids and selectors for a given tag in an html
+    document, and returns a list of all CSS selector permutations.
+
+    Possible future version may include descendant selectors that
+    include all possible permutations as well (by looking at a
+    tag's ancestors)
+
+    Args:
+        file_path: path to html document.
+        tag: string version of the tag.
+    Returns:
+        all_selectors: a list of strings for selectors that could
+        target the tag (just potential-not actual)"""
+    all_selectors = [
+        tag,
+    ]
+    variants_with_id = []
+    # Get all occurences of the tag
+    tags = get_elements(tag, file_path)
+    for el in tags:
+        id_attributes = el.attrs.get("id")
+        classes = el.attrs.get("class")
+        if id_attributes:
+            variants_with_id = []
+            if isinstance(id_attributes, list):
+                if len(id_attributes) > 1:
+                    for id in id_attributes:
+                        variants_with_id.append("#" + id)
+                        variants_with_id.append(tag + "#" + id)
+            else:
+                variants_with_id.append("#" + id_attributes)
+                variants_with_id.append(tag + "#" + id_attributes)
+            for variant in variants_with_id:
+                add_if_not_in(all_selectors, variant)
+        if classes:
+            if len(classes) == 1:
+                selector = "." + classes[0]
+                add_if_not_in(all_selectors, selector)
+                selector = tag + "." + classes[0]
+                add_if_not_in(all_selectors, selector)
+                for variant in variants_with_id:
+                    selector = "." + classes[0]
+                    add_if_not_in(all_selectors, selector)
+                    selector = variant + "." + classes[0]
+                    add_if_not_in(all_selectors, selector)
+            else:
+                together = "." + ".".join(classes)
+                add_if_not_in(all_selectors, together)
+                tag_with_selector = tag + together
+                add_if_not_in(all_selectors, tag_with_selector)
+                for sel in classes:
+                    selector = "." + sel
+                    add_if_not_in(all_selectors, selector)
+                    selector = tag + "." + sel
+                    add_if_not_in(all_selectors, selector)
+                    for variant in variants_with_id:
+                        new_selector = variant + "." + sel
+                        add_if_not_in(all_selectors, new_selector)
+                        new_selector = variant + together
+                        add_if_not_in(all_selectors, new_selector)
+    all_selectors.sort()
+    return all_selectors
+
+
+def add_if_not_in(my_list: list, item: str) -> None:
+    """inserts an item into a list but only if not already in said list
+
+    Args:
+        my_list: the list in question.
+        item: the string in the list"""
+    if item not in my_list:
+        my_list.append(item)
+
+
 if __name__ == "__main__":
     file_with_inline_styles = "tests/test_files/sample_with_inline_styles.html"
     markup = clerk.file_to_string(file_with_inline_styles)

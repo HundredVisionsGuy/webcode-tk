@@ -1692,7 +1692,7 @@ def get_all_color_rules(file: str) -> list:
         if rules:
             for rule in rules:
                 all_color_rules.append((file,) + rule)
-    condensed_rules = condense_the_rules(all_color_rules)
+    condensed_rules = condense_the_rules(all_color_rules, file)
     return condensed_rules
 
 
@@ -1726,16 +1726,25 @@ def get_background_color(declaration: Declaration) -> Union[str, None]:
     return color_value
 
 
-def condense_the_rules(rules: list) -> dict:
+def condense_the_rules(rules: list, source_file: str) -> dict:
     """takes a list of color rules and returns only the unique color rulesets
 
     Brings together both background and foreground color for each selector
     (when present)
+
+    Args:
+        rules: list of tuples that contain filename, selector, property,
+            and value
+        source_file: the HTML document the contains the rules
+    Returns:
+        condensed: a dictionary with file and all selectors that target
+            colors with what was set for background-color and color
     """
-    file = rules[0][0]
-    condensed = {"file": file}
+    condensed = {"file": source_file}
     for rule in rules:
         file, sel, prop, val = rule
+        if file != source_file:
+            continue
         if not condensed.get("file"):
             condensed["file"] = file
         if not condensed.get(sel):
@@ -1746,7 +1755,59 @@ def condense_the_rules(rules: list) -> dict:
             condensed[sel]["color"] = val
         if prop == "background-color":
             condensed[sel]["background-color"] = val
+    check_for_inherited_colors(rules, condensed, source_file)
     return condensed
+
+
+def check_for_inherited_colors(
+    rules: list, condensed: dict, source_file: str
+) -> None:
+    """Double-check and fix any necessary overrides.
+
+    This is a tough one. The goal is to look for advanced selectors
+    (descendant, class, id, pseudo, attribute), and if they did NOT
+    specify color or bg color, then replace it with the nearest
+    ancestor
+
+    Args:
+        rules: a list of all color rules.
+        condensed: the already condensed set of color rules
+        source_file: the file we are looking at."""
+    for rule in rules:
+        file, sel, prop, val = rule
+        if file != source_file:
+            continue
+        if "." in sel or ":" in sel or "#" in sel or "[" in sel:
+            # if either color or bg color is missing, look behind
+            if not condensed[sel].get("color") or not condensed[sel].get(
+                "background-color"
+            ):
+                for char in ".:#[":
+                    if char in sel:
+                        split_selector = sel.split(char)
+                        behind = split_selector[0]
+                        if condensed.get(behind):
+                            for data in rules:
+                                filename = data[0]
+                                if filename != source_file:
+                                    continue
+                                rule_selector = data[1]
+                                if behind == rule_selector:
+                                    # we found an ancestor
+                                    ancestor_data = condensed.get(behind)
+                                    current_condensed = condensed.get(sel)
+                                    if not current_condensed.get("color"):
+                                        color = ancestor_data.get("color")
+                                        current_condensed["color"] = color
+                                    if not current_condensed.get(
+                                        "background-color"
+                                    ):
+                                        bg = ancestor_data.get(
+                                            "background-color"
+                                        )
+                                        cur_bg = current_condensed
+                                        cur_bg["background-color"] = bg
+                                    break
 
 
 def get_bg_or_color(prop):
@@ -1783,6 +1844,9 @@ def get_project_color_contrast(
         global_details = global_color_rules.get(file)
         all_color_rules = get_all_color_rules(file)
         if global_details:
+            if isinstance(global_details, list):
+                if len(global_details) == 1:
+                    global_details = global_details[0]
             global_color = global_details.get("color")
             global_bg = global_details.get("background-color")
         items = list(all_color_rules.keys())
@@ -2084,15 +2148,6 @@ linear-gradient(-45deg, #46ABA6 0%, #092756 200%)'
     project_path = "tests/test_files/large_project/"
     css_path = project_path + "css/general.css"
     html_path = project_path + "index.html"
+    wonka = "tests/test_files/wiliwonka.html"
+    test_stuff = get_all_color_rules(wonka)
     tests = get_project_color_contrast(project_path)
-    test_stuff = get_all_color_rules(project_path + "about.html")
-    css_code = clerk.file_to_string(css_path)
-    html_code = clerk.file_to_string(html_path)
-
-    styles = Stylesheet("style.css", css_code)
-    color_rules = styles.color_rulesets
-    for rule in color_rules:
-        selector = rule.selector
-        for declaration in rule.declaration_block.declarations:
-            property = declaration.property
-            value = declaration.value
