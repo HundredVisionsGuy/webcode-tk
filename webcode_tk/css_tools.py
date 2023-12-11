@@ -1864,11 +1864,17 @@ def get_project_color_contrast(
             details = all_color_rules.get(selector)
             color = details.get("color")
             if not color:
-                color = global_color
+                if not global_color:
+                    color = "#000000"
+                else:
+                    color = global_color
             color_hex = color_tools.get_hex(color)
             bg_color = details.get("background-color")
             if not bg_color:
-                bg_color = global_bg
+                if not global_bg:
+                    bg_color = "#ffffff"
+                else:
+                    bg_color = global_bg
             bg_hex = color_tools.get_hex(bg_color)
             passes_color = color_tools.passes_color_contrast(
                 goal, bg_hex, color_hex
