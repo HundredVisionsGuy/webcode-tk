@@ -223,7 +223,7 @@ def test_get_possible_selectors_by_tag_for_two_selectors(about_file_path):
 
 def test_get_possible_selectors_by_tag_for_multiple_ids_and_classes():
     wonka = "tests/test_files/wiliwonka.html"
-    results = html_tools.get_possible_selectors_by_tag(wonka, "table")
+    results = html_tools.get_possible_selectors_by_tag(wonka, "td")
     expected = len(results) == 19
     expected = expected and "table#t2.visible" in results
     expected = expected and "#t1.test.visible" in results
