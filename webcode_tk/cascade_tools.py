@@ -5,16 +5,12 @@ inheritance and the cascade.
 The goal is to use the DOM, inheritance, and the cascade, to determine
 all styles applied to every element on the page.
 
-With that, it scans each stylesheet and applies each style one at a time
+With that, it scans each stylesheet and applies eacSh style one at a time
 to all elements and their children (if applicable) of a page.
 """
-from typing import TypeVar
-
 from file_clerk import clerk
 
 from webcode_tk import html_tools
-
-Element = TypeVar("Element")
 
 
 class Element(object):
@@ -31,14 +27,11 @@ class Element(object):
         children (list): any Elements nested in the tag.
     """
 
-    def __init__(self, name: str) -> None:
-        self.name = name
+    def __init__(self, val=None, children=None) -> None:
+        self.name = val
         self.attributes = []
         self.styles = []
-        self.children = []
-
-    def add_child(self, obj: Element) -> None:
-        self.children.append(obj)
+        self.children = children if children is not None else []
 
 
 class CSSAppliedTree:
@@ -77,24 +70,29 @@ class CSSAppliedTree:
         """Extracts filename from path"""
         self.filename = clerk.get_file_name(self.file_path)
 
-    def __build_tree(self):
+    def __build_tree(self) -> None:
         """Constructs initial tree (recursively?)"""
         # Start with the body element, and divide and conquer
-        new_tag = {"name": "body", "children": {}, "styles": []}
-        self.children = new_tag
+        new_tag = Element("body")
+        self.children.append(new_tag)
         children = self.soup.body
+
         # For n-ary tree level traversal, I must refer to
         # https://algo.monster/liteproblems/429
         for child in children.contents:
             if child == "\n":
                 continue
-            new_tag = {}
             tagname = child.name
+            element = Element(tagname)
+            print(element)
             new_tag["name"] = tagname
             tag_kids = child.contents
             for kid in tag_kids:
                 if not isinstance(kid, str):
                     print("We might have a tag")
+
+    def get_children(self, element: Element):
+        pass
 
 
 if __name__ == "__main__":
