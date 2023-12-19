@@ -98,7 +98,6 @@ class Stylesheet:
         self.repeated_selectors = []
         self.__minify()
         self.__replace_variables()
-        self.__replace_variables()
         self.__remove_external_imports()
         self.__extract_comments()
         self.__extract_nested_at_rules()
