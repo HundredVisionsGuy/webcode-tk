@@ -8,9 +8,13 @@ all styles applied to every element on the page.
 With that, it scans each stylesheet and applies eacSh style one at a time
 to all elements and their children (if applicable) of a page.
 """
+from typing import Type
+
 from file_clerk import clerk
 
 from webcode_tk import html_tools
+
+NavigableString = Type["NavigableString"]
 
 
 class Element(object):
@@ -57,6 +61,7 @@ class CSSAppliedTree:
     def __init__(self, path: str):
         self.soup = None
         self.file_path = path
+        self.root = None
         self.children = []
         self.__get_filename()
         self.__get_soup(path)
@@ -73,25 +78,30 @@ class CSSAppliedTree:
     def __build_tree(self) -> None:
         """Constructs initial tree (recursively?)"""
         # Start with the body element, and divide and conquer
-        new_tag = Element("body")
-        self.children.append(new_tag)
-        children = self.soup.body
+        root = Element("html")
+        self.root = root
+        body = Element("body")
+        body.styles = {"background-color": "#ffffff", "color": "#000000"}
+        self.children.append(body)
+        body_soup = self.soup.body
+        children = body_soup.contents
+        self.get_children(body, children)
 
-        # For n-ary tree level traversal, I must refer to
-        # https://algo.monster/liteproblems/429
-        for child in children.contents:
-            if child == "\n":
+    def get_children(self, element: Element, soup_contents: list):
+        contents = []
+        for child in soup_contents:
+            if isinstance(child, str):
                 continue
-            tagname = child.name
-            element = Element(tagname)
-            print(element)
-            new_tag["name"] = tagname
-            tag_kids = child.contents
-            for kid in tag_kids:
-                if not isinstance(kid, str):
-                    print("We might have a tag")
+            contents.append(child)
+        for tag in contents:
+            tag_name = tag.name
+            tag_children = tag.contents
+            new_element = Element(tag_name)
+            element.children.append(new_element)
+            self.get_children(new_element, tag_children)
+        return
 
-    def get_children(self, element: Element):
+    def __add_children(self, element: Element) -> None:
         pass
 
 

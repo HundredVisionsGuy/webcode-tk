@@ -115,6 +115,22 @@ html5lib = ["html5lib"]
 lxml = ["lxml"]
 
 [[package]]
+name = "bigtree"
+version = "0.14.6"
+description = "Tree Implementation and Methods for Python, integrated with Python list, dictionary, and pandas DataFrame."
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "bigtree-0.14.6-py3-none-any.whl", hash = "sha256:1196d7fb6da5208e7ba9ec60b3c519b4befa40a307acbbccf61e92d7bb59161b"},
+    {file = "bigtree-0.14.6.tar.gz", hash = "sha256:b271f9e4f292ca64fcb313b9c0015a2e4e3a541a5b20284f89c425bfcb36e99a"},
+]
+
+[package.extras]
+all = ["pandas", "pillow", "pydot"]
+image = ["pillow", "pydot"]
+pandas = ["pandas"]
+
+[[package]]
 name = "black"
 version = "22.12.0"
 description = "The uncompromising code formatter."
@@ -2841,4 +2857,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "616ea29083315566909bc43b3f8f976ce7ecb49898daae2596f5d92a2ec1fd89"
+content-hash = "e4d8f4f42248bca2be5651d06b42ca21652a1ce8230aaed0eed4ea467298f17a"
