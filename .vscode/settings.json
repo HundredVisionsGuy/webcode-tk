@@ -1,6 +1,6 @@
 {
   "python.testing.pytestArgs": [
-    "tests"
+    "webcode_tk"
   ],
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,

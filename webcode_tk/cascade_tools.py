@@ -8,11 +8,20 @@ all styles applied to every element on the page.
 With that, it scans each stylesheet and applies eacSh style one at a time
 to all elements and their children (if applicable) of a page.
 """
+import re
+
+from bs4 import Tag
 from file_clerk import clerk
 
 from webcode_tk import color_tools as color
 from webcode_tk import css_tools as css
 from webcode_tk import html_tools
+
+
+default_global_color = "#FFFFFF"
+default_global_background = "#000000"
+default_link_color = "#0000EE"
+default_link_visited = "#551A8B"
 
 
 class Element(object):
@@ -29,16 +38,12 @@ class Element(object):
         children (list): any Elements nested in the tag.
     """
 
-    default_global_color = ("#FFFFFF",)
-    default_global_background = "#000000"
-    default_link_color = "#0000EE"
-    default_link_visited = "#551A8B"
-
     def __init__(self, val=None, children=None) -> None:
         self.name = val
         self.attributes = []
         self.styles = []
         self.children = children if children is not None else []
+        self.parents = []
 
     def ammend_color_styles(self, new_styles: dict) -> None:
         """adjust color styles based on specificity"""
@@ -51,8 +56,8 @@ class Element(object):
         if not self.styles:
             if is_a_link:
                 # set the color to default blue
-                styles["color"] = Element.default_link_color
-                styles["visited-color"] = Element.default_link_visited
+                styles["color"] = default_link_color
+                styles["visited-color"] = default_link_visited
                 hexc = color.get_hex(styles.get("color"))
                 hexbg = color.get_hex(styles.get("background-color"))
                 hexv = color.get_hex(styles.get("visited-color"))
@@ -151,6 +156,7 @@ class CSSAppliedTree:
         attributes = body_soup.attrs
         if attributes:
             body.attributes = attributes
+        body.parents = self.__get_parents(body_soup)
         children = body_soup.contents
         self.__get_children(body, children)
 
@@ -165,6 +171,7 @@ class CSSAppliedTree:
             tag_name = tag.name
             tag_children = tag.contents
             new_element = Element(tag_name)
+            new_element.parents = self.__get_parents(tag)
             if tag.attrs:
                 new_element.attributes = tag.attrs
             element.children.append(new_element)
@@ -185,15 +192,9 @@ class CSSAppliedTree:
             self.__apply_global_colors(body, global_colors)
             color_rules = sheet.color_rulesets
             for ruleset in color_rules:
-                selector = list(ruleset.keys())[0]
-                declaration = list(ruleset.values())[0]
-                print(declaration)
-                print(selector)
-                prop, val = tuple(declaration.items())[0]
-                print(prop)
-                print(val)
+                self.__adjust_colors(body, ruleset)
 
-    def __apply_global_colors(self, element, global_colors):
+    def __apply_global_colors(self, element: Element, global_colors) -> None:
         """recursively apply global colors to all elements
         except color on links (they remain default)
 
@@ -210,10 +211,85 @@ class CSSAppliedTree:
             self.__apply_global_colors(child, global_colors)
         return
 
+    def __adjust_colors(self, element: Element, ruleset: dict) -> None:
+        """recursively adjust color where necessary to all elements that
+        apply.
+
+        Args:
+            element: the element in question.
+            rulese: the ruleset we want to apply"""
+        selector = list(ruleset.keys())[0]
+
+        # make sure the selector selects the element
+        selector_applies = does_selector_apply(element, selector)
+        if not selector_applies:
+            return
+        declaration = list(ruleset.values())[0]
+
+        # Check specificity & override if necessary
+        new_specificity = css.get_specificity(selector)
+        old_specificity = element.styles.get("specificity")
+        if new_specificity >= old_specificity:
+            prop, val = tuple(declaration.items())[0]
+            print(prop)
+            print(val)
+        # loop through all children and adjust colors
+        children = element.children
+        for child in children:
+            self.__adjust_colors(child, ruleset)
+        return
+
+    def __get_parents(self, tag: Tag) -> list:
+        """gets all parent tag names and possible selectors as dictionary
+        objects.
+
+        Args:
+            element: the Element object (the one that will get the list of
+            parents)
+            tag: the bs4 tag object that contains the parent information
+
+        Returns:
+            parents: a list of parent tag information in the form of a
+                dictionary."""
+        parents = []
+        for parent in tag.parents:
+            details = {}
+            if parent.name == "[document]":
+                continue
+            details["name"] = parent.name
+            details["classes"] = parent.attrs.get("class")
+            details["id"] = parent.attrs.get("id")
+            parents.append(details)
+        return parents
+
+
+def does_selector_apply(element: Element, selector: str) -> bool:
+    """returns whether the selector applies to the element.
+
+    We first determine what type of selector we're looking at (type,
+    class, id, grouped, descendant). With that information, we can
+    then check to see if it applies to the tag or not.
+
+    NOTE: we'll save more advanced selectors for a later date.
+
+    Args:
+        element: the element we are checking.
+        selector: the selector in question.
+    Returns:
+        applies: whether the selector actually applies to the element."""
+    applies = False
+    regex_patterns = css.regex_patterns
+    is_type_selector = bool(
+        re.match(regex_patterns.get("type_selector"), selector)
+    )
+    if is_type_selector:
+        applies = element.name == selector
+    return applies
+
 
 if __name__ == "__main__":
 
-    project_path = "tests/test_files/single_file_project/"
+    project_path = "tests/test_files/project_refactor_tests/"
     styles_by_html_files = css.get_styles_by_html_files(project_path)
     print(styles_by_html_files)
     for file in styles_by_html_files:
