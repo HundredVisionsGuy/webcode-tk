@@ -193,6 +193,9 @@ class CSSAppliedTree:
             color_rules = sheet.color_rulesets
             for ruleset in color_rules:
                 self.__adjust_colors(body, ruleset)
+                children = body.children
+                for child in children:
+                    self.__adjust_colors(child, ruleset)
 
     def __apply_global_colors(self, element: Element, global_colors) -> None:
         """recursively apply global colors to all elements
@@ -217,7 +220,7 @@ class CSSAppliedTree:
 
         Args:
             element: the element in question.
-            rulese: the ruleset we want to apply"""
+            ruleset: the ruleset we want to apply"""
         selector = list(ruleset.keys())[0]
 
         # make sure the selector selects the element
@@ -230,13 +233,16 @@ class CSSAppliedTree:
         new_specificity = css.get_specificity(selector)
         old_specificity = element.styles.get("specificity")
         if new_specificity >= old_specificity:
-            prop, val = tuple(declaration.items())[0]
-            print(prop)
-            print(val)
-        # loop through all children and adjust colors
-        children = element.children
-        for child in children:
-            self.__adjust_colors(child, ruleset)
+            # get property and value
+            new_prop, new_val = tuple(declaration.items())[0]
+
+            # if they are different from current element
+            el_val = element.styles.get(new_prop)
+            if el_val != new_val:
+                # loop through all children and adjust colors
+                children = element.children
+                for child in children:
+                    self.__adjust_colors(child, ruleset)
         return
 
     def __get_parents(self, tag: Tag) -> list:
@@ -266,11 +272,15 @@ class CSSAppliedTree:
 def does_selector_apply(element: Element, selector: str) -> bool:
     """returns whether the selector applies to the element.
 
-    We first determine what type of selector we're looking at (type,
-    class, id, grouped, descendant). With that information, we can
-    then check to see if it applies to the tag or not.
+    Since the selector could be a grouped selector, we might have to
+    loop through all selectors in the grouped selector. For that reason,
+    grouped selectors, will be converted to a list of selectors, and
+    non-grouped selectors will be placed in a list.
 
-    NOTE: we'll save more advanced selectors for a later date.
+    From there, we will loop through the list of selectors and check
+    for type, class, id, and any other selectors in our list of regex
+    expressions from the css library. With that information,
+    we can then check to see if it applies to the tag or not.
 
     Args:
         element: the element we are checking.
@@ -279,11 +289,48 @@ def does_selector_apply(element: Element, selector: str) -> bool:
         applies: whether the selector actually applies to the element."""
     applies = False
     regex_patterns = css.regex_patterns
-    is_type_selector = bool(
-        re.match(regex_patterns.get("type_selector"), selector)
+
+    # make a list of all selectors (in case of grouped selector)
+    selectors = []
+    is_grouped = bool(
+        re.match(regex_patterns.get("grouped_selector"), selector)
     )
-    if is_type_selector:
-        applies = element.name == selector
+    if is_grouped:
+        selectors = selector.split(",")
+    else:
+        selectors.append(selector)
+    for sel in selectors:
+        is_type_selector = bool(
+            re.match(regex_patterns.get("single_type_selector"), sel)
+        )
+        is_id_selector = bool(re.match(regex_patterns.get("id_selector"), sel))
+        is_class_selector = bool(
+            re.match(regex_patterns.get("class_selector"), sel)
+        )
+        is_psuedo_class_selector = bool(
+            re.match(regex_patterns.get("pseudoclass_selector"), sel)
+        )
+        is_psuedo_class_selector = is_psuedo_class_selector or ":" in sel
+        if is_type_selector:
+            applies = element.name == sel
+            if applies:
+                break
+        elif is_id_selector:
+            # get ID attribute (if there is one)
+            print(element.attributes)
+        elif is_class_selector:
+            # get all class attributes
+            attributes = element.attributes
+            if attributes:
+                print(attributes)
+        elif is_psuedo_class_selector:
+            # check for element before psuedoclass
+            pre_pseudo = sel.split(":")[0]
+            applies = selector == sel and pre_pseudo == element.name
+            if applies:
+                break
+        else:
+            print("What is this?")
     return applies
 
 
