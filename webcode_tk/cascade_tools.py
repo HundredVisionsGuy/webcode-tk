@@ -300,6 +300,7 @@ def does_selector_apply(element: Element, selector: str) -> bool:
     else:
         selectors.append(selector)
     for sel in selectors:
+        sel = sel.strip()
         is_type_selector = bool(
             re.match(regex_patterns.get("single_type_selector"), sel)
         )
@@ -311,6 +312,9 @@ def does_selector_apply(element: Element, selector: str) -> bool:
             re.match(regex_patterns.get("pseudoclass_selector"), sel)
         )
         is_psuedo_class_selector = is_psuedo_class_selector or ":" in sel
+        is_attribute_selector = bool(
+            re.match(regex_patterns.get("attribute_selector"), sel)
+        )
         if is_type_selector:
             applies = element.name == sel
             if applies:
@@ -329,6 +333,8 @@ def does_selector_apply(element: Element, selector: str) -> bool:
             applies = selector == sel and pre_pseudo == element.name
             if applies:
                 break
+        elif is_attribute_selector:
+            print("This must be an attribute selector")
         else:
             print("What is this?")
     return applies

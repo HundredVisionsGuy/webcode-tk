@@ -18,7 +18,7 @@ regex_patterns: dict = {
     "id_selector": r"#\w+",
     "class_selector": r"\.\w+",
     "pseudoclass_selector": r":\w+",
-    "attribute_selector": r"\[\w+=\w+]",
+    "attribute_selector": r"^[a-zA-Z]*\d*\[.*\]$",
     "single_type_selector": r"^[a-zA-Z][a-zA-Z0-9]*$",
     "type_selector": r"([^#:\+.\[=a-zA-Z][a-zA-Z$][a-zA-Z1-6]*|^\w*)",
     "descendant_selector": r"\w+\s\w+",
