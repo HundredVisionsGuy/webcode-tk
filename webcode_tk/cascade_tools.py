@@ -193,8 +193,9 @@ class CSSAppliedTree:
             color_rules = sheet.color_rulesets
             for ruleset in color_rules:
                 self.__adjust_colors(body, ruleset)
-                children = body.children
-                for child in children:
+            children = body.children
+            for child in children:
+                for ruleset in color_rules:
                     self.__adjust_colors(child, ruleset)
 
     def __apply_global_colors(self, element: Element, global_colors) -> None:
@@ -239,6 +240,9 @@ class CSSAppliedTree:
             # if they are different from current element
             el_val = element.styles.get(new_prop)
             if el_val != new_val:
+                # apply the new color
+                element.styles[new_prop] = new_val
+
                 # loop through all children and adjust colors
                 children = element.children
                 for child in children:
@@ -301,6 +305,10 @@ def does_selector_apply(element: Element, selector: str) -> bool:
         selectors.append(selector)
     for sel in selectors:
         sel = sel.strip()
+        is_link_selector = bool(
+            re.match(regex_patterns.get("advanced_link_selector"), sel)
+            or selector == "a"
+        )
         is_type_selector = bool(
             re.match(regex_patterns.get("single_type_selector"), sel)
         )
@@ -308,14 +316,20 @@ def does_selector_apply(element: Element, selector: str) -> bool:
         is_class_selector = bool(
             re.match(regex_patterns.get("class_selector"), sel)
         )
+        is_class_selector = is_class_selector or "." in sel
         is_psuedo_class_selector = bool(
             re.match(regex_patterns.get("pseudoclass_selector"), sel)
         )
         is_psuedo_class_selector = is_psuedo_class_selector or ":" in sel
         is_attribute_selector = bool(
-            re.match(regex_patterns.get("attribute_selector"), sel)
+            re.match(regex_patterns.get("single_attribute_selector"), sel)
         )
-        if is_type_selector:
+
+        # If the tag is an anchor, but the selector is not - doesn't apply
+        # link color can only be changed by a link selector
+        if element.name == "a" and not is_link_selector:
+            break
+        elif is_type_selector:
             applies = element.name == sel
             if applies:
                 break
@@ -326,7 +340,16 @@ def does_selector_apply(element: Element, selector: str) -> bool:
             # get all class attributes
             attributes = element.attributes
             if attributes:
-                print(attributes)
+                attribute_names = list(attributes.keys())
+                for name in attribute_names:
+                    if name == "class":
+                        possible_selectors = []
+                        class_values = attributes.get("class")
+                        for val in class_values:
+                            possible_selectors.append("." + val)
+                            possible_selectors.append(element.name + "." + val)
+                        if selector in possible_selectors:
+                            print("Now we're in business.")
         elif is_psuedo_class_selector:
             # check for element before psuedoclass
             pre_pseudo = sel.split(":")[0]

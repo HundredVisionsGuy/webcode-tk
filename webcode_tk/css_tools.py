@@ -12,21 +12,24 @@ from webcode_tk import color_tools
 from webcode_tk import html_tools
 
 # regex patterns for various selectors
+# on attribute selector, if you want
 regex_patterns: dict = {
-    "vendor_prefix": r"\A-moz-|-webkit-|-ms-|-o-",
-    "header_selector": r"h[1-6]",
-    "id_selector": r"#\w+",
-    "class_selector": r"\.\w+",
-    "pseudoclass_selector": r":\w+",
-    "attribute_selector": r"^[a-zA-Z]*\d*\[.*\]$",
-    "single_type_selector": r"^[a-zA-Z][a-zA-Z0-9]*$",
-    "type_selector": r"([^#:\+.\[=a-zA-Z][a-zA-Z$][a-zA-Z1-6]*|^\w*)",
-    "descendant_selector": r"\w+\s\w+",
-    "child_combinator": r"\w+\s*>\s*\w+",
     "adjacent_sibling_combinator": r"\w+\s*\+\s*\w+",
+    "advanced_link_selector": r"(a[:.#\[]\w+)",
+    "attribute_selectors": r"[a-zA-Z]*\[(.*?)\]",
+    "child_combinator": r"\w+\s*>\s*\w+",
+    "class_selector": r"\.\w+",
+    "descendant_selector": r"\w+\s\w+",
     "general_sibling_combinator": r"\w+\s*~\s*\w+",
     "grouped_selector": r"\w+\s*,\s*\w+",
-    "advanced_link_selector": r"(a[:.#\[]\w+)",
+    "header_selector": r"h[1-6]",
+    "id_selector": r"#\w+",
+    "link_selector": r"",
+    "pseudoclass_selector": r":\w+",
+    "single_attribute_selector": r"^[a-zA-Z]*\[(.*?)\]",
+    "single_type_selector": r"^[a-zA-Z][a-zA-Z0-9]*$",
+    "type_selector": r"([^#:\+.\[=a-zA-Z][a-zA-Z$][a-zA-Z1-6]*|^\w*)",
+    "vendor_prefix": r"\A-moz-|-webkit-|-ms-|-o-",
 }
 
 # all relevant at-rules.
@@ -1006,9 +1009,9 @@ def get_class_score(selector: str) -> int:
     pseudo_re = regex_patterns["pseudoclass_selector"]
     pseudo_selectors = re.findall(pseudo_re, selector)
     selectors += pseudo_selectors
-    attribute_re = regex_patterns["attribute_selector"]
-    attribute_selectors = re.findall(attribute_re, selector)
-    selectors += attribute_selectors
+    attribute_re = regex_patterns["attribute_selectors"]
+    attribute_selectorss = re.findall(attribute_re, selector)
+    selectors += attribute_selectorss
     score = len(selectors)
     return score
 
