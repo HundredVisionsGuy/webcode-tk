@@ -195,6 +195,7 @@ class CSSAppliedTree:
                 self.__adjust_colors(body, ruleset)
             children = body.children
             for child in children:
+                print(child)
                 for ruleset in color_rules:
                     self.__adjust_colors(child, ruleset)
 
@@ -222,6 +223,8 @@ class CSSAppliedTree:
         Args:
             element: the element in question.
             ruleset: the ruleset we want to apply"""
+        for child in element.children:
+            self.__adjust_colors(child, ruleset)
         selector = list(ruleset.keys())[0]
 
         # make sure the selector selects the element
