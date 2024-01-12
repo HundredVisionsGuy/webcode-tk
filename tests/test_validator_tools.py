@@ -67,10 +67,10 @@ def test_get_markup_validity_for_6_items():
     assert results == expected
 
 
-def test_get_html_file_names_for_test_files_folder():
-    files = val.get_html_file_names("tests/test_files/")
+def test_get_html_file_names_for_test_files_project_folder():
+    files = val.get_html_file_names("tests/test_files/project")
     results = len(files)
-    assert results == 15
+    assert results == 5
 
 
 def test_get_num_html_files_for_project_folder():

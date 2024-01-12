@@ -871,3 +871,9 @@ def test_get_all_color_rules_for_hover_link_inheritance():
     a_hover = color_rules.get("a:hover")
     results = a_hover.get("background-color")
     assert results == "darkblue"
+
+
+def test_get_project_color_contrast_for_single_file_project():
+    single_file = "tests/test_files/single_file_project"
+    results = css_tools.get_project_color_contrast(single_file)
+    assert results

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "webcode-tk"
-version = "0.7.7"
+version = "0.7.10"
 description = ""
 authors = ["hundredvisionsguy <cwinikka@gmail.com>"]
 keywords = ["html", "validation", "css", ]

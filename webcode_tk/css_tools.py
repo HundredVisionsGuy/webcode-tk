@@ -12,20 +12,24 @@ from webcode_tk import color_tools
 from webcode_tk import html_tools
 
 # regex patterns for various selectors
+# on attribute selector, if you want
 regex_patterns: dict = {
-    "vendor_prefix": r"\A-moz-|-webkit-|-ms-|-o-",
-    "header_selector": r"h[1-6]",
-    "id_selector": r"#\w+",
-    "class_selector": r"\.\w+",
-    "pseudoclass_selector": r":\w+",
-    "attribute_selector": r"\[\w+=\w+]",
-    "type_selector": r"([^#:\+.\[=a-zA-Z][a-zA-Z$][a-zA-Z1-6]*|^\w*)",
-    "descendant_selector": r"\w+\s\w+",
-    "child_combinator": r"\w+\s*>\s*\w+",
     "adjacent_sibling_combinator": r"\w+\s*\+\s*\w+",
+    "advanced_link_selector": r"(a[:.#\[]\w+)",
+    "attribute_selectors": r"[a-zA-Z]*\[(.*?)\]",
+    "child_combinator": r"\w+\s*>\s*\w+",
+    "class_selector": r"\.\w+",
+    "descendant_selector": r"\w+\s\w+",
     "general_sibling_combinator": r"\w+\s*~\s*\w+",
     "grouped_selector": r"\w+\s*,\s*\w+",
-    "advanced_link_selector": r"(a[:.#\[]\w+)",
+    "header_selector": r"h[1-6]",
+    "id_selector": r"#\w+",
+    "link_selector": r"",
+    "pseudoclass_selector": r":\w+",
+    "single_attribute_selector": r"^[a-zA-Z]*\[(.*?)\]",
+    "single_type_selector": r"^[a-zA-Z][a-zA-Z0-9]*$",
+    "type_selector": r"([^#:\+.\[=a-zA-Z][a-zA-Z$][a-zA-Z1-6]*|^\w*)",
+    "vendor_prefix": r"\A-moz-|-webkit-|-ms-|-o-",
 }
 
 # all relevant at-rules.
@@ -97,7 +101,6 @@ class Stylesheet:
         self.has_repeat_selectors = False
         self.repeated_selectors = []
         self.__minify()
-        self.__replace_variables()
         self.__replace_variables()
         self.__remove_external_imports()
         self.__extract_comments()
@@ -643,6 +646,666 @@ class Declaration:
         self.is_color = color_tools.is_color_value(value)
 
 
+def adjust_overrides(file_path: str, rules: dict) -> dict:
+    """Returns a dictionary with a single global ruleset.
+
+    Gets the final computed value of all rulesets in a file. It loops
+    through the rulesets, and whenever there is an override (due to a
+    repeat selector), it replaces whichever value is in the repeated
+    selector.
+
+    Args:
+        file_path: path to the file in question, to be used as a
+            key in the adjusted rule
+        rules: a dictionary where the key is the filename and the value
+            is a list of rules.
+
+    Returns:
+        adjusted_rule: a dictionary where the key is the same, but
+            there is only one ruleset (the computed ruleset).
+    """
+    adjusted_rule = {}
+    old_rules = list(rules.get(file_path))
+    pre_selector, pre_bg_color, pre_color = ("", "", "")
+    for rule in old_rules:
+        selector = rule.get("selector")
+        bg_color = rule.get("background-color")
+        color = rule.get("color")
+        if pre_selector:
+            # we have looped at least once.
+            # check to see if we have the same selector or not
+            if selector == pre_selector:
+                # same selector, it's time to check our stats
+                # for an override
+                if bg_color and bg_color != pre_bg_color:
+                    adjusted_rule[file_path]["background-color"] = bg_color
+                if color and color != pre_color:
+                    adjusted_rule[file_path]["color"] = color
+        else:
+            # this is the first time we are looping
+            adjusted_rule[file_path] = rule
+            pre_selector = selector
+            pre_bg_color = bg_color
+            pre_color = color
+    return adjusted_rule
+
+
+def check_for_inherited_colors(
+    rules: list, condensed: dict, source_file: str
+) -> None:
+    """Double-check and fix any necessary overrides.
+
+    This is a tough one. The goal is to look for advanced selectors
+    (descendant, class, id, pseudo, attribute), and if they did NOT
+    specify color or bg color, then replace it with the nearest
+    ancestor
+
+    Args:
+        rules: a list of all color rules.
+        condensed: the already condensed set of color rules
+        source_file: the file we are looking at."""
+    for rule in rules:
+        file, sel, prop, val = rule
+        if file != source_file:
+            continue
+        if "." in sel or ":" in sel or "#" in sel or "[" in sel:
+            # if either color or bg color is missing, look behind
+            if not condensed[sel].get("color") or not condensed[sel].get(
+                "background-color"
+            ):
+                for char in ".:#[":
+                    if char in sel:
+                        split_selector = sel.split(char)
+                        behind = split_selector[0]
+                        if condensed.get(behind):
+                            for data in rules:
+                                filename = data[0]
+                                if filename != source_file:
+                                    continue
+                                rule_selector = data[1]
+                                if behind == rule_selector:
+                                    # we found an ancestor
+                                    ancestor_data = condensed.get(behind)
+                                    current_condensed = condensed.get(sel)
+                                    if not current_condensed.get("color"):
+                                        color = ancestor_data.get("color")
+                                        current_condensed["color"] = color
+                                    if not current_condensed.get(
+                                        "background-color"
+                                    ):
+                                        bg = ancestor_data.get(
+                                            "background-color"
+                                        )
+                                        cur_bg = current_condensed
+                                        cur_bg["background-color"] = bg
+                                    break
+
+
+def condense_the_rules(rules: list, source_file: str) -> dict:
+    """takes a list of color rules and returns only the unique color rulesets
+
+    Brings together both background and foreground color for each selector
+    (when present)
+
+    Args:
+        rules: list of tuples that contain filename, selector, property,
+            and value
+        source_file: the HTML document the contains the rules
+    Returns:
+        condensed: a dictionary with file and all selectors that target
+            colors with what was set for background-color and color
+    """
+    condensed = {"file": source_file}
+    for rule in rules:
+        file, sel, prop, val = rule
+        if file != source_file:
+            continue
+        if not condensed.get("file"):
+            condensed["file"] = file
+        if not condensed.get(sel):
+            # we don't yet have the selector in place
+            condensed[sel] = {}
+        # set the color or background color here
+        if prop == "color":
+            condensed[sel]["color"] = val
+        if prop == "background-color":
+            condensed[sel]["background-color"] = val
+    check_for_inherited_colors(rules, condensed, source_file)
+    return condensed
+
+
+def file_applies_property_by_selector(
+    file_path: str, selector: str, property: str
+) -> bool:
+    """determines whether a specific property is applied to selector or not.
+
+    Args:
+        file_path: path to html doc in question.
+        selector: CSS selector (or element) that the property is applied.
+        property: the CSS property we are looking for.
+
+    Returns:
+        applies_property: whether that selector applies the property or not.
+    """
+    applies_property = False
+    style_sheets = get_all_stylesheets_by_file(file_path)
+
+    # look for the selector get all declaration block
+    declarations = []
+    for sheet in style_sheets:
+        declaration_block = get_declaration_block_from_selector(
+            selector, sheet
+        )
+        if declaration_block:
+            declarations.append(declaration_block)
+    combined_declaration_block = "\n".join(declarations)
+    if combined_declaration_block:
+        # check for property in declaration_block
+        declarations = combined_declaration_block.split(";")
+        for declaration in declarations:
+            try:
+                prop, value = declaration.split(":")
+                if property in prop:
+                    applies_property = True
+                    break
+            except ValueError:
+                print("Declaration is missing a colon!")
+    return applies_property
+
+
+def get_all_color_rules(file: str) -> list:
+    """gets all color rulesets from html file
+
+    Gets all color rulesets applied to an HTML file, whether that be
+    through a style tag or linked stylesheet and condensing them.
+
+    Creates a list of tuples that include filename, selector, color,
+    and background color, and adjusts for overrides. In other words,
+    it should be each selector and the final color applied.
+
+    Caveats: It does not yet account for inheritance. That would require
+    traversing the DOM. It also does not yet account for @media rules. As
+    of now, it's ignoring any @media breakpoint rule.
+
+    Args:
+        file: an html file
+
+    Returns:
+        all_color_rules: a dictionary of all color rulesets applied to an
+        html document."""
+    all_color_rules = []
+    styles_by_file = get_all_stylesheets_by_file(file)
+    for style in styles_by_file:
+        rules = get_color_rules_from_stylesheet(style)
+        if rules:
+            for rule in rules:
+                all_color_rules.append((file,) + rule)
+    condensed_rules = condense_the_rules(all_color_rules, file)
+    return condensed_rules
+
+
+def get_all_link_rules(sheet: Stylesheet) -> list:
+    """returns all rules that target a hyperlink
+
+    returns all rules that target a link
+
+    Args:
+        sheet: the stylesheet object.
+
+    Returns:
+        rules: a list of all rules that target a link"""
+    rules = []
+    link_selectors = get_all_link_selectors(sheet)
+    all_rulesets = sheet.rulesets
+    for rule in all_rulesets:
+        current_selector = rule.selector
+        if current_selector in link_selectors:
+            rules.append(rule)
+    return rules
+
+
+def get_all_link_selectors(sheet: Stylesheet) -> list:
+    """returns all selectors that target a link
+
+    Args:
+        sheet: the stylesheet object.
+
+    Returns:
+        selectors: a list of all selectors that target a link"""
+    selectors = []
+    all_selectors = sheet.selectors
+    for selector in all_selectors:
+        selector_match = is_link_selector(selector)
+        if selector_match:
+            selectors.append(selector.strip())
+    return selectors
+
+
+def get_all_styles_in_order(project_path: str) -> list:
+    """returns a list of all files' stylesheets in order of appearance.
+
+    The goal is to allows user to identify the cascade order of selectors
+    and their values. This will allow one to determine if one ruleset
+    overrides another (same specificity)
+
+    Iterates through each html file in a project folder and extracts
+    any style tags and local stylesheets. Each styletag or stylesheet
+    is converted into a Stylesheet object and appended to a dictionary
+    of file names.
+
+    Args:
+        project_path: the path to the main project folder.
+
+    Returns:
+        styles_by_html_files: a list of dictionary objects. Each dictionary
+            has two keys: file and stylesheets.
+    """
+    styles_by_html_files = []
+    html_files = html_tools.get_all_html_files(project_path)
+    for file in html_files:
+        file_data = get_all_stylesheets_by_file(file)
+        styles_by_html_files.append({"file": file, "stylesheets": file_data})
+    return styles_by_html_files
+
+
+def get_all_stylesheets_by_file(file_path: str) -> list:
+    """returns a list of all Stylesheet objects from an HTML file in order of
+    appearance.
+
+    This will check an HTML file for any links to stylesheets or style tags,
+    and get each stylesheet in the order in which they were called (in case
+    there is a CSS override).
+
+    It will only accept links to local stylesheets and ignore any external
+    stylesheets called with an http or https.
+
+    Args:
+        file_path: the path to an HTML file.
+
+    Returns:
+        all_styles: a list of stylesheet objects in the order in which they
+            are called (as a link or style tag).
+    """
+    all_styles = []
+    head_tags = html_tools.get_elements("head", file_path)
+    for item in head_tags:
+        for tag in item.contents:
+            if tag == "\n":
+                continue
+            if tag.name == "link":
+                href = tag.attrs.get("href")
+                if ".css" in href:
+                    if "http" not in href[:5]:
+                        # remove html filename with sheet href
+                        path_list = clerk.get_path_list(file_path)
+                        path_list.pop()
+                        path_list.append(href)
+                        sheet_path = "/".join(path_list)
+                        code = clerk.file_to_string(sheet_path)
+                        css_sheet = Stylesheet(sheet_path, code)
+                        all_styles.append(css_sheet)
+            if tag.name == "style":
+                css_sheet = Stylesheet(file_path, tag.text, "styletag")
+                all_styles.append(css_sheet)
+    return all_styles
+
+
+def get_background_color(declaration: Declaration) -> Union[str, None]:
+    """Returns a color value from a declaration with a property of background
+
+    Args:
+        declaration: the declaration we want to test.
+
+    Returns:
+        color_value: either a valid color value, None, or gradient - if it's a
+            gradient"""
+    color_value = None
+    is_rgb = color_tools.is_rgb(declaration.value)
+    if is_rgb:
+        return declaration.value
+    values = declaration.value.split()
+    for val in values:
+        color = color_tools.is_color_value(val)
+        if color:
+            color_value = val
+            break
+        is_keyword = val in color_tools.color_keywords.get_all_keywords()
+        if is_keyword:
+            color_value = val
+            break
+        gradient = is_gradient(val)
+        if gradient:
+            color_value = "gradient"
+            break
+    return color_value
+
+
+def get_bg_or_color(prop):
+    declaration = {"type": {}, "declaration": {}}
+    if prop == "color":
+        declaration["type"] = "color"
+        declaration["declaration"] = {"color": prop}
+    if "background" in prop:
+        declaration["type"] = "background"
+        declaration["declaration"] = {"background": prop}
+    return declaration
+
+
+def get_class_score(selector: str) -> int:
+    """receives a selector and returns the class score
+
+    The class score represents the combined number of class,
+    pseudo-class, and attribute selectors.
+
+    Args:
+        selector (str): the complete CSS selector
+
+    Returns:
+        score: the number of class selectors, which includes attribute
+        and pseudoclass selectors.
+    """
+    class_re = regex_patterns["class_selector"]
+    selectors = re.findall(class_re, selector)
+    pseudo_re = regex_patterns["pseudoclass_selector"]
+    pseudo_selectors = re.findall(pseudo_re, selector)
+    selectors += pseudo_selectors
+    attribute_re = regex_patterns["attribute_selectors"]
+    attribute_selectorss = re.findall(attribute_re, selector)
+    selectors += attribute_selectorss
+    score = len(selectors)
+    return score
+
+
+def get_color_codes_of_type(color_type: str, gradient: str) -> list:
+    """returns all color codes of a particular type from a gradient
+
+    Args:
+        color_type: the type of color code it might be (hex, rgb, hsl,
+            or keyword)
+        gradient: the gradient code.
+
+    Returns:
+        colors: any color values that were found.
+    """
+    colors = []
+    if color_type == "hsl":
+        colors = re.findall(color_tools.hsl_all_forms_re, gradient)
+    elif color_type == "rgb":
+        colors = re.findall(color_tools.rgb_all_forms_re, gradient)
+    elif color_type == "hex":
+        colors = re.findall(color_tools.hex_regex, gradient)
+    elif color_type == "keywords":
+        words = re.findall(r"[+a-z+A-Z]*", gradient)
+        for i in words:
+            # regex captures non-strings, so we don't process if empty
+            if i:
+                i = i.strip().lower()
+                is_keyword = keyword.is_a_keyword(i.strip(" "))
+                if is_keyword:
+                    colors.append(i)
+    if colors:
+        # strip each color code (if hex regex)
+        colors = [i.strip(" ") for i in colors]
+    return colors
+
+
+def get_color_rules_from_stylesheet(stylesheet: Stylesheet) -> list:
+    """Gets all color-based rules from a stylesheet.
+
+    Args:
+        stylesheet: Stylesheet object.
+
+    Returns:
+        rules: a list of color-based rules"""
+    rules = []
+    for ruleset in stylesheet.rulesets:
+        declaration_block = ruleset.declaration_block
+        declarations = declaration_block.declarations
+        for declaration in declarations:
+            property = declaration.property
+            if property == "color" or "background" in property:
+                selector = ruleset.selector
+                value = declaration.value
+                if "background" in property:
+                    background_color = get_background_color(declaration)
+                    if not background_color:
+                        continue
+                    else:
+                        value = background_color
+                rules.append((selector, property, value))
+    return rules
+
+
+def get_colors_from_gradient(gradient: str) -> list:
+    """extract all color codes from gradient
+
+    Args:
+        gradient: the CSS color gradient value.
+
+    Returns:
+        colors: a list of all colors found in the gradient.
+    """
+    colors = []
+    # use regex to pull all possible color codes first
+    color_types = ("hsl", "rgb", "hex", "keywords")
+    for color_type in color_types:
+        items = get_color_codes_of_type(color_type, gradient)
+        if items:
+            colors += items
+    return colors
+
+
+def get_comment_positions(code: (str)) -> Union[list, None]:
+    """looks for index positions of first opening and closing comment.
+
+    From this function, you can create a slice of a comment from the
+    code. You would do this if you want to extract the comments from
+    the code, or if you wanted to inspect what was in the comments, or
+    even identify if there are comments.
+
+    Note: this only works for the first comment in code. You would
+    want to loop through the code extracting each comment one at a
+    time using this function until it returns None.
+
+    Args:
+        code (str): the CSS code you want to extract comments from.
+
+    Returns:
+        list: a list of the index positions for the beginning and end
+            of the first occuring comment in the code.
+    """
+    positions = []
+    try:
+        positions.append(code.index("/*"))
+        positions.append(code.index("*/"))
+        return positions
+    except Exception as ex:
+        print(ex)
+        return
+
+
+def get_declaration_value_by_property(
+    block: Union[str, DeclarationBlock], property: str
+) -> str:
+    """returns the value of a property from a declaration block
+
+    Args:
+        block: the declaration block in question (could be as a string
+            or as a DeclarationBlock)
+        property: the property we are looking for
+
+    Returns:
+        value: the value of the property"""
+    value = ""
+    try:
+        block = block.text
+    except AttributeError:
+        declarations = block.strip()
+    declarations = block.split(";")
+    for item in declarations:
+        item = item.strip()
+        try:
+            # check for @media rules
+            if "{" in item:
+                item_split = item.split("{")
+                item = item_split[1].strip()
+            prop, val = item.split(":")
+            if prop.lower().strip() == property.lower():
+                value = val.strip()
+                continue
+        except ValueError:
+            print("Doh! no colon")
+    return value
+
+
+def get_families(declaration_block: DeclarationBlock) -> list:
+    """returns a list of all font families in a declaration block"""
+    families = []
+    for ruleset in declaration_block.declarations:
+        if ruleset.property in ("font", "font-family"):
+            families.append(ruleset.value)
+    return families
+
+
+def get_font_families(sheet: Stylesheet) -> list:
+    """returns a list of all font families targeted in a stylesheet
+
+    Args:
+        sheet: a stylesheet object, which could be a style tag or entire
+            stylesheet (*.css file)
+
+    Returns:
+        font_families: a list of dictionary objects that contain all selectors
+            and their values (but only if the value is a font family)
+    """
+    font_families = []
+    for ruleset in sheet.rulesets:
+        block = ruleset.declaration_block
+        families = get_families(block)
+        if families:
+            # create dict of selector and family
+            selector = ruleset.selector
+
+            # always take the last family as it would be an override in CSS
+            family = families[-1]
+            font_families.append({"selector": selector, "family": family})
+    return font_families
+
+
+def get_global_color_details(rulesets: Union[list, tuple]) -> list:
+    """receives rulesets and returns data on global colors
+
+    Note: a global selector is any selector that targets all elements
+    in the DOM. Examples include `html`, `body`, `:root`, and
+    the universal selector: `*`.
+
+    Args:
+        rulesets: a list or tuple of Ruleset objects
+
+    Returns:
+        global_rulesets: a list of dictionary objects that each contain
+            a selector, a background color, a text color, contrast ratio,
+            whether it passes at various levels.
+    """
+    # Are color and background color set on global selectors?
+    global_selectors = ("html", "body", ":root", "*")
+    global_rulesets = []
+    for ruleset in rulesets:
+        if ruleset.selector in global_selectors:
+            selector = ruleset.selector
+            background_color = ""
+            color = ""
+            for declaration in ruleset.declaration_block.declarations:
+                if declaration.property == "background-color":
+                    background_color = declaration.value
+                elif declaration.property == "color":
+                    color = declaration.value
+                    if is_gradient(color):
+                        colors = process_gradient(color)
+                        todo = input("We have colors: " + colors)
+                        print(todo)
+                elif declaration.property == "background":
+                    background_color = declaration.value
+                    if is_gradient(background_color):
+                        bg_colors = process_gradient(background_color)
+                        print("We have bg colors: " + str(bg_colors))
+
+            if background_color or color:
+                contrast_ratio = "NA"
+                passes_normal_aaa = False
+                passes_normal_aa = False
+                passes_large_aaa = False
+                if background_color and color:
+                    bg_hex = color_tools.get_hex(background_color)
+                    color_hex = color_tools.get_hex(color)
+                    contrast_ratio = color_tools.contrast_ratio(
+                        bg_hex, color_hex
+                    )
+                    passes_normal_aaa = color_tools.passes_color_contrast(
+                        "Normal AAA", bg_hex, color_hex
+                    )
+                    passes_normal_aa = color_tools.passes_color_contrast(
+                        "Normal AA", bg_hex, color_hex
+                    )
+                    passes_large_aaa = color_tools.passes_color_contrast(
+                        "Large AAA", bg_hex, color_hex
+                    )
+                global_rulesets.append(
+                    {
+                        "selector": selector,
+                        "background-color": background_color,
+                        "color": color,
+                        "contrast_ratio": contrast_ratio,
+                        "passes_normal_aaa": passes_normal_aaa,
+                        "passes_normal_aa": passes_normal_aa,
+                        "passes_large_aaa": passes_large_aaa,
+                    }
+                )
+    return global_rulesets
+
+
+def get_global_colors(file_path: str) -> dict:
+    """Returns a dictionary of color rules applied the entire document.
+
+    Global colors (in this context) are colors that apply to an entire
+    document. Selectors that target the entire document are *, html,
+    and body.
+
+    Since it's possible that an author could accidentally override
+    a color or background color, this function will remove any
+    previous rules that are overridden in a file.
+
+    NOTE: This should not consider an override if the would-be
+    selector is in an @media ruleset, we won't treat it as an
+    override.
+
+    Args:
+        file_path: the path to the file.
+
+    Returns:
+        global_color_rules: a dictionary of filenames and their global
+            rulesets.
+    """
+    global_color_rules = {}
+    sheets = get_all_stylesheets_by_file(file_path)
+    if sheets:
+        for sheet in sheets:
+            rules = sheet.rulesets
+            global_colors = get_global_color_details(rules)
+            if global_colors:
+                # Have we added the file to the global rules?
+                if not global_color_rules.get(file_path):
+                    global_color_rules[file_path] = []
+                for gc in global_colors:
+                    global_color_rules[file_path].append(gc)
+        if sheets and len(global_color_rules.get(file_path)) > 1:
+            # figure out the override
+            global_colors = adjust_overrides(file_path, global_color_rules)
+            adjusted_rule = global_colors.get(file_path)
+            global_color_rules[file_path] = adjusted_rule
+    return global_color_rules
+
+
 def restore_braces(split: list) -> list:
     """restore the missing braces removed by the .split() method
 
@@ -691,94 +1354,6 @@ def minify_code(text: str) -> str:
     text = text.replace("  ", "")
     text = text.replace("\t", "")
     return text
-
-
-def get_class_score(selector: str) -> int:
-    """receives a selector and returns the class score
-
-    The class score represents the combined number of class,
-    pseudo-class, and attribute selectors.
-
-    Args:
-        selector (str): the complete CSS selector
-
-    Returns:
-        score: the number of class selectors, which includes attribute
-        and pseudoclass selectors.
-    """
-    class_re = regex_patterns["class_selector"]
-    selectors = re.findall(class_re, selector)
-    pseudo_re = regex_patterns["pseudoclass_selector"]
-    pseudo_selectors = re.findall(pseudo_re, selector)
-    selectors += pseudo_selectors
-    attribute_re = regex_patterns["attribute_selector"]
-    attribute_selectors = re.findall(attribute_re, selector)
-    selectors += attribute_selectors
-    score = len(selectors)
-    return score
-
-
-def get_comment_positions(code: (str)) -> Union[list, None]:
-    """looks for index positions of first opening and closing comment.
-
-    From this function, you can create a slice of a comment from the
-    code. You would do this if you want to extract the comments from
-    the code, or if you wanted to inspect what was in the comments, or
-    even identify if there are comments.
-
-    Note: this only works for the first comment in code. You would
-    want to loop through the code extracting each comment one at a
-    time using this function until it returns None.
-
-    Args:
-        code (str): the CSS code you want to extract comments from.
-
-    Returns:
-        list: a list of the index positions for the beginning and end
-            of the first occuring comment in the code.
-    """
-    positions = []
-    try:
-        positions.append(code.index("/*"))
-        positions.append(code.index("*/"))
-        return positions
-    except Exception as ex:
-        print(ex)
-        return
-
-
-def get_font_families(sheet: Stylesheet) -> list:
-    """returns a list of all font families targeted in a stylesheet
-
-    Args:
-        sheet: a stylesheet object, which could be a style tag or entire
-            stylesheet (*.css file)
-
-    Returns:
-        font_families: a list of dictionary objects that contain all selectors
-            and their values (but only if the value is a font family)
-    """
-    font_families = []
-    for ruleset in sheet.rulesets:
-        block = ruleset.declaration_block
-        families = get_families(block)
-        if families:
-            # create dict of selector and family
-            selector = ruleset.selector
-
-            # always take the last family as it would be an override in CSS
-            family = families[-1]
-            font_families.append({"selector": selector, "family": family})
-    return font_families
-
-
-def get_families(declaration_block: DeclarationBlock) -> list:
-    """returns a list of all font families in a declaration block"""
-    families = []
-    for ruleset in declaration_block.declarations:
-        if ruleset.property in ("font", "font-family"):
-            families.append(ruleset.value)
-    return families
 
 
 def get_unique_font_rules(project_folder: str) -> list:
@@ -965,78 +1540,6 @@ def get_header_selectors(selector: str) -> list:
             if h_match:
                 header_selectors.append(selector)
     return header_selectors
-
-
-def get_global_color_details(rulesets: Union[list, tuple]) -> list:
-    """receives rulesets and returns data on global colors
-
-    Note: a global selector is any selector that targets all elements
-    in the DOM. Examples include `html`, `body`, `:root`, and
-    the universal selector: `*`.
-
-    Args:
-        rulesets: a list or tuple of Ruleset objects
-
-    Returns:
-        global_rulesets: a list of dictionary objects that each contain
-            a selector, a background color, a text color, contrast ratio,
-            whether it passes at various levels.
-    """
-    # Are color and background color set on global selectors?
-    global_selectors = ("html", "body", ":root", "*")
-    global_rulesets = []
-    for ruleset in rulesets:
-        if ruleset.selector in global_selectors:
-            selector = ruleset.selector
-            background_color = ""
-            color = ""
-            for declaration in ruleset.declaration_block.declarations:
-                if declaration.property == "background-color":
-                    background_color = declaration.value
-                elif declaration.property == "color":
-                    color = declaration.value
-                    if is_gradient(color):
-                        colors = process_gradient(color)
-                        todo = input("We have colors: " + colors)
-                        print(todo)
-                elif declaration.property == "background":
-                    background_color = declaration.value
-                    if is_gradient(background_color):
-                        bg_colors = process_gradient(background_color)
-                        print("We have bg colors: " + str(bg_colors))
-
-            if background_color or color:
-                contrast_ratio = "NA"
-                passes_normal_aaa = False
-                passes_normal_aa = False
-                passes_large_aaa = False
-                if background_color and color:
-                    bg_hex = color_tools.get_hex(background_color)
-                    color_hex = color_tools.get_hex(color)
-                    contrast_ratio = color_tools.contrast_ratio(
-                        bg_hex, color_hex
-                    )
-                    passes_normal_aaa = color_tools.passes_color_contrast(
-                        "Normal AAA", bg_hex, color_hex
-                    )
-                    passes_normal_aa = color_tools.passes_color_contrast(
-                        "Normal AA", bg_hex, color_hex
-                    )
-                    passes_large_aaa = color_tools.passes_color_contrast(
-                        "Large AAA", bg_hex, color_hex
-                    )
-                global_rulesets.append(
-                    {
-                        "selector": selector,
-                        "background-color": background_color,
-                        "color": color,
-                        "contrast_ratio": contrast_ratio,
-                        "passes_normal_aaa": passes_normal_aaa,
-                        "passes_normal_aa": passes_normal_aa,
-                        "passes_large_aaa": passes_large_aaa,
-                    }
-                )
-    return global_rulesets
 
 
 def has_vendor_prefix(property: str) -> bool:
@@ -1244,58 +1747,6 @@ def remove_alpha(color_code: str) -> str:
     return color_code
 
 
-def get_colors_from_gradient(gradient: str) -> list:
-    """extract all color codes from gradient
-
-    Args:
-        gradient: the CSS color gradient value.
-
-    Returns:
-        colors: a list of all colors found in the gradient.
-    """
-    colors = []
-    # use regex to pull all possible color codes first
-    color_types = ("hsl", "rgb", "hex", "keywords")
-    for color_type in color_types:
-        items = get_color_codes_of_type(color_type, gradient)
-        if items:
-            colors += items
-    return colors
-
-
-def get_color_codes_of_type(color_type: str, gradient: str) -> list:
-    """returns all color codes of a particular type from a gradient
-
-    Args:
-        color_type: the type of color code it might be (hex, rgb, hsl,
-            or keyword)
-        gradient: the gradient code.
-
-    Returns:
-        colors: any color values that were found.
-    """
-    colors = []
-    if color_type == "hsl":
-        colors = re.findall(color_tools.hsl_all_forms_re, gradient)
-    elif color_type == "rgb":
-        colors = re.findall(color_tools.rgb_all_forms_re, gradient)
-    elif color_type == "hex":
-        colors = re.findall(color_tools.hex_regex, gradient)
-    elif color_type == "keywords":
-        words = re.findall(r"[+a-z+A-Z]*", gradient)
-        for i in words:
-            # regex captures non-strings, so we don't process if empty
-            if i:
-                i = i.strip().lower()
-                is_keyword = keyword.is_a_keyword(i.strip(" "))
-                if is_keyword:
-                    colors.append(i)
-    if colors:
-        # strip each color code (if hex regex)
-        colors = [i.strip(" ") for i in colors]
-    return colors
-
-
 def is_required_selector(selector_type: str, selector: str) -> bool:
     """checks selector to see if it's required type or not.
 
@@ -1358,75 +1809,6 @@ def has_required_property(property: str, sheet: Stylesheet) -> bool:
             if declaration.property == property:
                 return True
     return has_property
-
-
-def get_all_stylesheets_by_file(file_path: str) -> list:
-    """returns a list of all Stylesheet objects from an HTML file in order of
-    appearance.
-
-    This will check an HTML file for any links to stylesheets or style tags,
-    and get each stylesheet in the order in which they were called (in case
-    there is a CSS override).
-
-    It will only accept links to local stylesheets and ignore any external
-    stylesheets called with an http or https.
-
-    Args:
-        file_path: the path to an HTML file.
-
-    Returns:
-        all_styles: a list of stylesheet objects in the order in which they
-            are called (as a link or style tag).
-    """
-    all_styles = []
-    head_tags = html_tools.get_elements("head", file_path)
-    for item in head_tags:
-        for tag in item.contents:
-            if tag == "\n":
-                continue
-            if tag.name == "link":
-                href = tag.attrs.get("href")
-                if ".css" in href:
-                    if "http" not in href[:5]:
-                        # remove html filename with sheet href
-                        path_list = clerk.get_path_list(file_path)
-                        path_list.pop()
-                        path_list.append(href)
-                        sheet_path = "/".join(path_list)
-                        code = clerk.file_to_string(sheet_path)
-                        css_sheet = Stylesheet(sheet_path, code)
-                        all_styles.append(css_sheet)
-            if tag.name == "style":
-                css_sheet = Stylesheet(file_path, tag.text, "styletag")
-                all_styles.append(css_sheet)
-    return all_styles
-
-
-def get_all_styles_in_order(project_path: str) -> list:
-    """returns a list of all files' stylesheets in order of appearance.
-
-    The goal is to allows user to identify the cascade order of selectors
-    and their values. This will allow one to determine if one ruleset
-    overrides another (same specificity)
-
-    Iterates through each html file in a project folder and extracts
-    any style tags and local stylesheets. Each styletag or stylesheet
-    is converted into a Stylesheet object and appended to a dictionary
-    of file names.
-
-    Args:
-        project_path: the path to the main project folder.
-
-    Returns:
-        styles_by_html_files: a list of dictionary objects. Each dictionary
-            has two keys: file and stylesheets.
-    """
-    styles_by_html_files = []
-    html_files = html_tools.get_all_html_files(project_path)
-    for file in html_files:
-        file_data = get_all_stylesheets_by_file(file)
-        styles_by_html_files.append({"file": file, "stylesheets": file_data})
-    return styles_by_html_files
 
 
 def get_styles_by_html_files(project_path: str) -> list:
@@ -1503,48 +1885,6 @@ def get_project_global_colors(project_path: str) -> dict:
     return global_color_rules
 
 
-def get_global_colors(file_path: str) -> dict:
-    """Returns a dictionary of color rules applied the entire document.
-
-    Global colors (in this context) are colors that apply to an entire
-    document. Selectors that target the entire document are *, html,
-    and body.
-
-    Since it's possible that an author could accidentally override
-    a color or background color, this function will remove any
-    previous rules that are overridden in a file.
-
-    NOTE: This should not consider an override if the would-be
-    selector is in an @media ruleset, we won't treat it as an
-    override.
-
-    Args:
-        file_path: the path to the file.
-
-    Returns:
-        global_color_rules: a dictionary of filenames and their global
-            rulesets.
-    """
-    global_color_rules = {}
-    sheets = get_all_stylesheets_by_file(file_path)
-    if sheets:
-        for sheet in sheets:
-            rules = sheet.rulesets
-            global_colors = get_global_color_details(rules)
-            if global_colors:
-                # Have we added the file to the global rules?
-                if not global_color_rules.get(file_path):
-                    global_color_rules[file_path] = []
-                for gc in global_colors:
-                    global_color_rules[file_path].append(gc)
-        if sheets and len(global_color_rules.get(file_path)) > 1:
-            # figure out the override
-            global_colors = adjust_overrides(file_path, global_color_rules)
-            adjusted_rule = global_colors.get(file_path)
-            global_color_rules[file_path] = adjusted_rule
-    return global_color_rules
-
-
 def passes_global_color_contrast(file: str, goal="Normal AAA") -> bool:
     """determines whether a file passes global color contrast
 
@@ -1594,233 +1934,6 @@ def get_variables(text: str) -> list:
     return variables
 
 
-def adjust_overrides(file_path: str, rules: dict) -> dict:
-    """Returns a dictionary with a single global ruleset.
-
-    Gets the final computed value of all rulesets in a file. It loops
-    through the rulesets, and whenever there is an override (due to a
-    repeat selector), it replaces whichever value is in the repeated
-    selector.
-
-    Args:
-        file_path: path to the file in question, to be used as a
-            key in the adjusted rule
-        rules: a dictionary where the key is the filename and the value
-            is a list of rules.
-
-    Returns:
-        adjusted_rule: a dictionary where the key is the same, but
-            there is only one ruleset (the computed ruleset).
-    """
-    adjusted_rule = {}
-    old_rules = list(rules.get(file_path))
-    pre_selector, pre_bg_color, pre_color = ("", "", "")
-    for rule in old_rules:
-        selector = rule.get("selector")
-        bg_color = rule.get("background-color")
-        color = rule.get("color")
-        if pre_selector:
-            # we have looped at least once.
-            # check to see if we have the same selector or not
-            if selector == pre_selector:
-                # same selector, it's time to check our stats
-                # for an override
-                if bg_color and bg_color != pre_bg_color:
-                    adjusted_rule[file_path]["background-color"] = bg_color
-                if color and color != pre_color:
-                    adjusted_rule[file_path]["color"] = color
-        else:
-            # this is the first time we are looping
-            adjusted_rule[file_path] = rule
-            pre_selector = selector
-            pre_bg_color = bg_color
-            pre_color = color
-    return adjusted_rule
-
-
-def get_color_rules_from_stylesheet(stylesheet: Stylesheet) -> list:
-    """Gets all color-based rules from a stylesheet.
-
-    Args:
-        stylesheet: Stylesheet object.
-
-    Returns:
-        rules: a list of color-based rules"""
-    rules = []
-    for ruleset in stylesheet.rulesets:
-        declaration_block = ruleset.declaration_block
-        declarations = declaration_block.declarations
-        for declaration in declarations:
-            property = declaration.property
-            if property == "color" or "background" in property:
-                selector = ruleset.selector
-                value = declaration.value
-                if "background" in property:
-                    background_color = get_background_color(declaration)
-                    if not background_color:
-                        continue
-                    else:
-                        value = background_color
-                rules.append((selector, property, value))
-    return rules
-
-
-def get_all_color_rules(file: str) -> list:
-    """gets all color rulesets from html file
-
-    Gets all color rulesets applied to an HTML file, whether that be
-    through a style tag or linked stylesheet and condensing them.
-
-    Creates a list of tuples that include filename, selector, color,
-    and background color, and adjusts for overrides. In other words,
-    it should be each selector and the final color applied.
-
-    Caveats: It does not yet account for inheritance. That would require
-    traversing the DOM. It also does not yet account for @media rules. As
-    of now, it's ignoring any @media breakpoint rule.
-
-    Args:
-        file: an html file
-
-    Returns:
-        all_color_rules: a dictionary of all color rulesets applied to an
-        html document."""
-    all_color_rules = []
-    styles_by_file = get_all_stylesheets_by_file(file)
-    for style in styles_by_file:
-        rules = get_color_rules_from_stylesheet(style)
-        if rules:
-            for rule in rules:
-                all_color_rules.append((file,) + rule)
-    condensed_rules = condense_the_rules(all_color_rules, file)
-    return condensed_rules
-
-
-def get_background_color(declaration: Declaration) -> Union[str, None]:
-    """Returns a color value from a declaration with a property of background
-
-    Args:
-        declaration: the declaration we want to test.
-
-    Returns:
-        color_value: either a valid color value, None, or gradient - if it's a
-            gradient"""
-    color_value = None
-    is_rgb = color_tools.is_rgb(declaration.value)
-    if is_rgb:
-        return declaration.value
-    values = declaration.value.split()
-    for val in values:
-        color = color_tools.is_color_value(val)
-        if color:
-            color_value = val
-            break
-        is_keyword = val in color_tools.color_keywords.get_all_keywords()
-        if is_keyword:
-            color_value = val
-            break
-        gradient = is_gradient(val)
-        if gradient:
-            color_value = "gradient"
-            break
-    return color_value
-
-
-def condense_the_rules(rules: list, source_file: str) -> dict:
-    """takes a list of color rules and returns only the unique color rulesets
-
-    Brings together both background and foreground color for each selector
-    (when present)
-
-    Args:
-        rules: list of tuples that contain filename, selector, property,
-            and value
-        source_file: the HTML document the contains the rules
-    Returns:
-        condensed: a dictionary with file and all selectors that target
-            colors with what was set for background-color and color
-    """
-    condensed = {"file": source_file}
-    for rule in rules:
-        file, sel, prop, val = rule
-        if file != source_file:
-            continue
-        if not condensed.get("file"):
-            condensed["file"] = file
-        if not condensed.get(sel):
-            # we don't yet have the selector in place
-            condensed[sel] = {}
-        # set the color or background color here
-        if prop == "color":
-            condensed[sel]["color"] = val
-        if prop == "background-color":
-            condensed[sel]["background-color"] = val
-    check_for_inherited_colors(rules, condensed, source_file)
-    return condensed
-
-
-def check_for_inherited_colors(
-    rules: list, condensed: dict, source_file: str
-) -> None:
-    """Double-check and fix any necessary overrides.
-
-    This is a tough one. The goal is to look for advanced selectors
-    (descendant, class, id, pseudo, attribute), and if they did NOT
-    specify color or bg color, then replace it with the nearest
-    ancestor
-
-    Args:
-        rules: a list of all color rules.
-        condensed: the already condensed set of color rules
-        source_file: the file we are looking at."""
-    for rule in rules:
-        file, sel, prop, val = rule
-        if file != source_file:
-            continue
-        if "." in sel or ":" in sel or "#" in sel or "[" in sel:
-            # if either color or bg color is missing, look behind
-            if not condensed[sel].get("color") or not condensed[sel].get(
-                "background-color"
-            ):
-                for char in ".:#[":
-                    if char in sel:
-                        split_selector = sel.split(char)
-                        behind = split_selector[0]
-                        if condensed.get(behind):
-                            for data in rules:
-                                filename = data[0]
-                                if filename != source_file:
-                                    continue
-                                rule_selector = data[1]
-                                if behind == rule_selector:
-                                    # we found an ancestor
-                                    ancestor_data = condensed.get(behind)
-                                    current_condensed = condensed.get(sel)
-                                    if not current_condensed.get("color"):
-                                        color = ancestor_data.get("color")
-                                        current_condensed["color"] = color
-                                    if not current_condensed.get(
-                                        "background-color"
-                                    ):
-                                        bg = ancestor_data.get(
-                                            "background-color"
-                                        )
-                                        cur_bg = current_condensed
-                                        cur_bg["background-color"] = bg
-                                    break
-
-
-def get_bg_or_color(prop):
-    declaration = {"type": {}, "declaration": {}}
-    if prop == "color":
-        declaration["type"] = "color"
-        declaration["declaration"] = {"color": prop}
-    if "background" in prop:
-        declaration["type"] = "background"
-        declaration["declaration"] = {"background": prop}
-    return declaration
-
-
 def get_project_color_contrast(
     project_path: str, normal_goal="Normal AAA", large_goal="Large AAA"
 ) -> list:
@@ -1844,6 +1957,9 @@ def get_project_color_contrast(
         global_details = global_color_rules.get(file)
         all_color_rules = get_all_color_rules(file)
         if global_details:
+            if isinstance(global_details, list):
+                if len(global_details) == 1:
+                    global_details = global_details[0]
             global_color = global_details.get("color")
             global_bg = global_details.get("background-color")
         items = list(all_color_rules.keys())
@@ -1861,11 +1977,17 @@ def get_project_color_contrast(
             details = all_color_rules.get(selector)
             color = details.get("color")
             if not color:
-                color = global_color
+                if not global_color:
+                    color = "#000000"
+                else:
+                    color = global_color
             color_hex = color_tools.get_hex(color)
             bg_color = details.get("background-color")
             if not bg_color:
-                bg_color = global_bg
+                if not global_bg:
+                    bg_color = "#ffffff"
+                else:
+                    bg_color = global_bg
             bg_hex = color_tools.get_hex(bg_color)
             passes_color = color_tools.passes_color_contrast(
                 goal, bg_hex, color_hex
@@ -1883,45 +2005,6 @@ def get_project_color_contrast(
                 )
             )
     return results
-
-
-def file_applies_property_by_selector(
-    file_path: str, selector: str, property: str
-) -> bool:
-    """determines whether a specific property is applied to selector or not.
-
-    Args:
-        file_path: path to html doc in question.
-        selector: CSS selector (or element) that the property is applied.
-        property: the CSS property we are looking for.
-
-    Returns:
-        applies_property: whether that selector applies the property or not.
-    """
-    applies_property = False
-    style_sheets = get_all_stylesheets_by_file(file_path)
-
-    # look for the selector get all declaration block
-    declarations = []
-    for sheet in style_sheets:
-        declaration_block = get_declaration_block_from_selector(
-            selector, sheet
-        )
-        if declaration_block:
-            declarations.append(declaration_block)
-    combined_declaration_block = "\n".join(declarations)
-    if combined_declaration_block:
-        # check for property in declaration_block
-        declarations = combined_declaration_block.split(";")
-        for declaration in declarations:
-            try:
-                prop, value = declaration.split(":")
-                if property in prop:
-                    applies_property = True
-                    break
-            except ValueError:
-                print("Declaration is missing a colon!")
-    return applies_property
 
 
 def get_declaration_block_from_selector(
@@ -1964,40 +2047,6 @@ def is_selector_at_end_of_descendant(selector: str, cur_selector: str) -> bool:
     return selector_at_end_of_descendant
 
 
-def get_declaration_value_by_property(
-    block: Union[str, DeclarationBlock], property: str
-) -> str:
-    """returns the value of a property from a declaration block
-
-    Args:
-        block: the declaration block in question (could be as a string
-            or as a DeclarationBlock)
-        property: the property we are looking for
-
-    Returns:
-        value: the value of the property"""
-    value = ""
-    try:
-        block = block.text
-    except AttributeError:
-        declarations = block.strip()
-    declarations = block.split(";")
-    for item in declarations:
-        item = item.strip()
-        try:
-            # check for @media rules
-            if "{" in item:
-                item_split = item.split("{")
-                item = item_split[1].strip()
-            prop, val = item.split(":")
-            if prop.lower().strip() == property.lower():
-                value = val.strip()
-                continue
-        except ValueError:
-            print("Doh! no colon")
-    return value
-
-
 def has_link_selector(sheet: Stylesheet) -> bool:
     """returns whether any style in a stylesheet targets a hyperlink
 
@@ -2031,23 +2080,6 @@ def has_link_selector(sheet: Stylesheet) -> bool:
     return has_selector
 
 
-def get_all_link_selectors(sheet: Stylesheet) -> list:
-    """returns all selectors that target a link
-
-    Args:
-        sheet: the stylesheet object.
-
-    Returns:
-        selectors: a list of all selectors that target a link"""
-    selectors = []
-    all_selectors = sheet.selectors
-    for selector in all_selectors:
-        selector_match = is_link_selector(selector)
-        if selector_match:
-            selectors.append(selector.strip())
-    return selectors
-
-
 def is_link_selector(selector):
     selector_copy = selector
     if " " in selector:
@@ -2061,26 +2093,6 @@ def is_link_selector(selector):
     regex_pattern = regex_patterns.get("advanced_link_selector")
     selector_match = re.search(regex_pattern, selector_copy)
     return selector_match
-
-
-def get_all_link_rules(sheet: Stylesheet) -> list:
-    """returns all rules that target a hyperlink
-
-    returns all rules that target a link
-
-    Args:
-        sheet: the stylesheet object.
-
-    Returns:
-        rules: a list of all rules that target a link"""
-    rules = []
-    link_selectors = get_all_link_selectors(sheet)
-    all_rulesets = sheet.rulesets
-    for rule in all_rulesets:
-        current_selector = rule.selector
-        if current_selector in link_selectors:
-            rules.append(rule)
-    return rules
 
 
 def get_link_color_data(project_path: str) -> list:
