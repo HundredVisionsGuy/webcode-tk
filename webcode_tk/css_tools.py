@@ -28,7 +28,7 @@ regex_patterns: dict = {
     "pseudoclass_selector": r":\w+",
     "single_attribute_selector": r"^[a-zA-Z]*\[(.*?)\]",
     "single_type_selector": r"^[a-zA-Z][a-zA-Z0-9]*$",
-    "type_selector": r"([^#:\+.\[=a-zA-Z][a-zA-Z$][a-zA-Z1-6]*|^\w*)",
+    "type_selector": r"(?:^|\s)([a-zA-Z][a-zA-Z0-9_-]*)",
     "vendor_prefix": r"\A-moz-|-webkit-|-ms-|-o-",
 }
 

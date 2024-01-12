@@ -187,9 +187,10 @@ class CSSAppliedTree:
         After all styles have been applied, do one last check to see
         if anything wasn't applied, and then apply the default colors."""
         for sheet in self.stylesheets:
-            global_colors = css.get_global_color_details(sheet.rulesets)[0]
+            global_colors = css.get_global_color_details(sheet.rulesets)
             body = self.children[0]
-            self.__apply_global_colors(body, global_colors)
+            if global_colors:
+                self.__apply_global_colors(body, global_colors)
             color_rules = sheet.color_rulesets
             for ruleset in color_rules:
                 self.__adjust_colors(body, ruleset)
@@ -204,15 +205,18 @@ class CSSAppliedTree:
 
         base case is an element with no children"""
         # first apply styles with specificity
-        selector = global_colors.get("selector")
-        specificity = css.get_specificity(selector)
-        global_colors["specificity"] = specificity
-        element.ammend_color_styles(global_colors)
+        if not isinstance(global_colors, list):
+            global_colors = [global_colors]
+        for gc in global_colors:
+            selector = gc.get("selector")
+            specificity = css.get_specificity(selector)
+            gc["specificity"] = specificity
+            element.ammend_color_styles(gc)
 
-        # loop through all children and call
-        children = element.children
-        for child in children:
-            self.__apply_global_colors(child, global_colors)
+            # loop through all children and call
+            children = element.children
+            for child in children:
+                self.__apply_global_colors(child, gc)
         return
 
     def __adjust_colors(self, element: Element, ruleset: dict) -> None:
@@ -234,6 +238,8 @@ class CSSAppliedTree:
 
         # Check specificity & override if necessary
         new_specificity = css.get_specificity(selector)
+        if not element.styles:
+            print("We need to apply styles to the element - stat!")
         old_specificity = element.styles.get("specificity")
         if new_specificity >= old_specificity:
             element.styles["specificity"] = new_specificity
@@ -330,6 +336,9 @@ def does_selector_apply(element: Element, selector: str) -> bool:
         is_attribute_selector = bool(
             re.match(regex_patterns.get("single_attribute_selector"), sel)
         )
+        is_descendant_selector = bool(
+            re.match(regex_patterns.get("descendant_selector"), sel)
+        )
 
         # If the tag is an anchor, but the selector is not - doesn't apply
         # link color can only be changed by a link selector
@@ -365,6 +374,11 @@ def does_selector_apply(element: Element, selector: str) -> bool:
                 break
         elif is_attribute_selector:
             print("This must be an attribute selector")
+        elif is_descendant_selector:
+            items = sel.split()
+            applies = items[-1] == element.name
+            if applies:
+                break
         else:
             print("What is this?")
     return applies
@@ -397,7 +411,7 @@ def change_children_colors(
 
 if __name__ == "__main__":
 
-    project_path = "tests/test_files/project_refactor_tests/"
+    project_path = "tests/test_files/large_project/"
     styles_by_html_files = css.get_styles_by_html_files(project_path)
     for file in styles_by_html_files:
         filepath = file.get("file")

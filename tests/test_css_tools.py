@@ -401,6 +401,11 @@ def test_get_type_score_for_3_type_selectors():
     assert results == 3
 
 
+def test_get_type_score_for_hyphenated_selector():
+    results = css_tools.get_type_score("nav.primary-nav")
+    assert results == 1
+
+
 def test_get_type_score_for_4_type_selectors():
     results = css_tools.get_type_score(selectors_with_no_ids)
     assert results == 4
