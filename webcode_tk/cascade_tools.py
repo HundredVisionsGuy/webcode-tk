@@ -195,7 +195,6 @@ class CSSAppliedTree:
                 self.__adjust_colors(body, ruleset)
             children = body.children
             for child in children:
-                print(child)
                 for ruleset in color_rules:
                     self.__adjust_colors(child, ruleset)
 
@@ -237,6 +236,7 @@ class CSSAppliedTree:
         new_specificity = css.get_specificity(selector)
         old_specificity = element.styles.get("specificity")
         if new_specificity >= old_specificity:
+            element.styles["specificity"] = new_specificity
             # get property and value
             new_prop, new_val = tuple(declaration.items())[0]
 
@@ -248,8 +248,11 @@ class CSSAppliedTree:
 
                 # loop through all children and adjust colors
                 children = element.children
-                for child in children:
-                    self.__adjust_colors(child, ruleset)
+                if children:
+                    for child in children:
+                        change_children_colors(
+                            child, new_specificity, selector, new_prop, new_val
+                        )
         return
 
     def __get_parents(self, tag: Tag) -> list:
@@ -352,7 +355,8 @@ def does_selector_apply(element: Element, selector: str) -> bool:
                             possible_selectors.append("." + val)
                             possible_selectors.append(element.name + "." + val)
                         if selector in possible_selectors:
-                            print("Now we're in business.")
+                            applies = True
+                            break
         elif is_psuedo_class_selector:
             # check for element before psuedoclass
             pre_pseudo = sel.split(":")[0]
@@ -366,11 +370,35 @@ def does_selector_apply(element: Element, selector: str) -> bool:
     return applies
 
 
+def change_children_colors(
+    element: Element(), specificity: str, sel: str, prop: str, value: str
+) -> None:
+    """
+    recursively change colors on all descendants.
+
+    Args:
+        element: the element
+        specificity: the computed specificity
+        sel: the selector used to change
+        prop: the property we want to change (color or bg color)
+        value: the value we will change it to
+    """
+    # Change property if selector works
+    element_specificity = element.styles.get("specificity")
+    if specificity >= element_specificity:
+        element.styles[prop] = value
+        element.styles["specificity"] = specificity
+        element.styles["selector"] = sel
+        kids = element.children
+        if kids:
+            for kid in kids:
+                change_children_colors(kid, specificity, sel, prop, value)
+
+
 if __name__ == "__main__":
 
     project_path = "tests/test_files/project_refactor_tests/"
     styles_by_html_files = css.get_styles_by_html_files(project_path)
-    print(styles_by_html_files)
     for file in styles_by_html_files:
         filepath = file.get("file")
         sheets = file.get("stylesheets")
