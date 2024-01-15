@@ -2080,7 +2080,11 @@ def has_link_selector(sheet: Stylesheet) -> bool:
     return has_selector
 
 
-def is_link_selector(selector):
+def is_link_selector(selector: str) -> bool:
+    """returns a true if selector targets a link
+
+    Args:
+        selector: the selector in question"""
     selector_copy = selector
     if " " in selector:
         # we need to add a space at the end for the split to work
@@ -2092,7 +2096,7 @@ def is_link_selector(selector):
         # Check selector_copy to see if it's an anchor
     regex_pattern = regex_patterns.get("advanced_link_selector")
     selector_match = re.search(regex_pattern, selector_copy)
-    return selector_match
+    return bool(selector_match)
 
 
 def get_link_color_data(project_path: str) -> list:

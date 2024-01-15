@@ -41,7 +41,18 @@ class Element(object):
     def __init__(self, val=None, children=None) -> None:
         self.name = val
         self.attributes = []
-        self.styles = []
+        self.styles = {
+            "background-color": "#ffffff",
+            "color": "#000000",
+            "specificity": "000",
+            "selector": "user-agent",
+        }
+        self.is_link = False
+        if val == "a":
+            self.is_link = True
+            self.styles["color"] = default_link_color
+            self.styles["visited-color"] = default_link_visited
+        self.get_contrast_data(self.styles)
         self.children = children if children is not None else []
         self.parents = []
 
@@ -49,32 +60,19 @@ class Element(object):
         """adjust color styles based on specificity"""
         # Make a copy of styles (being mutable and all)
         styles = new_styles.copy()
-        # check first to make sure it's not a link
-        is_a_link = False
-        if self.name == "a":
-            is_a_link = True
+        # check first to see if it's a link
+        if self.is_link:
+            selector = new_styles.get("selector")
+            is_link_selector = css.is_link_selector(selector)
+
+            # if it is a link selector, we change
+            if is_link_selector:
+                print("Make sure we're doing this right")
+                self.styles = new_styles
+                self.get_contrast_data(styles)
         if not self.styles:
-            if is_a_link:
-                # set the color to default blue
-                styles["color"] = default_link_color
-                styles["visited-color"] = default_link_visited
-                hexc = color.get_hex(styles.get("color"))
-                hexbg = color.get_hex(styles.get("background-color"))
-                hexv = color.get_hex(styles.get("visited-color"))
-                link_contrast = color.get_color_contrast_report(hexc, hexbg)
-                link_ratio = color.contrast_ratio(hexc, hexbg)
-                link_visited_contrast = color.get_color_contrast_report(
-                    hexv, hexbg
-                )
-                visited_ratio = color.contrast_ratio(hexv, hexbg)
-                styles["contrast_ratio"] = link_ratio
-                styles["passes_normal_aaa"] = link_contrast.get("Normal AAA")
-                styles["passes_normal_aa"] = link_contrast.get("Normal AA")
-                styles["passes_large_aaa"] = link_contrast.get("Large AAA")
-                styles["visited_contrast_ratio"] = visited_ratio
-                styles["visited_normal_aaa"] = link_visited_contrast.get(
-                    "Normal AAA"
-                )
+            if self.is_link:
+                print("Yo")
             self.styles = styles
         else:
             # check specificity
@@ -87,7 +85,7 @@ class Element(object):
                 bg = styles.get("background-color")
 
                 # if it's a link, only change bg (not color)
-                if is_a_link:
+                if self.is_link:
                     col = None
                 else:
                     col = styles.get("color")
@@ -98,6 +96,27 @@ class Element(object):
                         self.styles["background-color"] = bg
                     if col:
                         self.styles["color"] = col
+
+    def get_contrast_data(self, styles: dict) -> None:
+        hexc = color.get_hex(styles.get("color"))
+        hexbg = color.get_hex(styles.get("background-color"))
+        link_contrast = color.get_color_contrast_report(hexc, hexbg)
+        link_ratio = color.contrast_ratio(hexc, hexbg)
+        styles["contrast_ratio"] = link_ratio
+        styles["passes_normal_aaa"] = link_contrast.get("Normal AAA")
+        styles["passes_normal_aa"] = link_contrast.get("Normal AA")
+        styles["passes_large_aaa"] = link_contrast.get("Large AAA")
+        visited_color = styles.get("visited_color")
+        if visited_color:
+            hexv = color.get_hex(styles.get("visited-color"))
+            link_visited_contrast = color.get_color_contrast_report(
+                hexv, hexbg
+            )
+            visited_ratio = color.contrast_ratio(hexv, hexbg)
+            styles["visited_contrast_ratio"] = visited_ratio
+            styles["visited_normal_aaa"] = link_visited_contrast.get(
+                "Normal AAA"
+            )
 
 
 class CSSAppliedTree:
@@ -150,7 +169,6 @@ class CSSAppliedTree:
         root = Element("html")
         self.root = root
         body = Element("body")
-        body.styles = {"background-color": "#ffffff", "color": "#000000"}
         self.children.append(body)
         body_soup = self.soup.body
         attributes = body_soup.attrs
@@ -169,8 +187,13 @@ class CSSAppliedTree:
             contents.append(child)
         for tag in contents:
             tag_name = tag.name
+            if tag_name == "script":
+                continue
             tag_children = tag.contents
             new_element = Element(tag_name)
+            if tag.name != "a":
+                new_element.styles = element.styles
+            new_element.styles["specificity"] = "000"
             new_element.parents = self.__get_parents(tag)
             if tag.attrs:
                 new_element.attributes = tag.attrs
@@ -191,6 +214,7 @@ class CSSAppliedTree:
             body = self.children[0]
             if global_colors:
                 self.__apply_global_colors(body, global_colors)
+        for sheet in self.stylesheets:
             color_rules = sheet.color_rulesets
             for ruleset in color_rules:
                 self.__adjust_colors(body, ruleset)
@@ -226,9 +250,22 @@ class CSSAppliedTree:
         Args:
             element: the element in question.
             ruleset: the ruleset we want to apply"""
+        print(f"Adjusting colors for children of {element.name}")
+        print("there is something here we need to adjust.")
+        # Adjust colors if necessary - if there was a change,
+        # adjust colors for children
+        selector = list(ruleset.keys())[0]
+        if element.name != "body":
+            selector_applies = does_selector_apply(element, selector)
+            if selector_applies:
+                print("adjust the element")
+                declaration = ruleset.get(selector)
+                new_specificity = css.get_specificity(selector)
+                self.change_styles(
+                    element, selector, declaration, new_specificity
+                )
         for child in element.children:
             self.__adjust_colors(child, ruleset)
-        selector = list(ruleset.keys())[0]
 
         # make sure the selector selects the element
         selector_applies = does_selector_apply(element, selector)
@@ -238,28 +275,30 @@ class CSSAppliedTree:
 
         # Check specificity & override if necessary
         new_specificity = css.get_specificity(selector)
-        if not element.styles:
-            print("We need to apply styles to the element - stat!")
         old_specificity = element.styles.get("specificity")
         if new_specificity >= old_specificity:
-            element.styles["specificity"] = new_specificity
-            # get property and value
-            new_prop, new_val = tuple(declaration.items())[0]
-
-            # if they are different from current element
-            el_val = element.styles.get(new_prop)
-            if el_val != new_val:
-                # apply the new color
-                element.styles[new_prop] = new_val
-
-                # loop through all children and adjust colors
-                children = element.children
-                if children:
-                    for child in children:
-                        change_children_colors(
-                            child, new_specificity, selector, new_prop, new_val
-                        )
+            self.change_styles(element, selector, declaration, new_specificity)
         return
+
+    def change_styles(self, element, selector, declaration, new_specificity):
+        element.styles["specificity"] = new_specificity
+
+        # get property and value
+        new_prop, new_val = tuple(declaration.items())[0]
+
+        # if they are different from current element
+        el_val = element.styles.get(new_prop)
+        if el_val != new_val:
+            # apply the new color
+            element.styles[new_prop] = new_val
+
+            # loop through all children and adjust colors
+            children = element.children
+            if children:
+                for child in children:
+                    change_children_colors(
+                        child, new_specificity, selector, new_prop, new_val
+                    )
 
     def __get_parents(self, tag: Tag) -> list:
         """gets all parent tag names and possible selectors as dictionary
@@ -398,7 +437,11 @@ def change_children_colors(
         value: the value we will change it to
     """
     # Change property if selector works
-    element_specificity = element.styles.get("specificity")
+    if element.styles:
+        element_specificity = element.styles.get("specificity")
+    else:
+        element.styles = {}
+        element_specificity = "000"
     if specificity >= element_specificity:
         element.styles[prop] = value
         element.styles["specificity"] = specificity
