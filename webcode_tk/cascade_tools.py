@@ -209,19 +209,22 @@ class CSSAppliedTree:
 
         After all styles have been applied, do one last check to see
         if anything wasn't applied, and then apply the default colors."""
+        body = self.__set_global_colors()
+        for sheet in self.stylesheets:
+            color_rules = sheet.color_rulesets
+            for ruleset in color_rules:
+                if "body" in ruleset.keys():
+                    print("We found a body selector")
+                    continue
+                self.__adjust_colors(body, ruleset)
+
+    def __set_global_colors(self):
         for sheet in self.stylesheets:
             global_colors = css.get_global_color_details(sheet.rulesets)
             body = self.children[0]
             if global_colors:
                 self.__apply_global_colors(body, global_colors)
-        for sheet in self.stylesheets:
-            color_rules = sheet.color_rulesets
-            for ruleset in color_rules:
-                self.__adjust_colors(body, ruleset)
-            children = body.children
-            for child in children:
-                for ruleset in color_rules:
-                    self.__adjust_colors(child, ruleset)
+        return body
 
     def __apply_global_colors(self, element: Element, global_colors) -> None:
         """recursively apply global colors to all elements
@@ -250,35 +253,16 @@ class CSSAppliedTree:
         Args:
             element: the element in question.
             ruleset: the ruleset we want to apply"""
-        print(f"Adjusting colors for children of {element.name}")
-        print("there is something here we need to adjust.")
         # Adjust colors if necessary - if there was a change,
         # adjust colors for children
         selector = list(ruleset.keys())[0]
-        if element.name != "body":
-            selector_applies = does_selector_apply(element, selector)
-            if selector_applies:
-                print("adjust the element")
-                declaration = ruleset.get(selector)
-                new_specificity = css.get_specificity(selector)
-                self.change_styles(
-                    element, selector, declaration, new_specificity
-                )
+        selector_applies = does_selector_apply(element, selector)
+        if selector_applies:
+            declaration = ruleset.get(selector)
+            new_specificity = css.get_specificity(selector)
+            self.change_styles(element, selector, declaration, new_specificity)
         for child in element.children:
             self.__adjust_colors(child, ruleset)
-
-        # make sure the selector selects the element
-        selector_applies = does_selector_apply(element, selector)
-        if not selector_applies:
-            return
-        declaration = list(ruleset.values())[0]
-
-        # Check specificity & override if necessary
-        new_specificity = css.get_specificity(selector)
-        old_specificity = element.styles.get("specificity")
-        if new_specificity >= old_specificity:
-            self.change_styles(element, selector, declaration, new_specificity)
-        return
 
     def change_styles(self, element, selector, declaration, new_specificity):
         element.styles["specificity"] = new_specificity
@@ -289,6 +273,25 @@ class CSSAppliedTree:
         # if they are different from current element
         el_val = element.styles.get(new_prop)
         if el_val != new_val:
+            # If psuedo-class selector
+            # Adjust styles to match then break
+            if is_selector_pseudoclass(selector):
+                pseudo_key = selector + "-" + new_prop
+                other_pseudo_key = selector + "-"
+                if new_prop == "color":
+                    other_pseudo_key += "background"
+                    other_value = element.styles.get("background-color")
+                else:
+                    other_pseudo_key += "color"
+                    other_value = element.styles.get("color")
+                element.styles[pseudo_key] = new_val
+                element.styles[other_pseudo_key] = other_value
+                hex1 = color.get_hex(new_val)
+                hex2 = color.get_hex(other_value)
+                pseudo_report_key = selector + "-contrast"
+                contrast_report = color.get_color_contrast_report(hex1, hex2)
+                element.styles[pseudo_report_key] = contrast_report
+                return
             # apply the new color
             element.styles[new_prop] = new_val
 
@@ -368,10 +371,7 @@ def does_selector_apply(element: Element, selector: str) -> bool:
             re.match(regex_patterns.get("class_selector"), sel)
         )
         is_class_selector = is_class_selector or "." in sel
-        is_psuedo_class_selector = bool(
-            re.match(regex_patterns.get("pseudoclass_selector"), sel)
-        )
-        is_psuedo_class_selector = is_psuedo_class_selector or ":" in sel
+        is_psuedo_class_selector = is_selector_pseudoclass(sel)
         is_attribute_selector = bool(
             re.match(regex_patterns.get("single_attribute_selector"), sel)
         )
@@ -408,7 +408,7 @@ def does_selector_apply(element: Element, selector: str) -> bool:
         elif is_psuedo_class_selector:
             # check for element before psuedoclass
             pre_pseudo = sel.split(":")[0]
-            applies = selector == sel and pre_pseudo == element.name
+            applies = pre_pseudo == element.name
             if applies:
                 break
         elif is_attribute_selector:
@@ -421,6 +421,14 @@ def does_selector_apply(element: Element, selector: str) -> bool:
         else:
             print("What is this?")
     return applies
+
+
+def is_selector_pseudoclass(selector: str) -> bool:
+    """returns whether selector is a pseudoclass selector"""
+    pc_regex = css.regex_patterns.get("pseudoclass_selector")
+    is_psuedo_class_selector = bool(re.match(pc_regex, selector))
+    is_psuedo_class_selector = is_psuedo_class_selector or ":" in selector
+    return is_psuedo_class_selector
 
 
 def change_children_colors(
@@ -454,7 +462,7 @@ def change_children_colors(
 
 if __name__ == "__main__":
 
-    project_path = "tests/test_files/large_project/"
+    project_path = "tests/test_files/single_file_project/"
     styles_by_html_files = css.get_styles_by_html_files(project_path)
     for file in styles_by_html_files:
         filepath = file.get("file")
