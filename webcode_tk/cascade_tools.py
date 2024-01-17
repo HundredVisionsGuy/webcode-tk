@@ -60,6 +60,7 @@ class Element(object):
         """adjust color styles based on specificity"""
         # Make a copy of styles (being mutable and all)
         styles = new_styles.copy()
+
         # check first to see if it's a link
         if self.is_link:
             selector = new_styles.get("selector")
@@ -292,8 +293,11 @@ class CSSAppliedTree:
                 contrast_report = color.get_color_contrast_report(hex1, hex2)
                 element.styles[pseudo_report_key] = contrast_report
                 return
-            # apply the new color
+
+            # apply the new color, selector, and check contrast
             element.styles[new_prop] = new_val
+            element.styles["selector"] = selector
+            self.adjust_color_contrast(element, new_prop, new_val)
 
             # loop through all children and adjust colors
             children = element.children
@@ -302,6 +306,23 @@ class CSSAppliedTree:
                     change_children_colors(
                         child, new_specificity, selector, new_prop, new_val
                     )
+
+    def adjust_color_contrast(self, element, new_prop, new_val):
+        hex1 = color.get_hex(new_val)
+        if "background" in new_prop:
+            hex2 = element.styles["color"]
+        else:
+            hex2 = element.styles["background-color"]
+        hex2 = color.get_hex(hex2)
+        contrast_report = color.get_color_contrast_report(hex1, hex2)
+        passes_normal_aaa = contrast_report.get("Normal AAA")
+        passes_normal_aa = contrast_report.get("Normal AA")
+        passes_large_aaa = contrast_report.get("Large AAA")
+        ratio = color.contrast_ratio(hex1, hex2)
+        element.styles["contrast_ratio"] = ratio
+        element.styles["passes_normal_aaa"] = bool(passes_normal_aaa == "Pass")
+        element.styles["passes_normal_aa"] = bool(passes_normal_aa == "Pass")
+        element.styles["passes_large_aaa"] = bool(passes_large_aaa == "Pass")
 
     def __get_parents(self, tag: Tag) -> list:
         """gets all parent tag names and possible selectors as dictionary
