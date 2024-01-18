@@ -373,7 +373,7 @@ def test_stylesheet_for_selectors_with_one(
 
 
 def test_layout_css_stylesheet_for_multiple_selectors(layout_css_stylesheet):
-    assert len(layout_css_stylesheet.selectors) == 21
+    assert len(layout_css_stylesheet.selectors) == 22
 
 
 def test_has_required_property_for_display(layout_css_stylesheet):
