@@ -68,12 +68,9 @@ class Element(object):
 
             # if it is a link selector, we change
             if is_link_selector:
-                print("Make sure we're doing this right")
                 self.styles = new_styles
                 self.get_contrast_data(styles)
         if not self.styles:
-            if self.is_link:
-                print("Yo")
             self.styles = styles
         else:
             # check specificity
@@ -214,12 +211,21 @@ class CSSAppliedTree:
         for sheet in self.stylesheets:
             color_rules = sheet.color_rulesets
             for ruleset in color_rules:
-                if "body" in ruleset.keys():
-                    print("We found a body selector")
+                # only adjust colors if the selector doesn't target body
+                body_in_ruleset = self.targets_body(ruleset)
+                if body_in_ruleset:
                     continue
                 self.__adjust_colors(body, ruleset)
 
+    def targets_body(self, ruleset):
+        body_in_ruleset = False
+        for selector in list(ruleset.keys()):
+            if "body" in selector:
+                body_in_ruleset = True
+        return body_in_ruleset
+
     def __set_global_colors(self):
+        body = None
         for sheet in self.stylesheets:
             global_colors = css.get_global_color_details(sheet.rulesets)
             body = self.children[0]
@@ -266,7 +272,8 @@ class CSSAppliedTree:
             self.__adjust_colors(child, ruleset)
 
     def change_styles(self, element, selector, declaration, new_specificity):
-        element.styles["specificity"] = new_specificity
+        if not is_selector_pseudoclass(selector):
+            element.styles["specificity"] = new_specificity
 
         # get property and value
         new_prop, new_val = tuple(declaration.items())[0]
@@ -292,12 +299,11 @@ class CSSAppliedTree:
                 pseudo_report_key = selector + "-contrast"
                 contrast_report = color.get_color_contrast_report(hex1, hex2)
                 element.styles[pseudo_report_key] = contrast_report
-                return
-
-            # apply the new color, selector, and check contrast
-            element.styles[new_prop] = new_val
-            element.styles["selector"] = selector
-            self.adjust_color_contrast(element, new_prop, new_val)
+            else:
+                # apply the new color, selector, and check contrast
+                element.styles[new_prop] = new_val
+                element.styles["selector"] = selector
+                self.adjust_color_contrast(element, new_prop, new_val)
 
             # loop through all children and adjust colors
             children = element.children
@@ -433,6 +439,7 @@ def does_selector_apply(element: Element, selector: str) -> bool:
             if applies:
                 break
         elif is_attribute_selector:
+            # TODO: adjust for attribute selectors
             print("This must be an attribute selector")
         elif is_descendant_selector:
             items = sel.split()
@@ -440,7 +447,7 @@ def does_selector_apply(element: Element, selector: str) -> bool:
             if applies:
                 break
         else:
-            print("What is this?")
+            raise ValueError(f"Selector not recognized: Got {selector}")
     return applies
 
 
@@ -472,9 +479,11 @@ def change_children_colors(
         element.styles = {}
         element_specificity = "000"
     if specificity >= element_specificity:
-        element.styles[prop] = value
-        element.styles["specificity"] = specificity
-        element.styles["selector"] = sel
+        link_selector = css.is_link_selector(sel)
+        if not element.is_link and not link_selector:
+            element.styles[prop] = value
+            element.styles["specificity"] = specificity
+            element.styles["selector"] = sel
         kids = element.children
         if kids:
             for kid in kids:
@@ -482,8 +491,7 @@ def change_children_colors(
 
 
 if __name__ == "__main__":
-
-    project_path = "tests/test_files/single_file_project/"
+    project_path = "tests/test_files/large_project/"
     styles_by_html_files = css.get_styles_by_html_files(project_path)
     for file in styles_by_html_files:
         filepath = file.get("file")
