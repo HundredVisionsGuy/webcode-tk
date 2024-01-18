@@ -46,10 +46,22 @@ def single_file_td(single_file_tree):
 
 
 @pytest.fixture
-def gallery_file_h1(gallery_file_tree):
+def gallery_h1(gallery_file_tree):
     header = gallery_file_tree.children[0].children[0].children[0]
     h1 = header.children[0]
     return h1
+
+
+@pytest.fixture
+def gallery_body(gallery_file_tree):
+    body = gallery_file_tree.children[0]
+    return body
+
+
+@pytest.fixture
+def gallery_article(gallery_file_tree):
+    article = gallery_file_tree.children[0].children[0].children[1]
+    return article
 
 
 def test_css_tree_for_tree(single_file_tree):
@@ -100,13 +112,31 @@ def test_td_for_bg_color(single_file_td):
     assert expected == results
 
 
-def test_gallery_file_h1_for_specificity(gallery_file_h1):
+def test_gallery_h1_for_specificity(gallery_h1):
     expected = "002"
-    results = gallery_file_h1.styles.get("specificity")
+    results = gallery_h1.styles.get("specificity")
     assert expected == results
 
 
-def test_gallery_file_h1_for_colors(gallery_file_h1):
-    color = gallery_file_h1.styles.get("color")
-    background = gallery_file_h1.styles.get("background-color")
+def test_gallery_h1_for_colors(gallery_h1):
+    color = gallery_h1.styles.get("color")
+    background = gallery_h1.styles.get("background-color")
     assert background == "rgb(114, 101, 87)" and color == "#e7e4e1"
+
+
+def test_gallery_body_for_101_specificity(gallery_body):
+    expected = "101"
+    results = gallery_body.styles.get("specificity")
+    assert results == expected
+
+
+def test_gallery_body_for_background_color(gallery_body):
+    expected = "azure"
+    results = gallery_body.styles.get("background-color")
+    assert results == expected
+
+
+def test_gallery_article_for_background_color(gallery_article):
+    expected = "azure"
+    results = gallery_article.styles.get("background-color")
+    assert results == expected

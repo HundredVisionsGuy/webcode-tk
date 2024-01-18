@@ -391,6 +391,12 @@ def test_get_id_score_for_3_ids():
     assert results == 3
 
 
+def test_get_id_score_for_hash_in_middle_of_selector():
+    selector = "body#image-gallery"
+    results = css_tools.get_id_score(selector)
+    assert results == 1
+
+
 def test_get_id_score_for_no_ids():
     results = css_tools.get_id_score(selectors_with_no_ids)
     assert not results
@@ -431,6 +437,12 @@ def test_get_class_score_for_3_results():
 def test_get_specificity_for_303():
     results = css_tools.get_specificity(specificity303)
     assert results == "303"
+
+
+def test_get_specificity_for_101():
+    selector = "body#image-gallery"
+    results = css_tools.get_specificity(selector)
+    assert results == "101"
 
 
 def test_get_specificity_for_014():
