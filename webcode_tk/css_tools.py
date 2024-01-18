@@ -1333,7 +1333,6 @@ def restore_braces(split: list) -> list:
         # this is more of a precaution in case there we
         # two closing brackets on accident.
         if len(item) > 0 and "@" in item:
-            print(item)
             item = item + "}}"
             result.append(item)
     return result
