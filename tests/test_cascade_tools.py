@@ -74,7 +74,9 @@ def test_gallery_file_for_tree(gallery_file_tree):
 
 def test_single_link_for_color(single_file_link):
     color = single_file_link.styles.get("color")
+    color = color.get("value")
     bg_color = single_file_link.styles.get("background-color")
+    bg_color = bg_color.get("value")
     assert color == "rgb(228, 234, 220)" and bg_color == "darkblue"
 
 
@@ -85,58 +87,71 @@ def test_element_for_non_link():
 
 def test_element_for_link_styles():
     link = cascade.Element("a")
-    assert link.styles.get("color") == cascade.default_link_color
+    color_dict = link.styles.get("color")
+    results = color_dict.get("value")
+    assert results == cascade.default_link_color
 
 
 def test_single_link_for_contrast_ratio(single_file_link):
     expected = 12.45
-    results = single_file_link.styles.get("contrast_ratio")
+    color = single_file_link.styles.get("color")
+    contrast_data = color.get("contrast_data")
+    results = contrast_data.get("contrast_ratio")
     assert results == expected
 
 
 def test_single_link_for_specificity(single_file_link):
     expected = "001"
-    results = single_file_link.styles.get("specificity")
+    color = single_file_link.styles.get("color")
+    results = color.get("specificity")
     assert expected == results
 
 
 def test_td_for_color(single_file_td):
     expected = "aliceblue"
-    results = single_file_td.styles.get("color")
+    color = single_file_td.styles.get("color")
+    results = color.get("value")
     assert expected == results
 
 
 def test_td_for_bg_color(single_file_td):
     expected = "rgb(218, 236, 236)"
-    results = single_file_td.styles.get("background-color")
+    background = single_file_td.styles.get("background-color")
+    results = background.get("value")
     assert expected == results
 
 
 def test_gallery_h1_for_specificity(gallery_h1):
     expected = "002"
-    results = gallery_h1.styles.get("specificity")
+    background = gallery_h1.styles.get("background-color")
+    results = background.get("specificity")
     assert expected == results
 
 
 def test_gallery_h1_for_colors(gallery_h1):
     color = gallery_h1.styles.get("color")
+    color = color.get("value")
     background = gallery_h1.styles.get("background-color")
+    background = background.get("value")
     assert background == "rgb(114, 101, 87)" and color == "#e7e4e1"
 
 
 def test_gallery_body_for_101_specificity(gallery_body):
     expected = "101"
-    results = gallery_body.styles.get("specificity")
+    background = gallery_body.styles.get("background-color")
+    results = background.get("specificity")
     assert results == expected
 
 
 def test_gallery_body_for_background_color(gallery_body):
     expected = "azure"
-    results = gallery_body.styles.get("background-color")
+    background = gallery_body.styles.get("background-color")
+    results = background.get("value")
     assert results == expected
 
 
 def test_gallery_article_for_background_color(gallery_article):
     expected = "azure"
-    results = gallery_article.styles.get("background-color")
+    background = gallery_article.styles.get("background-color")
+    results = background.get("value")
     assert results == expected
