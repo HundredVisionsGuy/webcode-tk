@@ -416,6 +416,7 @@ def is_rgb(val: str) -> bool:
     """
     is_valid = bool(re.match(rgb_all_forms_re, val))
     comma_count = val.count(",")
+
     is_valid = is_valid and (comma_count == 2 or comma_count == 3)
     return is_valid
 

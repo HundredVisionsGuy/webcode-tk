@@ -115,12 +115,15 @@ class Element(object):
                 col["specificity"] = new_specificity
                 col["sheet"] = filename
             else:
-                print("Check here for conditions where we cannot apply color")
                 if not color_value:
                     # there was not a color value applied
                     color_value = self.styles["color"].get("value")
             # apply color contrast data to bg and color
+            if isinstance(background_value, dict):
+                print("Here's the problem")
             hexbg = color.get_hex(background_value)
+            if isinstance(color_value, dict):
+                print("Here's the problem")
             hexcol = color.get_hex(color_value)
             contrast_data = self.__build_contrast_report(hexbg, hexcol)
             background["contrast_data"] = contrast_data
@@ -131,6 +134,8 @@ class Element(object):
         col = col.get("value")
         bg = styles.get("background-color")
         bg = bg.get("value")
+        if isinstance(col, dict) or isinstance(bg, dict):
+            print("Here's the problem")
         hexc = color.get_hex(col)
         hexbg = color.get_hex(bg)
         contrast_report = self.__build_contrast_report(hexc, hexbg)
@@ -140,6 +145,8 @@ class Element(object):
             else:
                 visited_color = data.get("value")
                 if visited_color:
+                    if isinstance(styles.get("visited-color")["value"], dict):
+                        print("Here's the problem")
                     hexv = color.get_hex(styles.get("visited-color")["value"])
                     contrast_report = self.__build_contrast_report(hexv, hexbg)
                     styles["visited-color"]["contrast_data"] = contrast_report
@@ -348,6 +355,8 @@ class CSSAppliedTree:
         new_prop, new_val = tuple(declaration.items())[0]
 
         # if they are different from current element
+        if new_prop == "background":
+            new_prop = "background-color"
         el_val = element.styles.get(new_prop).get("value")
         if el_val != new_val:
             # If psuedo-class selector
@@ -355,19 +364,51 @@ class CSSAppliedTree:
             if selector_is_pseudoclass:
                 pseudo_key = selector + "-" + new_prop
                 other_pseudo_key = selector + "-"
+
+                # get all the data for the property not being changed
                 if new_prop == "color":
                     other_pseudo_key += "background"
-                    other_value = element.styles.get("background-color")
+                    other_styles = element.styles.get("background-color")
                 else:
                     other_pseudo_key += "color"
-                    other_value = element.styles.get("color")
-                element.styles[pseudo_key] = new_val
-                element.styles[other_pseudo_key] = other_value
+                    other_styles = element.styles.get("color")
+                other_value = other_styles.get("value")
+                other_sheet = other_styles.get("sheet")
+                other_selector = other_styles.get("selector")
+                other_specificity = other_styles.get("specificity")
+
+                # Set all the new data
+                element.styles[pseudo_key] = {}
+                new_pseudo_styles = element.styles[pseudo_key]
+                new_pseudo_styles["value"] = new_val
+                new_pseudo_styles["sheet"] = filename
+                new_pseudo_styles["selector"] = selector
+                new_pseudo_styles["specificity"] = new_specificity
+                new_pseudo_styles["contrast_data"] = {}
+
+                # Set all the other data
+                element.styles[other_pseudo_key] = {}
+                other_pseudo_styles = element.styles[other_pseudo_key]
+                other_pseudo_styles["value"] = other_value
+                other_pseudo_styles["sheet"] = other_sheet
+                other_pseudo_styles["selector"] = other_selector
+                other_pseudo_styles["specificity"] = other_specificity
+                other_pseudo_styles["contrast_data"] = {}
+
+                # Calculate contrast data
                 hex1 = color.get_hex(new_val)
                 hex2 = color.get_hex(other_value)
-                pseudo_report_key = selector + "-contrast"
                 contrast_report = color.get_color_contrast_report(hex1, hex2)
-                element.styles[pseudo_report_key] = contrast_report
+                new_contrast = new_pseudo_styles["contrast_data"]
+                other_contrast = other_pseudo_styles["contrast_data"]
+
+                # Extract contrast data
+                self.set_contrast_data(
+                    hex1, hex2, contrast_report, new_contrast
+                )
+                self.set_contrast_data(
+                    hex1, hex2, contrast_report, other_contrast
+                )
             else:
                 # apply the new color, selector, and check contrast
                 property = element.styles[new_prop]
@@ -389,6 +430,18 @@ class CSSAppliedTree:
                         new_val,
                         filename,
                     )
+
+    def set_contrast_data(self, hex1, hex2, contrast_report, new_contrast):
+        passes_normal_aaa = contrast_report.get("Normal AAA")
+        passes_normal_aa = contrast_report.get("Normal AA")
+        passes_large_aaa = contrast_report.get("Large AAA")
+        contrast_ratio = color.contrast_ratio(hex1, hex2)
+
+        # Set contrast data
+        new_contrast["contrast_ratio"] = contrast_ratio
+        new_contrast["passes_normal_aaa"] = passes_normal_aaa
+        new_contrast["passes_normal_aa"] = passes_normal_aa
+        new_contrast["passes_large_aaa"] = passes_large_aaa
 
     def __get_parents(self, tag: Tag) -> list:
         """gets all parent tag names and possible selectors as dictionary
@@ -563,6 +616,8 @@ def change_children_colors(
 
 
 def adjust_color_contrast(element, new_prop, new_val):
+    if isinstance(new_val, dict):
+        print("Here's the problem")
     hex1 = color.get_hex(new_val)
     if new_prop == "background" or new_prop == "background-color":
         hex2 = element.styles["color"].get("value")
@@ -570,6 +625,8 @@ def adjust_color_contrast(element, new_prop, new_val):
         hex2 = element.styles["background-color"].get("value")
     else:
         print("What the heck is this?")
+    if isinstance(hex2, dict):
+        print("Here's the problem")
     hex2 = color.get_hex(hex2)
     contrast_report = color.get_color_contrast_report(hex1, hex2)
     passes_normal_aaa = contrast_report.get("Normal AAA")
