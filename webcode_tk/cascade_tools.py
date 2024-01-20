@@ -235,13 +235,23 @@ class CSSAppliedTree:
             tag_children = tag.contents
             new_element = Element(tag_name)
             if tag.name != "a":
-                new_element.styles = element.styles
+                if element.styles:
+                    new_element.styles = element.styles
+                else:
+                    print("Here we go.")
+            # else:
+            #     print("Check for styles")
             new_element.styles["specificity"] = "000"
             new_element.parents = self.__get_parents(tag)
             if tag.attrs:
                 new_element.attributes = tag.attrs
             element.children.append(new_element)
-            self.__get_children(new_element, tag_children)
+            for tag in tag_children:
+                if tag and not isinstance(tag, str):
+                    their_kids = tag.contents
+                    kid_element = Element(tag.name)
+                    new_element.children.append(kid_element)
+                    self.__get_children(kid_element, their_kids)
         return
 
     def __apply_colors(self) -> None:
@@ -322,6 +332,8 @@ class CSSAppliedTree:
         # Adjust colors if necessary - if there was a change,
         # adjust colors for children
         selector = list(ruleset.keys())[0]
+        if "p" in selector:
+            print("Now is the time to check.")
         selector_applies = does_selector_apply(element, selector)
         if selector_applies:
             declaration = ruleset.get(selector)
@@ -582,6 +594,8 @@ def change_children_colors(
 ) -> None:
     """
     recursively change colors on all descendants.
+
+    Before just changing colors willy nilly, we need
 
     Args:
         element: the element
