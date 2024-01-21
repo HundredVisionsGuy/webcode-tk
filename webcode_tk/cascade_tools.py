@@ -59,6 +59,18 @@ class Element(object):
             "selector": "",
             "specificity": "",
         }
+        self.hover_color = {
+            "value": "",
+            "sheet": "",
+            "selector": "",
+            "specificity": "",
+        }
+        self.hover_background = {
+            "value": "",
+            "sheet": "",
+            "selector": "",
+            "specificity": "",
+        }
         self.is_link = bool(name == "a")
         self.contrast_data = {
             "ratio": 21.0,
@@ -88,57 +100,40 @@ class Element(object):
         Args:
             new_styles: the new styles we want to apply.
             filename: the stylesheet the styles came from."""
-        # Make a copy of styles (being mutable and all)
-        styles = new_styles.copy()
-
         # check specificity
-        specificity = self.styles.get("specificity")
-        new_specificity = styles.get("specificity")
-        if not specificity or new_specificity >= specificity:
-            background_value = styles.get("background-color")
-            if not background_value:
-                background_value = self.styles["background-color"].get("value")
-            color_value = styles.get("color")
-            selector = styles.get("selector")
-            is_link_selector = css.is_link_selector(selector)
+        new_specificity = new_styles.get("specificity")
+        col_specificity = self.color.get("specificity")
+        bg_specificity = self.background_color.get("specificity")
 
-            # apply background color data (if present)
-            background = self.styles["background-color"]
-            if background_value:
-                background["value"] = background_value
-                background["selector"] = selector
-                background["specificity"] = new_specificity
-                background["sheet"] = filename
-
-            # apply color data (if we are allowed to change color)
-            # to qualify, there must first be a color value.
-            # if that's so, then it either must not be a link
-            # or if it is a link there must also be a link selector
-            can_apply_color = (
-                color_value
-                and self.name != "a"
-                or (self.name == "a" and is_link_selector)
-            )
-            col = self.styles["color"]
-            if can_apply_color:
-                col["value"] = color_value
-                col["selector"] = selector
-                col["specificity"] = new_specificity
-                col["sheet"] = filename
+        # change color if applies
+        selector = new_styles.get("selector")
+        selector_applies = does_selector_apply(self, selector)
+        if selector_applies:
+            hover_selector = ":hover" in selector
+            if hover_selector:
+                print("Create a new method to deal")
             else:
-                if not color_value:
-                    # there was not a color value applied
-                    color_value = self.styles["color"].get("value")
-            # apply color contrast data to bg and color
-            if isinstance(background_value, dict):
-                print("Here's the problem")
-            hexbg = color.get_hex(background_value)
-            if isinstance(color_value, dict):
-                print("Here's the problem")
-            hexcol = color.get_hex(color_value)
-            contrast_data = self.__build_contrast_report(hexbg, hexcol)
-            background["contrast_data"] = contrast_data
-            col["contrast_data"] = contrast_data
+                if new_specificity >= col_specificity:
+                    col = new_styles.get("color")
+                    if col:
+                        self.color["value"] = col
+                        self.color["sheet"] = filename
+                        self.color["selector"] = selector
+                        self.color["specificity"] = new_specificity
+                else:
+                    col = self.color.get("value")
+                if new_specificity >= bg_specificity:
+                    bg_color = new_styles.get("background-color")
+                    if bg_color:
+                        self.background_color["value"] = bg_color
+                        self.background_color["sheet"] = filename
+                        self.background_color["selector"] = selector
+                        self.background_color["specificity"] = new_specificity
+                else:
+                    bg_color = self.background_color.get("value")
+
+                # get contrast for color & bg_color
+                self.get_contrast_data()
 
     def get_contrast_data(self) -> None:
         col = self.color.get("value")
@@ -182,6 +177,44 @@ class Element(object):
         self.visited_contrast_data["large_aaa"] = bool(
             link_contrast.get("Large AAA") == "Pass"
         )
+
+    def change_styles(
+        self,
+        selector: str,
+        declaration: str,
+        new_specificity: str,
+        filename: str,
+    ) -> None:
+        """change styles and apply them to all descendants
+
+        Args:
+            selector: the selector used to make a change
+            declaration: the declaration (property and value)
+            new_specificity: the specificity value of the selector
+            filename: file where the styles come from."""
+        hover_selector = "a:hover" in selector
+        if hover_selector:
+            print("New beast.")
+        for property, val in list(declaration.items()):
+            if property == "background" or property == "background-color":
+                old_specificity = self.background_color.get("specificity")
+                if new_specificity >= old_specificity:
+                    self.background_color["value"] = val
+                    self.background_color["sheet"] = filename
+                    self.background_color["selector"] = selector
+                    self.background_color["specificity"] = new_specificity
+            if property == "color":
+                old_specificity = self.color.get("specificity")
+                if new_specificity >= old_specificity:
+                    self.color["value"] = val
+                    self.color["sheet"] = filename
+                    self.color["selector"] = selector
+                    self.color["specificity"] = new_specificity
+            self.get_contrast_data()
+            for child in self.children:
+                child.change_styles(
+                    selector, declaration, new_specificity, filename
+                )
 
 
 class CSSAppliedTree:
@@ -350,8 +383,8 @@ class CSSAppliedTree:
         if selector_applies:
             declaration = ruleset.get(selector)
             new_specificity = css.get_specificity(selector)
-            self.change_styles(
-                element, selector, declaration, new_specificity, filename
+            element.change_styles(
+                selector, declaration, new_specificity, filename
             )
         for child in element.children:
             if child.name == "header":
