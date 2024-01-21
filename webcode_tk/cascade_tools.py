@@ -212,9 +212,49 @@ class Element(object):
                     self.color["specificity"] = new_specificity
             self.get_contrast_data()
             for child in self.children:
-                child.change_styles(
+                child.change_child_styles(
                     selector, declaration, new_specificity, filename
                 )
+
+    def change_child_styles(
+        self,
+        selector: str,
+        declaration: str,
+        new_specificity: str,
+        filename: str,
+    ) -> None:
+        """changes child styles based on inheritance.
+
+        Styles were changed by an ancestor, so we are passing down styles
+        through inheritance, and so we must only change styles if they weren't
+        already set directly.
+
+        Args:
+            selector: selector being used.
+            declaration: property and value being passed down.
+            new_specificity: in case it matters (selector should also be
+                targetting in some way).
+            filename: the file where the styles came from.
+        """
+        # is the selector targetting the tag directly (by type, id, or class)
+        targets_directly = does_selector_apply(self, selector)
+
+        # if it targets directly, then look to specificity
+        if targets_directly:
+            print("TODO: get old specificity")
+
+        # has the element already had same property targetted previously?
+        already_applied = False
+        if already_applied:
+            return
+
+        # Apply the styles
+
+    def is_targetted(self, selector: str) -> bool:
+        """returns whether the selector directly targets the tag
+
+        If the selector is directly targetting the tag by type, id,
+        class, etc."""
 
 
 class CSSAppliedTree:
@@ -391,129 +431,6 @@ class CSSAppliedTree:
                 print("check it out.")
             self.__adjust_colors(child, ruleset, filename)
 
-    def change_styles(
-        self,
-        element: Element,
-        selector: str,
-        declaration: str,
-        new_specificity: str,
-        filename: str,
-    ) -> None:
-        """changes styles for the element and recalculate all contrast data
-
-        Args:
-            element: the tag we want to change.
-            selector: the selector being used.
-            declaration: the declaration (property and value to change).
-            new_specificity: the specificity of the selector.
-            filename: the file where the changes come from.
-        """
-        selector_is_pseudoclass = is_selector_pseudoclass(selector)
-
-        # get property and value
-        new_prop, new_val = tuple(declaration.items())[0]
-
-        # if they are different from current element
-        if new_prop == "background":
-            new_prop = "background-color"
-        el_val = element.styles.get(new_prop).get("value")
-        if el_val != new_val:
-            # If psuedo-class selector
-            # Adjust styles to match then break
-            if selector_is_pseudoclass:
-                pseudo_key = selector + "-" + new_prop
-                other_pseudo_key = selector + "-"
-
-                # get all the data for the property not being changed
-                if new_prop == "color":
-                    other_pseudo_key += "background"
-                    other_styles = element.styles.get("background-color")
-                else:
-                    other_pseudo_key += "color"
-                    other_styles = element.styles.get("color")
-                other_value = other_styles.get("value")
-                other_sheet = other_styles.get("sheet")
-                other_selector = other_styles.get("selector")
-                other_specificity = other_styles.get("specificity")
-
-                # Set all the new data
-                element.styles[pseudo_key] = {}
-                new_pseudo_styles = element.styles[pseudo_key]
-                new_pseudo_styles["value"] = new_val
-                new_pseudo_styles["sheet"] = filename
-                new_pseudo_styles["selector"] = selector
-                new_pseudo_styles["specificity"] = new_specificity
-                new_pseudo_styles["contrast_data"] = {}
-
-                # Set all the other data
-                element.styles[other_pseudo_key] = {}
-                other_pseudo_styles = element.styles[other_pseudo_key]
-                other_pseudo_styles["value"] = other_value
-                other_pseudo_styles["sheet"] = other_sheet
-                other_pseudo_styles["selector"] = other_selector
-                other_pseudo_styles["specificity"] = other_specificity
-                other_pseudo_styles["contrast_data"] = {}
-
-                # Calculate contrast data
-                hex1 = color.get_hex(new_val)
-                hex2 = color.get_hex(other_value)
-                contrast_report = color.get_color_contrast_report(hex1, hex2)
-                new_contrast = new_pseudo_styles["contrast_data"]
-                other_contrast = other_pseudo_styles["contrast_data"]
-
-                # Extract contrast data
-                self.set_contrast_data(
-                    hex1, hex2, contrast_report, new_contrast
-                )
-                self.set_contrast_data(
-                    hex1, hex2, contrast_report, other_contrast
-                )
-            else:
-                # apply the new color, selector, and check contrast
-                new_styles = {}
-                new_styles["value"] = new_val
-                new_styles["sheet"] = filename
-                new_styles["selector"] = selector
-                new_styles["specificity"] = new_specificity
-                element.styles[new_prop] = new_styles
-                old_prop = "color"
-                if new_prop == "color":
-                    old_prop = "background-" + old_prop
-                old_val = element.styles[old_prop].get("value")
-                new_contrast = adjust_color_contrast(
-                    new_prop, new_val, old_prop, old_val
-                )
-                element.styles[new_prop]["contrast_data"] = new_contrast
-                element.styles[old_prop]["contrast_data"] = new_contrast
-            # loop through all children and adjust colors
-            children = element.children
-            if children:
-                for child in children:
-                    child_styles = child.styles.copy()
-                    is_link = child.is_link
-                    new_styles = get_new_styles(
-                        child_styles,
-                        is_link,
-                        new_specificity,
-                        selector,
-                        new_prop,
-                        new_val,
-                        filename,
-                    )
-                    child.styles = new_styles
-
-    def set_contrast_data(self, hex1, hex2, contrast_report, new_contrast):
-        passes_normal_aaa = contrast_report.get("Normal AAA")
-        passes_normal_aa = contrast_report.get("Normal AA")
-        passes_large_aaa = contrast_report.get("Large AAA")
-        contrast_ratio = color.contrast_ratio(hex1, hex2)
-
-        # Set contrast data
-        new_contrast["contrast_ratio"] = contrast_ratio
-        new_contrast["passes_normal_aaa"] = passes_normal_aaa
-        new_contrast["passes_normal_aa"] = passes_normal_aa
-        new_contrast["passes_large_aaa"] = passes_large_aaa
-
     def __get_parents(self, tag: Tag) -> list:
         """gets all parent tag names and possible selectors as dictionary
         objects.
@@ -641,130 +558,6 @@ def is_selector_pseudoclass(selector: str) -> bool:
     is_psuedo_class_selector = bool(re.match(pc_regex, selector))
     is_psuedo_class_selector = is_psuedo_class_selector or ":" in selector
     return is_psuedo_class_selector
-
-
-def change_children_colors(
-    element: Element(),
-    specificity: str,
-    sel: str,
-    prop: str,
-    value: str,
-    filename: str,
-) -> None:
-    """
-    recursively change colors on all descendants (if they apply).
-
-    Args:
-        element: the element
-        specificity: the computed specificity
-        sel: the selector used to change
-        prop: the property we want to change (color or bg color)
-        value: the value we will change it to
-    """
-    # Get the element property we want to change
-    element_property = {}
-
-    # Change property if selector works
-    if element.styles:
-        element_specificity = element.styles[prop].get("specificity")
-    else:
-        element_specificity = "000"
-        print("Delete this else block if never runs.")
-    if specificity >= element_specificity:
-        link_selector = css.is_link_selector(sel)
-        if not element.is_link and not link_selector:
-            element_property["value"] = value
-            element_property["sheet"] = filename
-            element_property["specificity"] = specificity
-            element_property["selector"] = sel
-            element.styles[prop] = element_property
-            other_prop = "color"
-            if prop == "color":
-                other_prop = "background-" + other_prop
-            other_val = element.styles[other_prop].get("value")
-            new_contrast = adjust_color_contrast(
-                prop, value, other_prop, other_val
-            )
-            element.styles[prop]["contrast_data"] = new_contrast
-            element.styles[other_prop]["contrast_data"] = new_contrast
-        kids = element.children
-        if kids:
-            for kid in kids:
-                change_children_colors(
-                    kid, specificity, sel, prop, value, filename
-                )
-
-
-def get_new_styles(
-    old_styles: dict,
-    is_link: bool,
-    specificity: str,
-    sel: str,
-    prop: str,
-    value: str,
-    filename: str,
-) -> dict:
-    """
-    get new styles if they can be changed
-
-    Args:
-        old_styles: the styles from the element in question
-        specificity: the computed specificity
-        sel: the selector used to change
-        prop: the property we want to change (color or bg color)
-        value: the value we will change it to
-
-    Returns:
-        new_styles: either the adjusted styles or the old styles.
-    """
-    # Get the element property we want to change
-    new_styles = {prop: {}}
-
-    # Change property if selector works
-    element_specificity = old_styles[prop].get("specificity")
-    if specificity >= element_specificity:
-        link_selector = css.is_link_selector(sel)
-        if not is_link and not link_selector:
-            new_styles[prop]["value"] = value
-            new_styles[prop]["sheet"] = filename
-            new_styles[prop]["specificity"] = specificity
-            new_styles[prop]["selector"] = sel
-
-            other_prop = "color"
-            if prop == "color":
-                other_prop = "background-" + other_prop
-            other_val = old_styles[other_prop].get("value")
-            new_contrast = adjust_color_contrast(
-                prop, value, other_prop, other_val
-            )
-            new_styles[prop]["contrast_data"] = new_contrast
-            new_styles[other_prop] = {}
-            new_styles[other_prop]["contrast_data"] = new_contrast
-            for prop_key in list(old_styles.keys()):
-                if prop_key not in list(new_styles.keys()):
-                    new_styles[prop_key] = {}
-                    vals = old_styles[prop_key]
-                    new_styles[prop_key] = vals
-        else:
-            return old_styles
-    return new_styles
-
-
-def adjust_color_contrast(new_prop, new_val, old_prop, old_val):
-    hex1 = color.get_hex(new_val)
-    hex2 = color.get_hex(old_val)
-    contrast_report = color.get_color_contrast_report(hex1, hex2)
-    passes_normal_aaa = contrast_report.get("Normal AAA")
-    passes_normal_aa = contrast_report.get("Normal AA")
-    passes_large_aaa = contrast_report.get("Large AAA")
-    ratio = color.contrast_ratio(hex1, hex2)
-
-    contrast_data = {}
-    contrast_data["contrast_ratio"] = ratio
-    contrast_data["passes_normal_aaa"] = passes_normal_aaa
-    contrast_data["passes_normal_aa"] = passes_normal_aa
-    contrast_data["passes_large_aaa"] = passes_large_aaa
-    return contrast_data
 
 
 if __name__ == "__main__":
