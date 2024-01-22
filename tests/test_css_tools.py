@@ -462,6 +462,30 @@ def test_get_specificity_for_002():
     assert results == "002"
 
 
+def test_get_selector_type_for_descendant():
+    selector = "header h1"
+    results = css_tools.get_selector_type(selector)
+    assert results == "descendant_selector"
+
+
+def test_get_selector_type_for_type_selector():
+    selector = "p"
+    results = css_tools.get_selector_type(selector)
+    assert results == "type_selector"
+
+
+def test_get_selector_type_for_id_selector():
+    selector = "body#main"
+    results = css_tools.get_selector_type(selector)
+    assert results == "id_selector"
+
+
+def test_get_selector_type_for_class_selector():
+    selector = ".primary"
+    results = css_tools.get_selector_type(selector)
+    assert results == "class_selector"
+
+
 def test_has_vendor_prefix_for_false():
     selector = "transition"
     results = css_tools.has_vendor_prefix(selector)
