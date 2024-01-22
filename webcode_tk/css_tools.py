@@ -23,8 +23,7 @@ regex_patterns: dict = {
     "general_sibling_combinator": r"\w+\s*~\s*\w+",
     "grouped_selector": r"\w+\s*,\s*\w+",
     "header_selector": r"h[1-6]",
-    "id_selector": r"#\w+",
-    "link_selector": r"",
+    "id_selector": r"#[a-zA-Z0-9-_.:]+",
     "pseudoclass_selector": r":\w+",
     "single_attribute_selector": r"^[a-zA-Z]*\[(.*?)\]",
     "single_type_selector": r"^[a-zA-Z][a-zA-Z0-9]*$",
@@ -1124,6 +1123,35 @@ def get_comment_positions(code: (str)) -> Union[list, None]:
         return
 
 
+def get_declaration_block_from_selector(
+    selector: str, style_sheet: Stylesheet
+) -> str:
+    declaration_block = ""
+    for ruleset in style_sheet.rulesets:
+        cur_selector = ruleset.selector
+        if selector in cur_selector:
+            # Check for grouped selectors
+            grouped_selectors = cur_selector.split(",")
+            if len(grouped_selectors) > 1:
+                for item in grouped_selectors:
+                    if selector in item:
+                        if " " not in item:
+                            declaration_block += ruleset.declaration_block.text
+                            break
+                        elif is_selector_at_end_of_descendant(selector, item):
+                            declaration_block += ruleset.declaration_block.text
+                            break
+
+            # Check for descendant selectors
+            if " " in cur_selector:
+                # we have a descendant selector
+                if is_selector_at_end_of_descendant(selector, cur_selector):
+                    declaration_block += ruleset.declaration_block.text
+                continue
+            declaration_block += ruleset.declaration_block.text + "\n"
+    return declaration_block
+
+
 def get_declaration_value_by_property(
     block: Union[str, DeclarationBlock], property: str
 ) -> str:
@@ -1306,169 +1334,6 @@ def get_global_colors(file_path: str) -> dict:
     return global_color_rules
 
 
-def restore_braces(split: list) -> list:
-    """restore the missing braces removed by the .split() method
-
-    This is more of a helper function to make sure that after splitting
-    at-rule code by two curly braces, we restore it back.
-
-    In CSS, to find the end of a nested @rule, you can use the
-    following code: `css_code.split("}}")` This is because a nested
-    @rule ends with two closing curly braces: one for the last
-    declaration, and the other for the end of the nested @rule.
-
-    Args:
-        split (list): a list created by the split method on CSS code
-
-    Returns:
-        list: the list but with the double closing braces restored from
-            the split.
-    """
-    result = []
-    split = tuple(split)
-    if len(split) <= 1:
-        return split
-    for item in split:
-        # only restore braces if there is an at-rule
-        # this is more of a precaution in case there we
-        # two closing brackets on accident.
-        if len(item) > 0 and "@" in item:
-            item = item + "}}"
-            result.append(item)
-    return result
-
-
-def minify_code(text: str) -> str:
-    """remove all new lines, tabs, and double spaces from text
-
-    This is a classic function for web developers to minify their code
-    by removing new lines, tabs, and any double spaces from text.
-
-    Args:
-        text: the code you want to minify.
-
-    Returns:
-        text: the code without all the additional whitespace."""
-    text = text.replace("\n", "")
-    text = text.replace("  ", "")
-    text = text.replace("\t", "")
-    return text
-
-
-def get_unique_font_rules(project_folder: str) -> list:
-    """Returns list of files with only unique font rules applied.
-
-    Args:
-        project_folder: a string path to the project folder we are testing.
-
-    Returns:
-        project_font_data: a list of dictionary objects that each store
-            the file where styles are applied and their unique font-related
-            rules.
-    """
-    styles_by_html_files = get_styles_by_html_files(project_folder)
-    font_families_tests = []
-    for file in styles_by_html_files:
-        style_sheets = file.get("stylesheets")
-        unique_rules = []
-        unique_font_values = []
-        unique_font_selectors = []
-        font_rules = []
-        for sheet in style_sheets:
-            font_families = get_font_families(sheet)
-            if font_families:
-                for family in font_families:
-                    font_rules.append(family)
-        # Let's build results for this page
-        for rule in font_rules:
-            if rule:
-                if rule not in unique_rules:
-                    unique_rules.append(rule)
-                    selector = rule.get("selector")
-                    value = rule.get("family")
-                    if selector not in unique_font_selectors:
-                        unique_font_selectors.append(selector)
-                    if value not in unique_font_values:
-                        unique_font_values.append(value)
-                else:
-                    print()
-        # apply the file, unique rules, unique selectors, and unique values
-        filename = file.get("file")
-        file_data = {"file": filename, "rules": unique_rules}
-        font_families_tests.append(file_data)
-    return font_families_tests
-
-
-def get_specificity(selector: str) -> str:
-    """Gets the specificity score on the selector.
-
-    According to MDN's article on Specificity, Specificity is the
-    algorithm used by browsers to determine the CSS declaration that
-    is the most relevant to an element, which in turn, determines
-    the property value to apply to the element.
-
-    The specificity algorithm calculates the weight of a CSS selector
-    to determine which rule from competing CSS declarations gets
-    applied to an element.
-
-    The specificity score is basically a number, and if two selectors
-    target the same element, the selector with the highest specificity
-    score wins. The number is like a 3-digit number, where the "ones"
-    place is the number of type selectors, the "tens" place is the
-    number of class selectors, and the "hundreds" place is the number
-    of id selectors.
-
-    For example, the selector: `h1, h2, h3` has a specificity of `003`
-    because there are neither id nor class selectors, but there are 3
-    type selectors.
-
-    The selector: `nav#main ul` has a specificity of `102` because
-    there is one id selector (`#main`) and two type selectors (`nav`
-    and `ul`).
-
-    Args:
-        selector (str): the CSS selector in question.
-
-    Returns:
-        specificity: the specificity score.
-    """
-    id_selector = get_id_score(selector)
-    class_selector = get_class_score(selector)
-    type_selector = get_type_score(selector)
-    specificity = "{}{}{}".format(id_selector, class_selector, type_selector)
-    return specificity
-
-
-def get_id_score(selector: str) -> int:
-    """receives a selector and returns # of ID selectors
-
-    Args:
-        selector (str): the complete CSS selector
-
-    Returns:
-        score: the number of ID selectors.
-    """
-    pattern = regex_patterns["id_selector"]
-    id_selectors = re.findall(pattern, selector)
-    score = len(id_selectors)
-    return score
-
-
-def get_type_score(selector: str) -> int:
-    """receives a selector and returns the number of type selectors
-
-    Args:
-        selector: the complete CSS selector
-
-    Returns:
-        score: the number of type selectors.
-    """
-    pattern = regex_patterns["type_selector"]
-    selectors = re.findall(pattern, selector)
-    score = len(selectors)
-    return score
-
-
 def get_header_color_details(rulesets: Union[list, tuple]) -> list:
     """receives rulesets and returns data on colors set by headers
 
@@ -1539,6 +1404,415 @@ def get_header_selectors(selector: str) -> list:
             if h_match:
                 header_selectors.append(selector)
     return header_selectors
+
+
+def get_id_score(selector: str) -> int:
+    """receives a selector and returns # of ID selectors
+
+    Args:
+        selector (str): the complete CSS selector
+
+    Returns:
+        score: the number of ID selectors.
+    """
+    pattern = regex_patterns["id_selector"]
+    id_selectors = re.findall(pattern, selector)
+    score = len(id_selectors)
+    return score
+
+
+def get_link_color_data(project_path: str) -> list:
+    """returns all colors applied to links.
+
+    Identifies all selectors that target a link, and gets a
+    list of dictionaries that identify colors.
+
+    Args:
+        project_path: path to project folder
+
+    Returns:
+        link_styles: a list of link color data applied to each
+            file that includes a link color data"""
+    link_styles = []
+    color_contrast_data = get_project_color_contrast(project_path)
+    for item in color_contrast_data:
+        selector = item[1]
+        if not is_link_selector(selector):
+            continue
+        # it must be a link selector, let's get our data
+        link_styles.append(item)
+    return link_styles
+
+
+def get_number_required_selectors(
+    selector_type: str, sheet: Stylesheet
+) -> int:
+    """returns # of a specific selector type in a stylesheet
+
+    Args:
+        selector_type: what kind of selector we're looking for.
+        sheet: the Stylesheet object we're inspecting.
+
+    Returns:
+        count: the number of occurrences of the selector.
+    """
+    count = 0
+    pattern = regex_patterns[selector_type]
+    for selector in sheet.selectors:
+        matches = re.findall(pattern, selector)
+        count += len(matches)
+    # Loop through all nested @rules and count selectors
+    for rules in sheet.nested_at_rules:
+        for selector in rules.selectors:
+            matches = re.findall(pattern, selector)
+            count += len(matches)
+    return count
+
+
+def get_project_color_contrast(
+    project_path: str, normal_goal="Normal AAA", large_goal="Large AAA"
+) -> list:
+    """checks all color rules for each file in a project folder for contrast
+
+    Args:
+        project_path: path to project folder.
+        normal_goal: color contrast goal for most text in document (all except
+            headers) - could be 'Normal AAA' or 'Normal AA' (default set to
+            'Normal AAA')
+        large_goal: color contrast goal for large (headings) text. May be
+            'Large AAA' or 'Large AA' (default is set to 'Large AAA')
+
+    Returns:
+        results: a list of tuples. Each tuple contains a filename, selector,
+            goal, color, bg_color, computed contrast ratio, passes_color"""
+
+    results = []
+    global_color_rules = get_project_global_colors(project_path)
+    for file in global_color_rules.keys():
+        global_details = global_color_rules.get(file)
+        all_color_rules = get_all_color_rules(file)
+        if global_details:
+            if isinstance(global_details, list):
+                if len(global_details) == 1:
+                    global_details = global_details[0]
+            global_color = global_details.get("color")
+            global_bg = global_details.get("background-color")
+        items = list(all_color_rules.keys())
+        heading_tag_re = r"h[1-6]"
+        for key in items:
+            # skip first key and any key that is a global selector
+            if key == "file":
+                continue
+            goal = normal_goal
+            if re.search(heading_tag_re, key):
+                goal = large_goal
+            else:
+                goal = normal_goal
+            selector = key
+            details = all_color_rules.get(selector)
+            color = details.get("color")
+            if not color:
+                if not global_color:
+                    color = "#000000"
+                else:
+                    color = global_color
+            color_hex = color_tools.get_hex(color)
+            bg_color = details.get("background-color")
+            if not bg_color:
+                if not global_bg:
+                    bg_color = "#ffffff"
+                else:
+                    bg_color = global_bg
+            bg_hex = color_tools.get_hex(bg_color)
+            passes_color = color_tools.passes_color_contrast(
+                goal, bg_hex, color_hex
+            )
+            contrast_ratio = color_tools.contrast_ratio(color_hex, bg_hex)
+            results.append(
+                (
+                    file,
+                    selector,
+                    goal,
+                    color,
+                    bg_color,
+                    contrast_ratio,
+                    passes_color,
+                )
+            )
+    return results
+
+
+def get_project_global_colors(project_path: str) -> dict:
+    """Returns a dictionary of color rules applied to all html files
+    in a project folder.
+
+    Global colors (in this context) are colors that apply to an entire
+    document. Selectors that target the entire document are *, html,
+    and body.
+
+    Since it's possible that an author could accidentally override
+    a color or background color, this function will remove any
+    previous rules that are overridden in a file.
+
+    NOTE: This should not consider an override if the would-be
+    selector is in an @media ruleset, we won't treat it as an
+    override.
+
+    Args:
+        project_path: the project folder path.
+
+    Returns:
+        global_color_rules: a dictionary of filenames and their global
+            rulesets.
+    """
+    global_color_rules = {}
+    styles_by_files = get_styles_by_html_files(project_path)
+    for file in styles_by_files:
+        filename = file.get("file")
+        sheets = file.get("stylesheets")
+        if sheets:
+            for sheet in sheets:
+                rules = sheet.rulesets
+                global_colors = get_global_color_details(rules)
+                if global_colors:
+                    # Have we added the file to the global rules?
+                    if not global_color_rules.get(filename):
+                        global_color_rules[filename] = []
+                    for gc in global_colors:
+                        global_color_rules[filename].append(gc)
+        if sheets and len(global_color_rules.get(filename)) > 1:
+            # figure out the override
+            global_colors = adjust_overrides(filename, global_color_rules)
+            adjusted_rule = global_colors.get(filename)
+            global_color_rules[filename] = adjusted_rule
+    return global_color_rules
+
+
+def get_selector_type(selector: str) -> str:
+    """returns the type of selector it is.
+
+    Cycles through selector regexes to see which one it is. When it has a
+    match, it returns the key.
+
+    Args:
+        selector: the selector in question.
+
+    Returns:
+        str: the key of the selector regex dictionary if there's a match."""
+    for type, regex in regex_patterns.items():
+        match = re.match(regex, selector)
+        if "#" in selector and selector.index("#") != len(selector) - 1:
+            return "id_selector"
+        if match:
+            if type == "single_type_selector":
+                return "type_selector"
+            return type
+
+
+def get_specificity(selector: str) -> str:
+    """Gets the specificity score on the selector.
+
+    According to MDN's article on Specificity, Specificity is the
+    algorithm used by browsers to determine the CSS declaration that
+    is the most relevant to an element, which in turn, determines
+    the property value to apply to the element.
+
+    The specificity algorithm calculates the weight of a CSS selector
+    to determine which rule from competing CSS declarations gets
+    applied to an element.
+
+    The specificity score is basically a number, and if two selectors
+    target the same element, the selector with the highest specificity
+    score wins. The number is like a 3-digit number, where the "ones"
+    place is the number of type selectors, the "tens" place is the
+    number of class selectors, and the "hundreds" place is the number
+    of id selectors.
+
+    For example, the selector: `h1, h2, h3` has a specificity of `003`
+    because there are neither id nor class selectors, but there are 3
+    type selectors.
+
+    The selector: `nav#main ul` has a specificity of `102` because
+    there is one id selector (`#main`) and two type selectors (`nav`
+    and `ul`).
+
+    Args:
+        selector (str): the CSS selector in question.
+
+    Returns:
+        specificity: the specificity score.
+    """
+    id_selector = get_id_score(selector)
+    class_selector = get_class_score(selector)
+    type_selector = get_type_score(selector)
+    specificity = "{}{}{}".format(id_selector, class_selector, type_selector)
+    return specificity
+
+
+def get_styles_by_html_files(project_path: str) -> list:
+    """Returns a list of filenames with their stylesheets in order of
+    appearance.
+
+    This will identify all HTML documents in the project folder. For
+    each HTML document, it will create a dictionary with two keys:
+    filename for the HTML document and stylesheets for a list of the
+    css styles created through link tags or style tags.
+
+    As it uses get_all_stylesheets_by_files, you can be sure that no
+    external stylesheets (https://...) will be included in the list.
+
+    Args:
+        project_path: a string of the path to the project folder you
+            want to test.
+
+    Returns:
+        styles_by_html_files: a list of dictionary objects indicating
+            each html document and its styles in order of appearance.
+    """
+    styles_by_html_files = []
+    html_files = html_tools.get_all_html_files(project_path)
+    for file in html_files:
+        file_data = get_all_stylesheets_by_file(file)
+        styles_by_html_files.append({"file": file, "stylesheets": file_data})
+    return styles_by_html_files
+
+
+def get_type_score(selector: str) -> int:
+    """receives a selector and returns the number of type selectors
+
+    Args:
+        selector: the complete CSS selector
+
+    Returns:
+        score: the number of type selectors.
+    """
+    pattern = regex_patterns["type_selector"]
+    selectors = re.findall(pattern, selector)
+    score = len(selectors)
+    return score
+
+
+def get_unique_font_rules(project_folder: str) -> list:
+    """Returns list of files with only unique font rules applied.
+
+    Args:
+        project_folder: a string path to the project folder we are testing.
+
+    Returns:
+        project_font_data: a list of dictionary objects that each store
+            the file where styles are applied and their unique font-related
+            rules.
+    """
+    styles_by_html_files = get_styles_by_html_files(project_folder)
+    font_families_tests = []
+    for file in styles_by_html_files:
+        style_sheets = file.get("stylesheets")
+        unique_rules = []
+        unique_font_values = []
+        unique_font_selectors = []
+        font_rules = []
+        for sheet in style_sheets:
+            font_families = get_font_families(sheet)
+            if font_families:
+                for family in font_families:
+                    font_rules.append(family)
+        # Let's build results for this page
+        for rule in font_rules:
+            if rule:
+                if rule not in unique_rules:
+                    unique_rules.append(rule)
+                    selector = rule.get("selector")
+                    value = rule.get("family")
+                    if selector not in unique_font_selectors:
+                        unique_font_selectors.append(selector)
+                    if value not in unique_font_values:
+                        unique_font_values.append(value)
+                else:
+                    print()
+        # apply the file, unique rules, unique selectors, and unique values
+        filename = file.get("file")
+        file_data = {"file": filename, "rules": unique_rules}
+        font_families_tests.append(file_data)
+    return font_families_tests
+
+
+def get_variables(text: str) -> list:
+    """returns a list of css variables and their values.
+
+    This will extract any variables if they exist, copy the
+    variable name and its value and create a dictionary object
+    and append to list.
+
+    Args:
+        text: full text of css stylesheet
+
+    Returns:
+        variables: a list of variable dictionaries each with a
+            key for the variable and a value for its value.
+    """
+    variables = []
+    variable_split = text.split(":root {")
+    if len(variable_split) == 1:
+        return []
+    variable_text = variable_split[1].strip()
+    variables_list = variable_text.strip().split(";")
+    for var in variables_list:
+        var = var.strip()
+        if "}" in var:
+            break
+        variable, value = var.split(":")
+        var_dict = {"variable": variable, "value": value}
+        variables.append(var_dict)
+    return variables
+
+
+def restore_braces(split: list) -> list:
+    """restore the missing braces removed by the .split() method
+
+    This is more of a helper function to make sure that after splitting
+    at-rule code by two curly braces, we restore it back.
+
+    In CSS, to find the end of a nested @rule, you can use the
+    following code: `css_code.split("}}")` This is because a nested
+    @rule ends with two closing curly braces: one for the last
+    declaration, and the other for the end of the nested @rule.
+
+    Args:
+        split (list): a list created by the split method on CSS code
+
+    Returns:
+        list: the list but with the double closing braces restored from
+            the split.
+    """
+    result = []
+    split = tuple(split)
+    if len(split) <= 1:
+        return split
+    for item in split:
+        # only restore braces if there is an at-rule
+        # this is more of a precaution in case there we
+        # two closing brackets on accident.
+        if len(item) > 0 and "@" in item:
+            item = item + "}}"
+            result.append(item)
+    return result
+
+
+def minify_code(text: str) -> str:
+    """remove all new lines, tabs, and double spaces from text
+
+    This is a classic function for web developers to minify their code
+    by removing new lines, tabs, and any double spaces from text.
+
+    Args:
+        text: the code you want to minify.
+
+    Returns:
+        text: the code without all the additional whitespace."""
+    text = text.replace("\n", "")
+    text = text.replace("  ", "")
+    text = text.replace("\t", "")
+    return text
 
 
 def has_vendor_prefix(property: str) -> bool:
@@ -1767,31 +2041,6 @@ def is_required_selector(selector_type: str, selector: str) -> bool:
     return match
 
 
-def get_number_required_selectors(
-    selector_type: str, sheet: Stylesheet
-) -> int:
-    """returns # of a specific selector type in a stylesheet
-
-    Args:
-        selector_type: what kind of selector we're looking for.
-        sheet: the Stylesheet object we're inspecting.
-
-    Returns:
-        count: the number of occurrences of the selector.
-    """
-    count = 0
-    pattern = regex_patterns[selector_type]
-    for selector in sheet.selectors:
-        matches = re.findall(pattern, selector)
-        count += len(matches)
-    # Loop through all nested @rules and count selectors
-    for rules in sheet.nested_at_rules:
-        for selector in rules.selectors:
-            matches = re.findall(pattern, selector)
-            count += len(matches)
-    return count
-
-
 def has_required_property(property: str, sheet: Stylesheet) -> bool:
     """checks stylesheet for a particular property
 
@@ -1808,80 +2057,6 @@ def has_required_property(property: str, sheet: Stylesheet) -> bool:
             if declaration.property == property:
                 return True
     return has_property
-
-
-def get_styles_by_html_files(project_path: str) -> list:
-    """Returns a list of filenames with their stylesheets in order of
-    appearance.
-
-    This will identify all HTML documents in the project folder. For
-    each HTML document, it will create a dictionary with two keys:
-    filename for the HTML document and stylesheets for a list of the
-    css styles created through link tags or style tags.
-
-    As it uses get_all_stylesheets_by_files, you can be sure that no
-    external stylesheets (https://...) will be included in the list.
-
-    Args:
-        project_path: a string of the path to the project folder you
-            want to test.
-
-    Returns:
-        styles_by_html_files: a list of dictionary objects indicating
-            each html document and its styles in order of appearance.
-    """
-    styles_by_html_files = []
-    html_files = html_tools.get_all_html_files(project_path)
-    for file in html_files:
-        file_data = get_all_stylesheets_by_file(file)
-        styles_by_html_files.append({"file": file, "stylesheets": file_data})
-    return styles_by_html_files
-
-
-def get_project_global_colors(project_path: str) -> dict:
-    """Returns a dictionary of color rules applied to all html files
-    in a project folder.
-
-    Global colors (in this context) are colors that apply to an entire
-    document. Selectors that target the entire document are *, html,
-    and body.
-
-    Since it's possible that an author could accidentally override
-    a color or background color, this function will remove any
-    previous rules that are overridden in a file.
-
-    NOTE: This should not consider an override if the would-be
-    selector is in an @media ruleset, we won't treat it as an
-    override.
-
-    Args:
-        project_path: the project folder path.
-
-    Returns:
-        global_color_rules: a dictionary of filenames and their global
-            rulesets.
-    """
-    global_color_rules = {}
-    styles_by_files = get_styles_by_html_files(project_path)
-    for file in styles_by_files:
-        filename = file.get("file")
-        sheets = file.get("stylesheets")
-        if sheets:
-            for sheet in sheets:
-                rules = sheet.rulesets
-                global_colors = get_global_color_details(rules)
-                if global_colors:
-                    # Have we added the file to the global rules?
-                    if not global_color_rules.get(filename):
-                        global_color_rules[filename] = []
-                    for gc in global_colors:
-                        global_color_rules[filename].append(gc)
-        if sheets and len(global_color_rules.get(filename)) > 1:
-            # figure out the override
-            global_colors = adjust_overrides(filename, global_color_rules)
-            adjusted_rule = global_colors.get(filename)
-            global_color_rules[filename] = adjusted_rule
-    return global_color_rules
 
 
 def passes_global_color_contrast(file: str, goal="Normal AAA") -> bool:
@@ -1901,138 +2076,6 @@ def passes_global_color_contrast(file: str, goal="Normal AAA") -> bool:
     goal_key = "passes_" + goal.replace(" ", "_").lower()
     meets = details.get(goal_key)
     return meets
-
-
-def get_variables(text: str) -> list:
-    """returns a list of css variables and their values.
-
-    This will extract any variables if they exist, copy the
-    variable name and its value and create a dictionary object
-    and append to list.
-
-    Args:
-        text: full text of css stylesheet
-
-    Returns:
-        variables: a list of variable dictionaries each with a
-            key for the variable and a value for its value.
-    """
-    variables = []
-    variable_split = text.split(":root {")
-    if len(variable_split) == 1:
-        return []
-    variable_text = variable_split[1].strip()
-    variables_list = variable_text.strip().split(";")
-    for var in variables_list:
-        var = var.strip()
-        if "}" in var:
-            break
-        variable, value = var.split(":")
-        var_dict = {"variable": variable, "value": value}
-        variables.append(var_dict)
-    return variables
-
-
-def get_project_color_contrast(
-    project_path: str, normal_goal="Normal AAA", large_goal="Large AAA"
-) -> list:
-    """checks all color rules for each file in a project folder for contrast
-
-    Args:
-        project_path: path to project folder.
-        normal_goal: color contrast goal for most text in document (all except
-            headers) - could be 'Normal AAA' or 'Normal AA' (default set to
-            'Normal AAA')
-        large_goal: color contrast goal for large (headings) text. May be
-            'Large AAA' or 'Large AA' (default is set to 'Large AAA')
-
-    Returns:
-        results: a list of tuples. Each tuple contains a filename, selector,
-            goal, color, bg_color, computed contrast ratio, passes_color"""
-
-    results = []
-    global_color_rules = get_project_global_colors(project_path)
-    for file in global_color_rules.keys():
-        global_details = global_color_rules.get(file)
-        all_color_rules = get_all_color_rules(file)
-        if global_details:
-            if isinstance(global_details, list):
-                if len(global_details) == 1:
-                    global_details = global_details[0]
-            global_color = global_details.get("color")
-            global_bg = global_details.get("background-color")
-        items = list(all_color_rules.keys())
-        heading_tag_re = r"h[1-6]"
-        for key in items:
-            # skip first key and any key that is a global selector
-            if key == "file":
-                continue
-            goal = normal_goal
-            if re.search(heading_tag_re, key):
-                goal = large_goal
-            else:
-                goal = normal_goal
-            selector = key
-            details = all_color_rules.get(selector)
-            color = details.get("color")
-            if not color:
-                if not global_color:
-                    color = "#000000"
-                else:
-                    color = global_color
-            color_hex = color_tools.get_hex(color)
-            bg_color = details.get("background-color")
-            if not bg_color:
-                if not global_bg:
-                    bg_color = "#ffffff"
-                else:
-                    bg_color = global_bg
-            bg_hex = color_tools.get_hex(bg_color)
-            passes_color = color_tools.passes_color_contrast(
-                goal, bg_hex, color_hex
-            )
-            contrast_ratio = color_tools.contrast_ratio(color_hex, bg_hex)
-            results.append(
-                (
-                    file,
-                    selector,
-                    goal,
-                    color,
-                    bg_color,
-                    contrast_ratio,
-                    passes_color,
-                )
-            )
-    return results
-
-
-def get_declaration_block_from_selector(
-    selector: str, style_sheet: Stylesheet
-) -> str:
-    declaration_block = ""
-    for ruleset in style_sheet.rulesets:
-        cur_selector = ruleset.selector
-        if selector in cur_selector:
-            # Check for grouped selectors
-            grouped_selectors = cur_selector.split(",")
-            if len(grouped_selectors) > 1:
-                for item in grouped_selectors:
-                    if selector in item:
-                        if " " not in item:
-                            declaration_block += ruleset.declaration_block.text
-                            break
-                        elif is_selector_at_end_of_descendant(selector, item):
-                            declaration_block += ruleset.declaration_block.text
-                            break
-
-            # Check for descendant selectors
-            if " " in cur_selector:
-                # we have a descendant selector
-                if is_selector_at_end_of_descendant(selector, cur_selector):
-                    declaration_block += ruleset.declaration_block.text
-                continue
-            declaration_block += ruleset.declaration_block.text + "\n"
-    return declaration_block
 
 
 def is_selector_at_end_of_descendant(selector: str, cur_selector: str) -> bool:
@@ -2096,29 +2139,6 @@ def is_link_selector(selector: str) -> bool:
     regex_pattern = regex_patterns.get("advanced_link_selector")
     selector_match = re.search(regex_pattern, selector_copy)
     return bool(selector_match)
-
-
-def get_link_color_data(project_path: str) -> list:
-    """returns all colors applied to links.
-
-    Identifies all selectors that target a link, and gets a
-    list of dictionaries that identify colors.
-
-    Args:
-        project_path: path to project folder
-
-    Returns:
-        link_styles: a list of link color data applied to each
-            file that includes a link color data"""
-    link_styles = []
-    color_contrast_data = get_project_color_contrast(project_path)
-    for item in color_contrast_data:
-        selector = item[1]
-        if not is_link_selector(selector):
-            continue
-        # it must be a link selector, let's get our data
-        link_styles.append(item)
-    return link_styles
 
 
 if __name__ == "__main__":
