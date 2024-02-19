@@ -39,8 +39,14 @@ def single_file_link(single_file_tree):
 
 
 @pytest.fixture
-def single_file_td(single_file_tree):
-    tr = single_file_tree.children[0].children[2].children[3]
+def single_file_table(single_file_tree):
+    table = single_file_tree.children[0].children[2]
+    return table
+
+
+@pytest.fixture
+def single_file_td(single_file_table):
+    tr = single_file_table.children[3]
     td = tr.children[1]
     return td
 
@@ -110,6 +116,12 @@ def test_td_for_color(single_file_td):
 def test_td_for_bg_color(single_file_td):
     expected = "rgb(218, 236, 236)"
     results = single_file_td.background_color.get("value")
+    assert expected == results
+
+
+def test_table_for_bg_color(single_file_table):
+    expected = "rgb(218, 236, 236)"
+    results = single_file_table.background_color.get("value")
     assert expected == results
 
 
