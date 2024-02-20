@@ -112,7 +112,7 @@ class Element(object):
 
         # change color if applies
         selector = new_styles.get("selector")
-        selector_applies = does_selector_apply(self, selector)
+        selector_applies = self.name != "a"
         if selector_applies:
             hover_selector = ":hover" in selector
             if hover_selector:
@@ -506,6 +506,14 @@ class CSSAppliedTree:
         """recursively adjust color where necessary to all elements that
         apply.
 
+        Step 1: recursively search through children until we find an
+        element where the selector applies (both by selector and by
+        specificity).
+
+        Step 2: if we find a selector that applies, apply changes to
+        element AND all children that have same or lower specificity
+        except a link (unless the selector is a link)
+
         Args:
             element: the element in question.
             ruleset: the ruleset we want to apply.
@@ -513,17 +521,45 @@ class CSSAppliedTree:
         # Adjust colors if necessary - if there was a change,
         # adjust colors for children
         selector = list(ruleset.keys())[0]
-        if selector == "nav.primary-nav":
+        if selector in ["nav.primary-nav", "a:hover", "h1, h2, h3, h4"]:
             print("Now is the time to check. Something is mutating.")
+
+        # does the selector apply to the element?
+        selector_applies = False
+        specificity = css.get_specificity(selector)
+        declaration = list(ruleset.values())[0]
+        property = list(declaration.keys())[0]
+        is_background_prop = "background" in property
+        if is_background_prop:
+            old_specificity = element.background_color.get("specificity")
+        else:
+            old_specificity = element.color.get("specificity")
+        applies = does_selector_apply(element, selector)
+        selector_applies = (specificity >= old_specificity) and applies
+        if selector_applies:
+            for child in element.children:
+                self.__adjust_child_colors(child, ruleset, filename)
+
+        # --------- Stopped here --------- #
+
         can_inherit = can_inherit_styles(element, selector, ruleset)
         if can_inherit:
             declaration = ruleset.get(selector)
             new_specificity = css.get_specificity(selector)
             element.change_styles(
-                selector, declaration, new_specificity, filename
+                selector, declaration.copy(), new_specificity, filename
             )
         for child in element.children:
-            if child.name == "td":
+            child_name = child.name
+            if selector in ["h1, h2, h3, h4", "table"] and child_name == "td":
+                print("Check it out.")
+            if child_name == "td" and selector not in [
+                "tr",
+                "th",
+                "td",
+                "a",
+                "a:hover",
+            ]:
                 print("check it out.")
             self.__adjust_colors(child, ruleset, filename)
 
@@ -550,6 +586,40 @@ class CSSAppliedTree:
             parents.append(details)
         return parents
 
+    def __adjust_child_colors(
+        self, child: Element, ruleset: dict, filename: str
+    ) -> None:
+        """adjusts colors for child of an element.
+
+        A parent element already had styles applied, so we only need to check
+        to see if the child element is a link or not (as well as the selector)
+        and check the specificity of the ruleset.
+
+        Args:
+            child: the child element in question
+            ruleset: the CSS rule being applied
+            filename: name of the file where the styles came from
+        """
+        # Adjust colors if necessary - if there was a change,
+        # adjust colors for children
+        selector = list(ruleset.keys())[0]
+        is_link_selector = css.is_link_selector(selector)
+        element_name = child.name
+        can_inherit = (
+            is_link_selector
+            and element_name == "a"
+            or not is_link_selector
+            and element_name != "a"
+        )
+        if can_inherit:
+            declaration = ruleset.get(selector)
+            new_specificity = css.get_specificity(selector)
+            child.change_styles(
+                selector, declaration.copy(), new_specificity, filename
+            )
+        for kid in child.children:
+            self.__adjust_child_colors(kid, ruleset, filename)
+
 
 def does_selector_apply(element: Element, selector: str) -> bool:
     """returns whether the selector applies to the element.
@@ -571,7 +641,9 @@ def does_selector_apply(element: Element, selector: str) -> bool:
         applies: whether the selector actually applies to the element."""
     applies = False
     regex_patterns = css.regex_patterns
-
+    element_name = element.name
+    if element_name == "td" and selector == "body":
+        print("This should be applied")
     # make a list of all selectors (in case of grouped selector)
     selectors = []
     is_grouped = bool(
@@ -605,10 +677,10 @@ def does_selector_apply(element: Element, selector: str) -> bool:
 
         # If the tag is an anchor, but the selector is not - doesn't apply
         # link color can only be changed by a link selector
-        if element.name == "a" and not is_link_selector:
+        if element_name == "a" and not is_link_selector:
             break
         elif is_type_selector:
-            applies = element.name == sel
+            applies = element_name == sel
             if applies:
                 break
         elif is_id_selector:
@@ -625,14 +697,21 @@ def does_selector_apply(element: Element, selector: str) -> bool:
                         class_values = attributes.get("class")
                         for val in class_values:
                             possible_selectors.append("." + val)
-                            possible_selectors.append(element.name + "." + val)
+                            possible_selectors.append(element_name + "." + val)
                         if selector in possible_selectors:
                             applies = True
                             break
+        elif is_link_selector:
+            # If the selector is a link selector, but the element is not
+            # NOTE: if this doesn't solve it, we should double check the
+            # parent to see if it was a link (might already be taken care of)
+            if element_name == "a":
+                applies = True
+            break
         elif is_psuedo_class_selector:
             # check for element before psuedoclass
             pre_pseudo = sel.split(":")[0]
-            applies = pre_pseudo == element.name
+            applies = pre_pseudo == element_name
             if applies:
                 break
         elif is_attribute_selector:
@@ -640,7 +719,7 @@ def does_selector_apply(element: Element, selector: str) -> bool:
             print("This must be an attribute selector")
         elif is_descendant_selector:
             items = sel.split()
-            applies = items[-1] == element.name
+            applies = items[-1] == element_name
             if applies:
                 break
         else:
@@ -674,9 +753,9 @@ def can_inherit_styles(element: Element, selector: str, ruleset: dict) -> bool:
         can_inherit: whether the element should get the inherited
             styles or not."""
     can_inherit = False
-
+    element_name = element.name
     # is it a link?
-    if element.name == "a":
+    if element_name == "a":
         is_link_selector = css.is_link_selector(selector)
         if is_link_selector:
             can_inherit = True
@@ -690,15 +769,16 @@ def can_inherit_styles(element: Element, selector: str, ruleset: dict) -> bool:
     if selector_applies:
         can_inherit = True
 
-    # check to see how property has been changed.
-    (declaration,) = ruleset.values()
-    (property,) = declaration
-    if "background" in property:
-        applied_by = element.background_color.get("applied_by")
-    else:
-        applied_by = element.color.get("applied_by")
-    if "selector" not in applied_by:
-        can_inherit = True
+    if can_inherit:
+        # check to see how property has been changed.
+        (declaration,) = ruleset.values()
+        (property,) = declaration
+        if "background" in property:
+            applied_by = element.background_color.get("applied_by")
+        else:
+            applied_by = element.color.get("applied_by")
+        if "selector" not in applied_by:
+            can_inherit = True
     return can_inherit
 
 
