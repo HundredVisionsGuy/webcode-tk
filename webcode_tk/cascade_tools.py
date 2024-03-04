@@ -449,7 +449,8 @@ class CSSAppliedTree:
             for ruleset in color_rules:
                 # only adjust colors if the selector doesn't target body
                 body_in_ruleset = self.targets_body(ruleset)
-                if body_in_ruleset:
+                rule_keys = list(ruleset.keys())
+                if body_in_ruleset and "body#image-gallery" not in rule_keys:
                     continue
 
                 # get filename
@@ -521,7 +522,7 @@ class CSSAppliedTree:
         # Adjust colors if necessary - if there was a change,
         # adjust colors for children
         selector = list(ruleset.keys())[0]
-        if selector in ["nav.primary-nav", "a:hover", "h1, h2, h3, h4"]:
+        if selector in ["a:hover", "h1, h2, h3, h4"]:
             print("Now is the time to check. Something is mutating.")
 
         # does the selector apply to the element?
@@ -685,7 +686,17 @@ def does_selector_apply(element: Element, selector: str) -> bool:
                 break
         elif is_id_selector:
             # get ID attribute (if there is one)
-            print(element.attributes)
+            possible_el, id_attr = selector.split("#")
+            if element.attributes:
+                element_id = element.attributes.get("id")
+                if possible_el:
+                    applies = (
+                        possible_el == element_name and id_attr == element_id
+                    )
+                else:
+                    applies = id_attr == element_id
+                if applies:
+                    break
         elif is_class_selector:
             # get all class attributes
             attributes = element.attributes

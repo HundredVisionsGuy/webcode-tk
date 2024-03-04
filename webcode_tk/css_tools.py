@@ -23,7 +23,7 @@ regex_patterns: dict = {
     "general_sibling_combinator": r"\w+\s*~\s*\w+",
     "grouped_selector": r"\w+\s*,\s*\w+",
     "header_selector": r"h[1-6]",
-    "id_selector": r"#[a-zA-Z0-9-_.:]+",
+    "id_selector": r"(.*?)#[a-zA-Z0-9-_.:]+",
     "pseudoclass_selector": r":\w+",
     "single_attribute_selector": r"^[a-zA-Z]*\[(.*?)\]",
     "single_type_selector": r"^[a-zA-Z][a-zA-Z0-9]*$",
