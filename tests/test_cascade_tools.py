@@ -5,6 +5,10 @@ from webcode_tk import css_tools as css
 
 project_path = "tests/test_files/single_file_project/"
 large_project = "tests/test_files/large_project/"
+attribute_selector_path = "tests/test_files/attribute_selector_file/"
+attribute_selector_styles = css.get_styles_by_html_files(
+    attribute_selector_path
+)
 styles_by_html_files = css.get_styles_by_html_files(project_path)
 large_project_styles = css.get_styles_by_html_files(large_project)
 
@@ -20,6 +24,16 @@ def single_file_tree():
 
 
 @pytest.fixture
+def attribute_selectors_tree():
+    css_tree = None
+    file = attribute_selector_styles[0]
+    filepath = file.get("file")
+    sheets = file.get("stylesheets")
+    css_tree = cascade.CSSAppliedTree(filepath, sheets)
+    return css_tree
+
+
+@pytest.fixture
 def gallery_file_tree():
     css_tree = None
     all_files = large_project_styles
@@ -28,6 +42,7 @@ def gallery_file_tree():
             filepath = file.get("file")
             sheets = file.get("stylesheets")
             css_tree = cascade.CSSAppliedTree(filepath, sheets)
+            break
     return css_tree
 
 
@@ -152,4 +167,10 @@ def test_gallery_body_for_background_color(gallery_body):
 def test_gallery_article_for_background_color(gallery_article):
     expected = "azure"
     results = gallery_article.background_color.get("value")
+    assert results == expected
+
+
+def test_attribute_selectors_for_title_attribute(attribute_selectors_tree):
+    expected = "purple"
+    results = None
     assert results == expected

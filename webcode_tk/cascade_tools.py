@@ -9,6 +9,7 @@ With that, it scans each stylesheet and applies eacSh style one at a time
 to all elements and their children (if applicable) of a page.
 """
 import re
+from collections import abc
 
 from bs4 import Tag
 from file_clerk import clerk
@@ -19,7 +20,7 @@ from webcode_tk import html_tools
 
 
 default_global_color = "#FFFFFF"
-default_global_background = "#000000"
+default_global_background = None
 default_link_color = "#0000EE"
 default_link_visited = "#551A8B"
 
@@ -31,22 +32,39 @@ class Element(object):
     the DOM of a web page and will contain the computed
     CSS styles based on the styesheet.
 
-    Attribues:
+    A NOTE on background color:
+    background color is not applied through inheritance. By default,
+    without being set, the background of all elements is white (or
+    technically, it's transparent). All elements have a transparent
+    background (and there is no inheritance).
+
+    It is applied through one of two methods:
+    1. when directly applied to the element
+    2. through the context of a container element
+
+    For example, if the background color of body is set using an ID
+    selector, and a table inside the body has a different background
+    color set using a type selector, even though the table's background
+    has a lower specificity, it will be applied because there is no
+    inheritance and therefore no specificity to consider.
+
+    Therefore, the applied_by will be either "context" or "applied"
+    Attributes:
         name (str): name of the element.
-        attributes (list): a list of attributes as dictionries.
+        attributes (list): a list of attributes as dictionaries.
         styles (list): a list of computed styles in key-value pairs.
         children (list): any Elements nested in the tag.
     """
 
-    def __init__(self, name=None, children=None) -> None:
+    def __init__(self, name=None, children=None, attributes=None) -> None:
         self.name = name
-        self.attributes = []
+        self.attributes = attributes
         self.background_color = {
             "value": "#ffffff",
             "sheet": "user-agent",
             "selector": "",
             "specificity": "000",
-            "applied_by": "default",
+            "applied_by": "context",
         }
         self.color = {
             "value": "#000000",
@@ -74,7 +92,7 @@ class Element(object):
             "sheet": "",
             "selector": "",
             "specificity": "",
-            "applied_by": "default",
+            "applied_by": "context",
         }
         self.is_link = bool(name == "a")
         self.contrast_data = {
@@ -90,7 +108,7 @@ class Element(object):
             "large_aaa": False,
         }
         self.__set_link_color()
-        self.get_contrast_data()
+        self.get_contrast_data("default")
         self.children = children if children is not None else []
         self.parents = []
 
@@ -98,6 +116,8 @@ class Element(object):
         if self.name == "a":
             self.color["value"] = default_link_color
             self.visited_color["value"] = default_link_visited
+            self.visited_color["sheet"] = "user-agent"
+            self.visited_color["specificity"] = "000"
 
     def ammend_color_styles(self, new_styles: dict, filename: str) -> None:
         """adjust color styles based on specificity.
@@ -105,53 +125,110 @@ class Element(object):
         Args:
             new_styles: the new styles we want to apply.
             filename: the stylesheet the styles came from."""
-        # check specificity
+
+        # are we even targetting color or bg color
+        targets_color = bool(new_styles.get("color"))
+        targets_bg_color = bool(new_styles.get("background-color"))
+
+        # get relevant specificity
         new_specificity = new_styles.get("specificity")
         col_specificity = self.color.get("specificity")
-        bg_specificity = self.background_color.get("specificity")
+        # Check for overrides
+        color_has_override = new_specificity >= col_specificity
 
         # change color if applies
         selector = new_styles.get("selector")
-        selector_applies = self.name != "a"
-        if selector_applies:
+        not_a_link = self.name != "a"
+        if not_a_link:
             hover_selector = ":hover" in selector
-            if hover_selector:
-                print("Create a new method to deal")
-            else:
-                if new_specificity >= col_specificity:
-                    col = new_styles.get("color")
-                    if col:
-                        self.color["value"] = col
-                        self.color["sheet"] = filename
-                        self.color["selector"] = selector
-                        self.color["specificity"] = new_specificity
-                else:
-                    col = self.color.get("value")
-                if new_specificity >= bg_specificity:
-                    bg_color = new_styles.get("background-color")
-                    if bg_color:
-                        self.background_color["value"] = bg_color
-                        self.background_color["sheet"] = filename
-                        self.background_color["selector"] = selector
-                        self.background_color["specificity"] = new_specificity
-                else:
-                    bg_color = self.background_color.get("value")
-
+            visited_selector = ":visited" in selector
+            if not hover_selector and not visited_selector:
+                if targets_color:
+                    if color_has_override:
+                        col = new_styles.get("color")
+                        if col:
+                            self.color["value"] = col
+                            self.color["sheet"] = filename
+                            self.color["selector"] = selector
+                            self.color["specificity"] = new_specificity
+                    else:
+                        col = self.color.get("value")
+                if targets_bg_color:
+                    self.ammend_bg_color(
+                        new_styles.get("background-color"),
+                        new_styles.get("selector"),
+                        new_specificity,
+                        filename,
+                    )
                 # get contrast for color & bg_color
-                self.get_contrast_data()
+                self.get_contrast_data("standard")
+            elif hover_selector:
+                print()
+        else:
+            # Do we have a link selector?
+            is_link_selector = css.is_link_selector(selector)
+            if is_link_selector:
+                print("We have a link selector in ammend_color_styles")
+                print("I suppose we should check specificity")
 
-    def get_contrast_data(self) -> None:
+    def ammend_bg_color(
+        self,
+        bg_color: str,
+        new_selector: str,
+        new_specificity: str,
+        filename: str,
+    ) -> None:
+
+        old_specificity = self.background_color.get("specificity")
+        bg_has_override = new_specificity >= old_specificity
+
+        # Is the element is targetted directly.
+        targeted_directly = targets_element_directly(self, new_selector)
+
+        # Did the previous bg get set directly?
+        bg_was_directly_set = self.background_color["applied_by"] == "directly"
+
+        if targeted_directly:
+            # don't apply if it was previously set with a higher specificity
+            if bg_was_directly_set and not bg_has_override:
+                return
+
+            # set new values
+            self.background_color["applied_by"] = "directly"
+            self.background_color["value"] = bg_color
+            self.background_color["specificity"] = new_specificity
+            self.background_color["sheet"] = filename
+        else:
+            # If it was not directly set, we can change it
+            if not bg_was_directly_set:
+                self.background_color["value"] = bg_color
+
+    def get_contrast_data(self, type="default") -> None:
+        """get color contrast for the type specified
+
+        contrast data could be for one of three possibile types:
+        * default: this is when all elements get their default values,
+        * standard: this is for checking contrast between color and
+        background color,
+        * hover: for the hover pseudoselector - could be applied to any
+        element (not just hyperlinks)
+        * visited: for visited links
+
+        Args:
+            type: the type of color contrast.
+        """
         col = self.color.get("value")
         bg = self.background_color.get("value")
         hexc = color.get_hex(col)
         hexbg = color.get_hex(bg)
         self.__build_contrast_report(hexc, hexbg)
-        if self.name == "a":
+        if self.name == "a" and type == "default" or type == "visited":
             vcol = self.visited_color.get("value")
-            if not vcol:
-                vcol = default_link_visited
             hexv = color.get_hex(vcol)
             self.__build_visited_contrast_report(hexv, hexbg)
+        if type == "hover":
+            self.hover_color["value"] = col
+            self.hover_color["applied_by"] = "directly"
 
     def __build_contrast_report(self, hexc, hexbg):
         link_contrast = color.get_color_contrast_report(hexc, hexbg)
@@ -197,10 +274,7 @@ class Element(object):
             declaration: the declaration (property and value)
             new_specificity: the specificity value of the selector
             filename: file where the styles come from."""
-        if self.name == "a":
-            print("What's up?")
-        if self.name == "p":
-            print("Let's follow up with the children")
+
         hover_selector = "a:hover" in selector
 
         for property, val in list(declaration.items()):
@@ -229,11 +303,14 @@ class Element(object):
                         )
             elif property == "background" or property == "background-color":
                 old_specificity = self.background_color.get("specificity")
-                if new_specificity >= old_specificity:
-                    self.background_color["value"] = val
-                    self.background_color["sheet"] = filename
-                    self.background_color["selector"] = selector
-                    self.background_color["specificity"] = new_specificity
+                self.apply_background_color(
+                    selector,
+                    property,
+                    val,
+                    old_specificity,
+                    new_specificity,
+                    filename,
+                )
             elif property == "color":
                 old_specificity = self.color.get("specificity")
                 if new_specificity >= old_specificity:
@@ -244,8 +321,6 @@ class Element(object):
             if not hover_selector:
                 self.get_contrast_data()
             for child in self.children:
-                if child.name == "td":
-                    print("did we get this?")
                 child.change_child_styles(
                     selector, property, val, new_specificity, filename
                 )
@@ -301,14 +376,7 @@ class Element(object):
 
         # Apply the styles
         if "background" in property:
-            self.background_color["value"] = val
-            self.background_color["sheet"] = filename
-            if targets_directly:
-                self.background_color["selector"] = selector
-                self.background_color["specificity"] = new_specificity
-                self.background_color["applied_by"] = "selector: " + selector
-            else:
-                self.background_color["applied_by"] = "inheritance"
+            self.ammend_bg_color(val, selector, new_specificity, filename)
         else:
             self.color["value"] = val
             self.color["sheet"] = filename
@@ -330,8 +398,40 @@ class Element(object):
         Returns:
             targets: a boolean value (does the selector target the tag?)"""
         targets = False
+        element_name = self.name
+
         if selector == self.name:
             targets = True
+
+        elif element_name in selector:
+            selector_type = css.get_selector_type(selector)
+            if selector_type == "descendant_selector":
+                selectors = selector.split(" ")
+                if element_name in selectors[-1]:
+                    targets = True
+            elif selector_type == "grouped_selector":
+                selectors = selector.split(",")
+                for sel in selectors:
+                    if element_name in sel:
+                        targets = True
+                        break
+            elif selector_type == "id_selector":
+                # If it's an id selector, the id attribute must be there.
+                id_value = selector.split("#")[1]
+                try:
+                    if isinstance(self.attributes, abc.ItemsView):
+                        for attr, value in self.attributes:
+                            if attr == "id":
+                                element_id = value
+                    else:
+                        element_id = self.attributes.get("id")
+                except AttributeError:
+                    element_id = None
+                if id_value == element_id:
+                    targets = True
+            elif selector_type == "advanced_link_selector":
+                if ":hover" in selector and element_name == "a":
+                    targets = True
         return targets
 
     def been_applied(self, property: str) -> bool:
@@ -348,9 +448,49 @@ class Element(object):
 
         else:
             applied_by = self.color.get("applied_by")
-        if applied_by not in ["default", "inheritance"]:
+        if applied_by not in ["default", "context", "inheritance"]:
             applied = True
         return applied
+
+    def apply_background_color(
+        self,
+        selector: str,
+        property: str,
+        val: str,
+        old_specificity: str,
+        new_specificity: str,
+        filename: str,
+    ) -> None:
+        """Applies background color by context or directly.
+
+        Args:
+            selector: the selector of the new styles.
+            property: the property of the new styles.
+            val: the value of the new styles.
+            old_specificity: the specificity rank of styles currently in use.
+            new_specificity: the specificity of the new selector.
+            filename: the file (html or css) that applied the styles.
+        """
+        # Are we directly targeted or not?
+        directly_targeted = self.directly_targets(selector)
+        previously_set = self.background_color.get("applied_by") == "directly"
+        element_name = self.name
+        print(element_name)
+        # If directly, check specificity
+        if directly_targeted:
+            if previously_set:
+                if new_specificity < old_specificity:
+                    return
+            # set color, specificity, and directly applied
+            self.background_color["value"] = val
+            self.background_color["sheet"] = filename
+            self.background_color["specificity"] = new_specificity
+            self.background_color["applied_by"] = "directly"
+        else:
+            if not previously_set:
+                self.background_color["value"] = val
+                self.background_color["sheet"] = filename
+                self.background_color["applied_by"] = "context"
 
 
 class CSSAppliedTree:
@@ -407,7 +547,7 @@ class CSSAppliedTree:
         body_soup = self.soup.body
         attributes = body_soup.attrs
         if attributes:
-            body.attributes = attributes
+            body.attributes = attributes.items()
         body.parents = self.__get_parents(body_soup)
         children = body_soup.contents
         self.__get_children(body, children)
@@ -424,13 +564,20 @@ class CSSAppliedTree:
             if tag_name == "script":
                 continue
             tag_children = tag.contents
-            new_element = Element(tag_name)
+            tag_attributes = tag.attrs
+            new_element = Element(tag_name, attributes=tag_attributes)
 
             element.children.append(new_element)
             for tag in tag_children:
                 if tag and not isinstance(tag, str):
                     their_kids = tag.contents
-                    kid_element = Element(tag.name)
+                    kids_attributes = tag.attrs
+                    if kids_attributes:
+                        kid_element = Element(
+                            tag.name, attributes=kids_attributes
+                        )
+                    else:
+                        kid_element = Element(tag.name)
                     new_element.children.append(kid_element)
                     self.__get_children(kid_element, their_kids)
         return
@@ -447,12 +594,6 @@ class CSSAppliedTree:
         for sheet in self.stylesheets:
             color_rules = sheet.color_rulesets
             for ruleset in color_rules:
-                # only adjust colors if the selector doesn't target body
-                body_in_ruleset = self.targets_body(ruleset)
-                rule_keys = list(ruleset.keys())
-                if body_in_ruleset and "body#image-gallery" not in rule_keys:
-                    continue
-
                 # get filename
                 filename = clerk.get_file_name(sheet.href)
                 self.__adjust_colors(body, ruleset, filename)
@@ -522,8 +663,6 @@ class CSSAppliedTree:
         # Adjust colors if necessary - if there was a change,
         # adjust colors for children
         selector = list(ruleset.keys())[0]
-        if selector in ["a:hover", "h1, h2, h3, h4"]:
-            print("Now is the time to check. Something is mutating.")
 
         # does the selector apply to the element?
         selector_applies = False
@@ -538,10 +677,28 @@ class CSSAppliedTree:
         applies = does_selector_apply(element, selector)
         selector_applies = (specificity >= old_specificity) and applies
         if selector_applies:
+            if is_background_prop:
+                value = declaration.get("background-color")
+                element.apply_background_color(
+                    selector,
+                    property,
+                    value,
+                    old_specificity,
+                    specificity,
+                    filename,
+                )
+            else:
+                if ":hover" in selector:
+                    color = element.hover_color
+                else:
+                    color = element.color
+                color["value"] = declaration.get("color")
+                color["sheet"] = filename
+                color["selector"] = selector
+                color["specificity"] = specificity
+                color["applied_by"] = "directly"
             for child in element.children:
                 self.__adjust_child_colors(child, ruleset, filename)
-
-        # --------- Stopped here --------- #
 
         can_inherit = can_inherit_styles(element, selector, ruleset)
         if can_inherit:
@@ -643,8 +800,7 @@ def does_selector_apply(element: Element, selector: str) -> bool:
     applies = False
     regex_patterns = css.regex_patterns
     element_name = element.name
-    if element_name == "td" and selector == "body":
-        print("This should be applied")
+
     # make a list of all selectors (in case of grouped selector)
     selectors = []
     is_grouped = bool(
@@ -688,7 +844,12 @@ def does_selector_apply(element: Element, selector: str) -> bool:
             # get ID attribute (if there is one)
             possible_el, id_attr = selector.split("#")
             if element.attributes:
-                element_id = element.attributes.get("id")
+                if isinstance(element.attributes, abc.ItemsView):
+                    for id, value in element.attributes:
+                        if id == "id":
+                            element_id = value
+                else:
+                    element_id = element.attributes.get("id")
                 if possible_el:
                     applies = (
                         possible_el == element_name and id_attr == element_id
@@ -701,8 +862,7 @@ def does_selector_apply(element: Element, selector: str) -> bool:
             # get all class attributes
             attributes = element.attributes
             if attributes:
-                attribute_names = list(attributes.keys())
-                for name in attribute_names:
+                for name in attributes:
                     if name == "class":
                         possible_selectors = []
                         class_values = attributes.get("class")
@@ -717,7 +877,32 @@ def does_selector_apply(element: Element, selector: str) -> bool:
             # NOTE: if this doesn't solve it, we should double check the
             # parent to see if it was a link (might already be taken care of)
             if element_name == "a":
-                applies = True
+                # first check for attributes
+                if is_attribute_selector:
+                    # check to see if there is both an attribute and value
+                    if "=" in selector:
+                        attr = selector.split("=")[0]
+                        start_pos = attr.index("[") + 1
+                        if attr[-1] in ("*", "$", "~"):
+                            attr = attr[start_pos:-1]
+                        else:
+                            attr = attr[start_pos:]
+                        if "*=" in selector:
+                            # value need only be a partial match
+                            attr, partial = selector.split("*=")
+                        elif "$=" in selector:
+                            # looking for value ending in (case-insensitive)
+                            attr, ending = selector.split("$=")
+                        elif "~=" in selector:
+                            # looking for whole word in space-separated list
+                            attr, word = selector.split("~=")
+                        else:
+                            attr, value = selector.split("=")
+                    else:
+                        # we're just looking for an attribute match
+                        attr = selector[1:-1]
+                else:
+                    applies = True
             break
         elif is_psuedo_class_selector:
             # check for element before psuedoclass
@@ -771,11 +956,6 @@ def can_inherit_styles(element: Element, selector: str, ruleset: dict) -> bool:
         if is_link_selector:
             can_inherit = True
             return can_inherit
-        selector_type = css.get_selector_type(selector)
-        if selector_type in ("id_selector", "class_selector"):
-            attributes = element.attributes
-            if attributes:
-                print("TODO: check to see if selector targets class or id")
     selector_applies = does_selector_apply(element, selector)
     if selector_applies:
         can_inherit = True
@@ -791,6 +971,34 @@ def can_inherit_styles(element: Element, selector: str, ruleset: dict) -> bool:
         if "selector" not in applied_by:
             can_inherit = True
     return can_inherit
+
+
+def targets_element_directly(element: Element, selector: str) -> bool:
+    """returns whether selector targets element directly.
+
+    Args:
+        element: the element we are checking.
+        selector: the selector in question.
+    Returns:
+        targets: whether the selector targets the element directly."""
+    targets = False
+    selector_type = css.get_selector_type(selector)
+    if selector_type == "type_selector":
+        targets = element.name == selector
+    elif selector_type == "id_selector":
+        attributes = element.attributes
+        if attributes:
+            id_attribute = attributes.get("id")
+            if id_attribute:
+                targets = selector in attributes.get("id")
+    elif selector_type == "class_selector":
+        attributes = element.attributes
+        if attributes:
+            classes = attributes.get("class")
+            if classes:
+                selector_value = selector[1:]
+                targets = selector_value in classes
+    return targets
 
 
 if __name__ == "__main__":

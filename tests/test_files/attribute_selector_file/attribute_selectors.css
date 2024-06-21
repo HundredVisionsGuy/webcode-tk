@@ -1,0 +1,33 @@
+/*************************************
+ * Attribute Selectors for testing
+ ************************************/
+/* <a> elements with a title attribute */
+a[title] {
+  color: purple;
+  background-color: antiquewhite;
+}
+
+/* <a> elements with an href matching "https://example.org" */
+a[href="https://example.org"]
+{
+  color: green;
+  background-color: black;
+}
+
+/* <a> elements with an href containing "example" */
+a[href*="example"] {
+  font-size: 2em;
+  color: cadetblue;
+}
+
+/* <a> elements with an href ending ".org", case-insensitive */
+a[href$=".org" i] {
+  font-style: italic;
+  background-color: cornsilk;
+}
+
+/* <a> elements whose class attribute contains the word "logo" */
+a[class~="logo"] {
+  padding: 2px;
+  color: mediumvioletred;
+}

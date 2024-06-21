@@ -65,7 +65,7 @@ def test_get_paragraph_text_for_automate_page(automate_path, automate_text):
 
 def test_get_all_paragraphs_for_large_project(large_project_path):
     results = ux_tools.get_all_paragraphs(large_project_path)
-    assert len(results) == 4
+    assert len(results) == 13
 
 
 def test_get_words_per_sentence_for_automate(automate_path):
