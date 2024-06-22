@@ -85,6 +85,12 @@ def gallery_article(gallery_file_tree):
     return article
 
 
+@pytest.fixture
+def attribute_selectors_article(attribute_selectors_tree):
+    article = attribute_selectors_tree.children[0].children[0].children[1]
+    return article
+
+
 def test_css_tree_for_tree(single_file_tree):
     assert single_file_tree
 
@@ -170,7 +176,8 @@ def test_gallery_article_for_background_color(gallery_article):
     assert results == expected
 
 
-def test_attribute_selectors_for_title_attribute(attribute_selectors_tree):
+def test_attribute_selectors_for_title_attribute(attribute_selectors_article):
     expected = "purple"
-    results = None
+    link = attribute_selectors_article.children[1].children[0]
+    results = link.color.get("value")
     assert results == expected

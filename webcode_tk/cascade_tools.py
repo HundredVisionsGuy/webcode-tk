@@ -701,7 +701,7 @@ class CSSAppliedTree:
                 self.__adjust_child_colors(child, ruleset, filename)
 
         can_inherit = can_inherit_styles(element, selector, ruleset)
-        if can_inherit:
+        if can_inherit and applies:
             declaration = ruleset.get(selector)
             new_specificity = css.get_specificity(selector)
             element.change_styles(
@@ -884,23 +884,47 @@ def does_selector_apply(element: Element, selector: str) -> bool:
                         attr = selector.split("=")[0]
                         start_pos = attr.index("[") + 1
                         if attr[-1] in ("*", "$", "~"):
-                            attr = attr[start_pos:-1]
+                            attribute = attr[start_pos:-1]
+                            print()
                         else:
                             attr = attr[start_pos:]
                         if "*=" in selector:
                             # value need only be a partial match
                             attr, partial = selector.split("*=")
+                            partial = "".join(
+                                i for i in partial if i not in '"]'
+                            )
+                            value = element.attributes.get(attribute)
+                            if isinstance(value, list):
+                                for v in value:
+                                    if partial in v:
+                                        applies = True
+                                        break
+                            else:
+                                applies = partial in value
                         elif "$=" in selector:
                             # looking for value ending in (case-insensitive)
                             attr, ending = selector.split("$=")
                         elif "~=" in selector:
                             # looking for whole word in space-separated list
                             attr, word = selector.split("~=")
+                            word = "".join(i for i in word if i not in '"]')
+                            value = element.attributes.get(attribute)
+                            if isinstance(value, list):
+                                for v in value:
+                                    if word == v:
+                                        applies = True
+                                        break
+                            else:
+                                applies = word == value
                         else:
                             attr, value = selector.split("=")
                     else:
                         # we're just looking for an attribute match
-                        attr = selector[1:-1]
+                        start = selector.index("[") + 1
+                        stop = selector.index("]")
+                        attr = selector[start:stop]
+                        applies = attr in element.attributes.keys()
                 else:
                     applies = True
             break
