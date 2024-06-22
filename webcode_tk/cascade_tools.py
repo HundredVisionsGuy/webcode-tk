@@ -903,8 +903,26 @@ def does_selector_apply(element: Element, selector: str) -> bool:
                             else:
                                 applies = partial in value
                         elif "$=" in selector:
-                            # looking for value ending in (case-insensitive)
-                            attr, ending = selector.split("$=")
+                            # looking for value ending in text
+                            ending = selector.split("$=")[1]
+                            text = ending.split('"')[1]
+                            case_insenstive = (
+                                "i]" in selector or "i ]" in selector
+                            )
+                            value = ""
+                            if isinstance(element.attributes, list):
+                                if attribute in element.attributes:
+                                    pos = element.attributes.index(value)
+                                    value = element.attributes[pos]
+                            elif isinstance(element.attributes, dict):
+                                if attribute in element.attributes.keys():
+                                    value = element.attributes.get(attribute)
+                            if value:
+                                end_pos = -len(text)
+                                value_end = value[end_pos:]
+                                if case_insenstive:
+                                    value_end = value_end.lower()
+                                applies = text == value_end
                         elif "~=" in selector:
                             # looking for whole word in space-separated list
                             attr, word = selector.split("~=")

@@ -20,14 +20,24 @@ a[href*="example"] {
   color: cadetblue;
 }
 
-/* <a> elements with an href ending ".org", case-insensitive */
-a[href$=".org" i] {
+/* <a> elements with an href ending "attribute_selectors",
+    case-insensitive */
+a[href$="attribute_selectors" i] {
   font-style: italic;
+  color: rgb(40, 34, 75);
   background-color: cornsilk;
 }
 
-/* <a> elements whose class attribute contains the word "logo" */
-a[class~="logo"] {
+
+/* <a> elements whose class attribute contains the word "classy" */
+a[class~="classy"] {
   padding: 2px;
   color: mediumvioletred;
+  font-style: italic;
+}
+
+/* <a> elements with an href ending "Bob-Ross",
+    case-sensitive */
+a[href$="Bob-Ross"] {
+  color: #336699;
 }

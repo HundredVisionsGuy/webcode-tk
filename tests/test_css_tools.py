@@ -686,7 +686,7 @@ def test_get_all_stylesheets_for_style_tag(gallery_path):
 
 def test_get_font_families_for_one(css_with_external_imports):
     results = css_tools.get_font_families(css_with_external_imports)
-    assert "noto sans" in results[0].get("family")
+    assert "noto sans" in results[0].get("family").lower()
 
 
 def test_get_font_families_for_two(general_stylesheet):

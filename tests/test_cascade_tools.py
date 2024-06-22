@@ -91,6 +91,13 @@ def attribute_selectors_article(attribute_selectors_tree):
     return article
 
 
+@pytest.fixture
+def attribute_selectors_header(attribute_selectors_tree):
+    div = attribute_selectors_tree.children[0].children[0]
+    header = div.children[0]
+    return header
+
+
 def test_css_tree_for_tree(single_file_tree):
     assert single_file_tree
 
@@ -179,5 +186,39 @@ def test_gallery_article_for_background_color(gallery_article):
 def test_attribute_selectors_for_title_attribute(attribute_selectors_article):
     expected = "purple"
     link = attribute_selectors_article.children[1].children[0]
+    results = link.color.get("value")
+    assert results == expected
+
+
+def test_attribute_selectors_for_exact_attribute_values(
+    attribute_selectors_article,
+):
+    expected = "cadetblue"
+    link = attribute_selectors_article.children[2].children[0]
+    results = link.color.get("value")
+    assert results == expected
+
+
+def test_attribute_selectors_for_contains_word(attribute_selectors_article):
+    expected = "mediumvioletred"
+    link = attribute_selectors_article.children[3].children[0]
+    results = link.color.get("value")
+    assert results == expected
+
+
+def test_attribute_selectors_for_ends_with_case_insensitive(
+    attribute_selectors_header,
+):
+    expected = "rgb(40, 34, 75)"
+    link = attribute_selectors_header.children[2].children[0]
+    results = link.color.get("value")
+    assert results == expected
+
+
+def test_attribute_selectors_for_ends_with_case_sensitive(
+    attribute_selectors_header,
+):
+    expected = "#336699"
+    link = attribute_selectors_header.children[0].children[0]
     results = link.color.get("value")
     assert results == expected

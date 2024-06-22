@@ -207,7 +207,7 @@ class Stylesheet:
         external_import_re += r"@import url\(['\"]http://"
 
         # remove external imports if there's a protocol
-        text = text.lower()
+        # text = text.lower()
         match = re.search(external_import_re, text)
         if match:
             # but only if it's in an @import url function
