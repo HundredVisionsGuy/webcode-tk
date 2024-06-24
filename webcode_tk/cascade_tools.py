@@ -162,8 +162,6 @@ class Element(object):
                     )
                 # get contrast for color & bg_color
                 self.get_contrast_data("standard")
-            elif hover_selector:
-                print()
         else:
             # Do we have a link selector?
             is_link_selector = css.is_link_selector(selector)
@@ -347,8 +345,6 @@ class Element(object):
                 targetting in some way).
             filename: the file where the styles came from.
         """
-        if self.name == "td":
-            print("What's up?")
 
         # has the element already had same property targetted previously?
         already_applied = self.been_applied(property)
@@ -474,8 +470,7 @@ class Element(object):
         # Are we directly targeted or not?
         directly_targeted = self.directly_targets(selector)
         previously_set = self.background_color.get("applied_by") == "directly"
-        element_name = self.name
-        print(element_name)
+
         # If directly, check specificity
         if directly_targeted:
             if previously_set:
@@ -708,17 +703,6 @@ class CSSAppliedTree:
                 selector, declaration.copy(), new_specificity, filename
             )
         for child in element.children:
-            child_name = child.name
-            if selector in ["h1, h2, h3, h4", "table"] and child_name == "td":
-                print("Check it out.")
-            if child_name == "td" and selector not in [
-                "tr",
-                "th",
-                "td",
-                "a",
-                "a:hover",
-            ]:
-                print("check it out.")
             self.__adjust_colors(child, ruleset, filename)
 
     def __get_parents(self, tag: Tag) -> list:
@@ -880,69 +864,7 @@ def does_selector_apply(element: Element, selector: str) -> bool:
                 # first check for attributes
                 if is_attribute_selector:
                     # check to see if there is both an attribute and value
-                    if "=" in selector:
-                        attr = selector.split("=")[0]
-                        start_pos = attr.index("[") + 1
-                        if attr[-1] in ("*", "$", "~"):
-                            attribute = attr[start_pos:-1]
-                            print()
-                        else:
-                            attr = attr[start_pos:]
-                        if "*=" in selector:
-                            # value need only be a partial match
-                            attr, partial = selector.split("*=")
-                            partial = "".join(
-                                i for i in partial if i not in '"]'
-                            )
-                            value = element.attributes.get(attribute)
-                            if isinstance(value, list):
-                                for v in value:
-                                    if partial in v:
-                                        applies = True
-                                        break
-                            else:
-                                applies = partial in value
-                        elif "$=" in selector:
-                            # looking for value ending in text
-                            ending = selector.split("$=")[1]
-                            text = ending.split('"')[1]
-                            case_insenstive = (
-                                "i]" in selector or "i ]" in selector
-                            )
-                            value = ""
-                            if isinstance(element.attributes, list):
-                                if attribute in element.attributes:
-                                    pos = element.attributes.index(value)
-                                    value = element.attributes[pos]
-                            elif isinstance(element.attributes, dict):
-                                if attribute in element.attributes.keys():
-                                    value = element.attributes.get(attribute)
-                            if value:
-                                end_pos = -len(text)
-                                value_end = value[end_pos:]
-                                if case_insenstive:
-                                    value_end = value_end.lower()
-                                applies = text == value_end
-                        elif "~=" in selector:
-                            # looking for whole word in space-separated list
-                            attr, word = selector.split("~=")
-                            word = "".join(i for i in word if i not in '"]')
-                            value = element.attributes.get(attribute)
-                            if isinstance(value, list):
-                                for v in value:
-                                    if word == v:
-                                        applies = True
-                                        break
-                            else:
-                                applies = word == value
-                        else:
-                            attr, value = selector.split("=")
-                    else:
-                        # we're just looking for an attribute match
-                        start = selector.index("[") + 1
-                        stop = selector.index("]")
-                        attr = selector[start:stop]
-                        applies = attr in element.attributes.keys()
+                    applies = attribute_selector_applies(element, selector)
                 else:
                     applies = True
             break
@@ -953,8 +875,7 @@ def does_selector_apply(element: Element, selector: str) -> bool:
             if applies:
                 break
         elif is_attribute_selector:
-            # TODO: adjust for attribute selectors
-            print("This must be an attribute selector")
+            applies = attribute_selector_applies(element, selector)
         elif is_descendant_selector:
             items = sel.split()
             applies = items[-1] == element_name
@@ -962,6 +883,72 @@ def does_selector_apply(element: Element, selector: str) -> bool:
                 break
         else:
             raise ValueError(f"Selector not recognized: Got {selector}")
+    return applies
+
+def attribute_selector_applies(element, selector):
+    applies = False
+    if "=" in selector:
+        attr = selector.split("=")[0]
+        start_pos = attr.index("[") + 1
+        if attr[-1] in ("*", "$", "~"):
+            attribute = attr[start_pos:-1]
+        else:
+            attr = attr[start_pos:]
+        if "*=" in selector:
+                            # value need only be a partial match
+            attr, partial = selector.split("*=")
+            partial = "".join(
+                                i for i in partial if i not in '"]'
+                            )
+            value = element.attributes.get(attribute)
+            if isinstance(value, list):
+                for v in value:
+                    if partial in v:
+                        applies = True
+                        break
+            else:
+                applies = partial in value
+        elif "$=" in selector:
+                            # looking for value ending in text
+            ending = selector.split("$=")[1]
+            text = ending.split('"')[1]
+            case_insenstive = (
+                                "i]" in selector or "i ]" in selector
+                            )
+            value = ""
+            if isinstance(element.attributes, list):
+                if attribute in element.attributes:
+                    pos = element.attributes.index(value)
+                    value = element.attributes[pos]
+            elif isinstance(element.attributes, dict):
+                if attribute in element.attributes.keys():
+                    value = element.attributes.get(attribute)
+            if value:
+                end_pos = -len(text)
+                value_end = value[end_pos:]
+                if case_insenstive:
+                    value_end = value_end.lower()
+                applies = text == value_end
+        elif "~=" in selector:
+            # looking for whole word in space-separated list
+            attr, word = selector.split("~=")
+            word = "".join(i for i in word if i not in '"]')
+            value = element.attributes.get(attribute)
+            if isinstance(value, list):
+                for v in value:
+                    if word == v:
+                        applies = True
+                        break
+            else:
+                applies = word == value
+        else:
+            attr, value = selector.split("=")
+    else:
+        # we're just looking for an attribute match
+        start = selector.index("[") + 1
+        stop = selector.index("]")
+        attr = selector[start:stop]
+        applies = attr in element.attributes.keys()
     return applies
 
 
