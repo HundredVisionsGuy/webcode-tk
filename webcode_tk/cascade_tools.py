@@ -11,7 +11,6 @@ to all elements and their children (if applicable) of a page.
 import re
 from collections import abc
 
-from bs4 import Tag
 from file_clerk import clerk
 
 from webcode_tk import color_tools as color
@@ -52,12 +51,21 @@ class Element(object):
     Therefore, the applied_by will be either "context" or "applied"
     Attributes:
         name (str): name of the element.
-        attributes (list): a list of attributes as dictionaries.
-        styles (list): a list of computed styles in key-value pairs.
         children (list): any Elements nested in the tag.
+        attributes (list): a list of attributes as dictionaries.
+        parent (str): the direct parent of the element.
+        ancestors (list): a list of all ancestors (in order of the appearance
+            in the DOM)
     """
 
-    def __init__(self, name=None, children=None, attributes=None) -> None:
+    def __init__(
+        self,
+        name=None,
+        children=None,
+        attributes=None,
+        parent=None,
+        ancestors=None,
+    ) -> None:
         self.name = name
         self.attributes = attributes
         self.background_color = {
@@ -112,7 +120,10 @@ class Element(object):
         self.__set_link_color()
         self.get_contrast_data("default")
         self.children = children if children is not None else []
-        self.parents = []
+        self.parent = parent
+        self.ancestors = ancestors.copy() if ancestors is not None else []
+        if parent:
+            self.ancestors.append(self.parent)
 
     def __set_link_color(self):
         if self.name == "a":
@@ -539,13 +550,13 @@ class CSSAppliedTree:
         # Start with the body element, and divide and conquer
         root = Element("html")
         self.root = root
-        body = Element("body")
+        body = Element("body", parent="html")
         self.children.append(body)
         body_soup = self.soup.body
         attributes = body_soup.attrs
         if attributes:
             body.attributes = attributes.items()
-        body.parents = self.__get_parents(body_soup)
+        # body.parents = self.__get_parents(body_soup)
         children = body_soup.contents
         self.__get_children(body, children)
 
@@ -562,7 +573,13 @@ class CSSAppliedTree:
                 continue
             tag_children = tag.contents
             tag_attributes = tag.attrs
-            new_element = Element(tag_name, attributes=tag_attributes)
+            parent = element.name
+            new_element = Element(
+                tag_name,
+                attributes=tag_attributes,
+                parent=parent,
+                ancestors=element.ancestors,
+            )
 
             element.children.append(new_element)
             for tag in tag_children:
@@ -571,10 +588,14 @@ class CSSAppliedTree:
                     kids_attributes = tag.attrs
                     if kids_attributes:
                         kid_element = Element(
-                            tag.name, attributes=kids_attributes
+                            tag.name,
+                            attributes=kids_attributes,
+                            ancestors=element.ancestors,
                         )
                     else:
-                        kid_element = Element(tag.name)
+                        kid_element = Element(
+                            tag.name, ancestors=element.ancestors
+                        )
                     new_element.children.append(kid_element)
                     self.__get_children(kid_element, their_kids)
         return
@@ -706,29 +727,6 @@ class CSSAppliedTree:
             )
         for child in element.children:
             self.__adjust_colors(child, ruleset, filename)
-
-    def __get_parents(self, tag: Tag) -> list:
-        """gets all parent tag names and possible selectors as dictionary
-        objects.
-
-        Args:
-            element: the Element object (the one that will get the list of
-            parents)
-            tag: the bs4 tag object that contains the parent information
-
-        Returns:
-            parents: a list of parent tag information in the form of a
-                dictionary."""
-        parents = []
-        for parent in tag.parents:
-            details = {}
-            if parent.name == "[document]":
-                continue
-            details["name"] = parent.name
-            details["classes"] = parent.attrs.get("class")
-            details["id"] = parent.attrs.get("id")
-            parents.append(details)
-        return parents
 
     def __adjust_child_colors(
         self, child: Element, ruleset: dict, filename: str
