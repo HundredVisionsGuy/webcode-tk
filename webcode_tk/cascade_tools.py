@@ -189,6 +189,14 @@ class Element(object):
         new_specificity: str,
         filename: str,
     ) -> None:
+        """ammends the bg color based on the selector and specficity.
+
+        Args:
+            bg_color: the new bg color value.
+            new_selector: the new selector.
+            new_specificity: the specificity of the new selector.
+            filename: the name of the file that is applying the styles.
+        """
 
         old_specificity = self.background_color.get("specificity")
         bg_has_override = new_specificity >= old_specificity
@@ -241,7 +249,13 @@ class Element(object):
             self.hover_color["value"] = col
             self.hover_color["applied_by"] = "directly"
 
-    def __build_contrast_report(self, hexc, hexbg):
+    def __build_contrast_report(self, hexc: str, hexbg: str) -> None:
+        """creates a full contrast report for Element.
+
+        Args:
+            hexc: the hex code for the color value.
+            hexbg: the hex code for the background color.
+        """
         link_contrast = color.get_color_contrast_report(hexc, hexbg)
         link_ratio = color.contrast_ratio(hexc, hexbg)
 
@@ -256,7 +270,16 @@ class Element(object):
             link_contrast.get("Large AAA") == "Pass"
         )
 
-    def __build_visited_contrast_report(self, hexc, hexbg):
+    def __build_visited_contrast_report(self, hexc: str, hexbg: str) -> None:
+        """builds contrast report for visited color settings.
+
+        This applies only for anchor tags as they are the only ones with a
+        visited property.
+
+        Args:
+            hexc: the hex code for the color value.
+            hexbg: the hex code for the background color.
+        """
         link_contrast = color.get_color_contrast_report(hexc, hexbg)
         link_ratio = color.contrast_ratio(hexc, hexbg)
 
@@ -284,7 +307,8 @@ class Element(object):
             selector: the selector used to make a change
             declaration: the declaration (property and value)
             new_specificity: the specificity value of the selector
-            filename: file where the styles come from."""
+            filename: file where the styles come from.
+        """
 
         hover_selector = "a:hover" in selector
 
@@ -538,7 +562,11 @@ class CSSAppliedTree:
         self.__apply_colors()
 
     def __get_soup(self, path: str):
-        """Gets bs4 soup from the file path"""
+        """Gets bs4 soup from the file path
+
+        Args:
+            path: the relative file path to the html document
+        """
         self.soup = html_tools.get_html(path)
 
     def __get_filename(self):
@@ -560,8 +588,15 @@ class CSSAppliedTree:
         children = body_soup.contents
         self.__get_children(body, children)
 
-    def __get_children(self, element: Element, soup_contents: list):
-        """gets all children of the element and their children from the soup"""
+    def __get_children(self, element: Element, soup_contents: list) -> None:
+        """gets all children of the element and their children from the soup
+
+        The soup refers to the bs4 (Beautiful Soup) of the HTML element.
+
+        Args:
+            element: the parent element.
+            soup_contents: a list of all items in the bs4 soup
+        """
         contents = []
         for child in soup_contents:
             if isinstance(child, str):
@@ -619,14 +654,32 @@ class CSSAppliedTree:
                 filename = clerk.get_file_name(sheet.href)
                 self.__adjust_colors(body, ruleset, filename)
 
-    def targets_body(self, ruleset):
+    def targets_body(self, ruleset: dict) -> bool:
+        """returns whether the ruleset is targetting the body or not.
+
+        Args:
+            ruleset: a dictionary of selectors and their declaration blocks.
+
+        Returns:
+            body_in_ruleset: whether body is in one of the selectors.
+        """
         body_in_ruleset = False
         for selector in list(ruleset.keys()):
             if "body" in selector:
                 body_in_ruleset = True
         return body_in_ruleset
 
-    def __set_global_colors(self):
+    def __set_global_colors(self) -> Element:
+        """sets global colors to the body element.
+
+        This loops through all stylesheets, and at each iteration, it checks
+        specificity, and if the global colors beat previous specificity, they
+        get applied. The last of the styles to be applied win, and we return
+        the body element with global colors applied.
+
+        Returns:
+            body: the Body element with global colors applied.
+        """
         body = None
         for sheet in self.stylesheets:
             global_colors = css.get_global_color_details(sheet.rulesets)
@@ -782,6 +835,7 @@ def does_selector_apply(element: Element, selector: str) -> bool:
     Args:
         element: the element we are checking.
         selector: the selector in question.
+
     Returns:
         applies: whether the selector actually applies to the element."""
     applies = False
@@ -889,7 +943,17 @@ def does_selector_apply(element: Element, selector: str) -> bool:
     return applies
 
 
-def attribute_selector_applies(element, selector):
+def attribute_selector_applies(element: Element, selector: str) -> bool:
+    """determines if the attribute selector applies or not.
+
+    Args:
+        element: the element in question.
+        selector: the attribute selector in question.
+
+    Returns:
+        applies: a bool representing whether the attribute selector
+            applies or not.
+    """
     applies = False
     if "=" in selector:
         attr = selector.split("=")[0]
@@ -953,11 +1017,19 @@ def attribute_selector_applies(element, selector):
 
 
 def is_selector_pseudoclass(selector: str) -> bool:
-    """returns whether selector is a pseudoclass selector"""
+    """returns whether selector is a pseudoclass selector.
+
+    Args:
+        selector: the selector in question.
+
+    Returns:
+        is_pseudo_class_selector: whether the selector is a psuedoclass
+            or not.
+    """
     pc_regex = css.regex_patterns.get("pseudoclass_selector")
-    is_psuedo_class_selector = bool(re.match(pc_regex, selector))
-    is_psuedo_class_selector = is_psuedo_class_selector or ":" in selector
-    return is_psuedo_class_selector
+    is_pseudo_class_selector = bool(re.match(pc_regex, selector))
+    is_pseudo_class_selector = is_pseudo_class_selector or ":" in selector
+    return is_pseudo_class_selector
 
 
 def can_inherit_styles(element: Element, selector: str, ruleset: dict) -> bool:
@@ -974,6 +1046,9 @@ def can_inherit_styles(element: Element, selector: str, ruleset: dict) -> bool:
         element: the tag that is a descendant of another tag targetted
             by the selector.
         selector: the selector in question.
+        ruleset: the ruleset dictionary (the key is the selector, and
+            the value is the declaration block).
+
     Returns:
         can_inherit: whether the element should get the inherited
             styles or not."""
@@ -1054,6 +1129,8 @@ def get_color_contrast_results(
 
     Args:
         css_tree: the css tree of color styles for a particular file.
+        results: the overall results we want adjusted (increases as we
+            iterate through the css_tree).
         min_regular: the minimum passing size ('AAA' or 'AA') for color
             contrast for normal sized elements (anything except h1-h4).
 
@@ -1080,7 +1157,7 @@ def get_color_contrast_results(
 
 def update_contrast_results(
     results: dict, tag: str, contrast_data: dict, min_regular: str
-) -> None:
+) -> dict:
     """updates the results of color contrast for the tag.
 
     Args:
@@ -1088,6 +1165,9 @@ def update_contrast_results(
         tag: the element we want to adjust.
         contrast_data: the contrast results for the tag.
         min_regular: the minimum level required for standard text passing.
+
+    Returns:
+        results: adjusted results after processing contrast data.
     """
     passes = False
     data = results.get(tag)
@@ -1111,7 +1191,7 @@ def update_contrast_results(
 
 if __name__ == "__main__":
     project_path = "tests/test_files/attribute_selector_file"
-    # project_path = "tests/test_files/large_project/"
+    project_path = "tests/test_files/large_project/"
     styles_by_html_files = css.get_styles_by_html_files(project_path)
     for file in styles_by_html_files:
         filepath = file.get("file")
