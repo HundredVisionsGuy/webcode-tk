@@ -23,6 +23,7 @@ default_global_color = "#FFFFFF"
 default_global_background = None
 default_link_color = "#0000EE"
 default_link_visited = "#551A8B"
+root_font_size = 16
 
 
 class Element(object):
@@ -107,6 +108,7 @@ class Element(object):
             "normal_aa": False,
             "large_aaa": False,
         }
+        self.font_size = root_font_size
         self.__set_link_color()
         self.get_contrast_data("default")
         self.children = children if children is not None else []
@@ -885,6 +887,7 @@ def does_selector_apply(element: Element, selector: str) -> bool:
             raise ValueError(f"Selector not recognized: Got {selector}")
     return applies
 
+
 def attribute_selector_applies(element, selector):
     applies = False
     if "=" in selector:
@@ -895,11 +898,9 @@ def attribute_selector_applies(element, selector):
         else:
             attr = attr[start_pos:]
         if "*=" in selector:
-                            # value need only be a partial match
+            # value need only be a partial match
             attr, partial = selector.split("*=")
-            partial = "".join(
-                                i for i in partial if i not in '"]'
-                            )
+            partial = "".join(i for i in partial if i not in '"]')
             value = element.attributes.get(attribute)
             if isinstance(value, list):
                 for v in value:
@@ -909,12 +910,10 @@ def attribute_selector_applies(element, selector):
             else:
                 applies = partial in value
         elif "$=" in selector:
-                            # looking for value ending in text
+            # looking for value ending in text
             ending = selector.split("$=")[1]
             text = ending.split('"')[1]
-            case_insenstive = (
-                                "i]" in selector or "i ]" in selector
-                            )
+            case_insenstive = "i]" in selector or "i ]" in selector
             value = ""
             if isinstance(element.attributes, list):
                 if attribute in element.attributes:
@@ -1030,12 +1029,93 @@ def targets_element_directly(element: Element, selector: str) -> bool:
     return targets
 
 
+def get_color_contrast_results(
+    element: Element, results, min_regular="AAA"
+) -> dict:
+    """returns a list of color contrast results for all elements in a file.
+
+    Recursively searches through the css_tree of HTML elements looking to
+    determine whether the element is normal or large in size, and whether it
+    passes the AIM color contrast goals.
+
+    The minimum passing level could be either at an AAA or AA level (according
+    to the WebAIM Color Contrast Checker). Be default we'll look for AAA
+    sizes to see if they pass.
+    [WebAim Contrast Checker](https://webaim.org/resources/contrastchecker/)
+
+    Calculating whether an element qualifies as large depends on the styles
+    applied. With a standard font size (no changes to global font-size), h1-h3
+    qualify as large.
+
+    As of this version, we are not looking at calculated font sizes, but
+    that could be a feature implemented later. For future reference, we're
+    including some details:
+
+    Args:
+        css_tree: the css tree of color styles for a particular file.
+        min_regular: the minimum passing size ('AAA' or 'AA') for color
+            contrast for normal sized elements (anything except h1-h4).
+
+    Returns:
+        results: a dictionary of color contrast results for each element in
+            the file.
+    """
+    tag = element.name
+    if tag not in results.keys():
+        results[tag] = {
+            "num_elements": 0,
+            "num_passed": 0,
+            "num_failed": 0,
+            "all_pass": True,
+        }
+    results = update_contrast_results(
+        results, tag, element.contrast_data, min_regular
+    )
+    if element.children:
+        for child in element.children:
+            results = get_color_contrast_results(child, results, min_regular)
+    return results
+
+
+def update_contrast_results(
+    results: dict, tag: str, contrast_data: dict, min_regular: str
+) -> None:
+    """updates the results of color contrast for the tag.
+
+    Args:
+        results: the overall results we want to adjust.
+        tag: the element we want to adjust.
+        contrast_data: the contrast results for the tag.
+        min_regular: the minimum level required for standard text passing.
+    """
+    passes = False
+    data = results.get(tag)
+
+    data["num_elements"] += 1
+
+    if tag in ("h1", "h2", "h3"):
+        passes = contrast_data.get("large_aaa")
+    else:
+        if min_regular == "AAA":
+            passes = contrast_data.get("normal_aaa")
+        else:
+            passes = contrast_data.get("normal_aa")
+    if passes:
+        data["num_passed"] += 1
+    else:
+        data["num_failed"] += 1
+    data["all_pass"] = not data["num_failed"]
+    return results
+
+
 if __name__ == "__main__":
-    project_path = "tests/test_files/single_file_project/"
-    project_path = "tests/test_files/large_project/"
+    project_path = "tests/test_files/attribute_selector_file"
+    # project_path = "tests/test_files/large_project/"
     styles_by_html_files = css.get_styles_by_html_files(project_path)
     for file in styles_by_html_files:
         filepath = file.get("file")
         sheets = file.get("stylesheets")
         css_tree = CSSAppliedTree(filepath, sheets)
-        print(css_tree)
+        results = {}
+        results = get_color_contrast_results(css_tree.children[0], results)
+        print(results)
