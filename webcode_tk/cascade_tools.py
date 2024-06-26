@@ -590,11 +590,14 @@ class CSSAppliedTree:
                         kid_element = Element(
                             tag.name,
                             attributes=kids_attributes,
-                            ancestors=element.ancestors,
+                            parent=new_element.name,
+                            ancestors=new_element.ancestors,
                         )
                     else:
                         kid_element = Element(
-                            tag.name, ancestors=element.ancestors
+                            tag.name,
+                            parent=new_element.name,
+                            ancestors=new_element.ancestors,
                         )
                     new_element.children.append(kid_element)
                     self.__get_children(kid_element, their_kids)
