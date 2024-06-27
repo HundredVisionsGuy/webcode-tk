@@ -141,6 +141,7 @@ figcaption {
   article.page,
   aside.sidebar {
       margin-top: 2rem;
+      font-size: 1.1rem;
   }
   .container {
     grid-template-columns: 2fr 1fr;

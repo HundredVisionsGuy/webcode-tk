@@ -887,6 +887,16 @@ def test_get_all_link_rules_for_two(navigation_styles):
     assert len(results) == 2
 
 
+def test_get_all_font_rules_for_number(general_stylesheet):
+    results = css_tools.get_all_font_rules(general_stylesheet)
+    assert len(results) == 2
+
+
+def test_get_all_font_rules_for_four(layout_css_stylesheet):
+    results = css_tools.get_all_font_rules(layout_css_stylesheet)
+    assert len(results) == 5
+
+
 def test_get_link_color_data_for_large_project(large_project_path):
     results = css_tools.get_link_color_data(large_project_path)
     assert len(results) == 4

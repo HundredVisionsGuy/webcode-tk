@@ -843,6 +843,55 @@ def get_all_color_rules(file: str) -> list:
     return condensed_rules
 
 
+def get_all_font_rules(sheet: Stylesheet) -> list:
+    """returns a list of all rules targetting font properties.
+
+    Args:
+        sheet: a stylesheet object.
+
+    Returns:
+        font_rules: a list of all font rules.
+    """
+    rules = {}
+    for rule in sheet.rulesets:
+        if "font" in rule._Ruleset__text:
+            for declaration in rule.declaration_block.declarations:
+                if "font" in declaration.property:
+                    selector = rule.selector
+                    property = declaration.property
+                    value = declaration.value
+                    if not rules.get(selector):
+                        rules[selector] = {}
+                    rules[selector]["at_rule"] = None
+                    rules[selector]["property"] = property
+                    rules[selector]["value"] = value
+    font_rules = list(rules.items())
+    at_rules = get_all_at_rules(sheet)
+    font_rules = font_rules + at_rules
+    return font_rules
+
+
+def get_all_at_rules(sheet):
+    adjusted_at_rules = []
+    for declaration in sheet.nested_at_rules:
+        at_rule = declaration.at_rule
+        for rule in declaration.rulesets:
+            for declaration in rule.declaration_block.declarations:
+                if "font" in declaration.property:
+                    selector = rule.selector
+                    property = declaration.property
+                    value = declaration.value
+                    details = {
+                        "at_rule": at_rule,
+                        "property": property,
+                        "value": value,
+                    }
+                    new_rule = (selector, details)
+                    adjusted_at_rules.append(new_rule)
+
+    return adjusted_at_rules
+
+
 def get_all_link_rules(sheet: Stylesheet) -> list:
     """returns all rules that target a hyperlink
 
