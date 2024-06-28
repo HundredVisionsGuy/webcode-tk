@@ -584,7 +584,7 @@ class CSSAppliedTree:
         attributes = body_soup.attrs
         if attributes:
             body.attributes = attributes.items()
-        # body.parents = self.__get_parents(body_soup)
+        self.compute_font_size(body)
         children = body_soup.contents
         self.__get_children(body, children)
 
@@ -817,6 +817,19 @@ class CSSAppliedTree:
             )
         for kid in child.children:
             self.__adjust_child_colors(kid, ruleset, filename)
+
+    def compute_font_size(self, element: Element, parent=None):
+        for sheet in self.stylesheets:
+            font_rules = css.get_all_font_rules(sheet)
+            for rule in font_rules:
+                selector = rule[0]
+                rule_applies = does_selector_apply(element, selector)
+                is_at_rule = bool(rule[1].get("at_rule"))
+                if rule_applies and not is_at_rule:
+                    # get the other stuff and process
+                    print()
+                else:
+                    print()
 
 
 def does_selector_apply(element: Element, selector: str) -> bool:
