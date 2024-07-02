@@ -10,19 +10,72 @@ particular element in the DOM, and the rules behind it can get a
 little daunting, so here we are.
 """
 import re
+from typing import Union
+
+from webcode_tk.css_tools import Stylesheet
 
 absolute_keyword_regex = r"\b(?:xx-small|x-small|small|medium|large|x-large|"
 absolute_keyword_regex += r"xx-large|xxx-large|smaller|larger)\b"
 numeric_value_regex = r"(\d+(\.\d+)?)(px|em|rem|pt|%)"
 
+KEYWORD_SIZE_MAP = {
+    "xx-small": "9px",
+    "x-small": "10px",
+    "small": "13px",
+    "medium": "16px",
+    "large": "18px",
+    "x-large": "24px",
+    "xx-large": "32px",
+    "xxx-large": "48px",
+}
 
-def get_absolute_keyword_values(css_code: str) -> list:
-    matches = re.findall(absolute_keyword_regex, css_code)
-    return matches
+
+def get_absolute_keyword_values(css_code: Union[str, Stylesheet]) -> list:
+    """returns a list of all keyword values in CSS
+
+    To be safe, we should remove all selectors using the curly brackets
+    with the split method.
+
+    Args:
+        css_code: the CSS styles in either string or Stylesheet format
+    """
+    if isinstance(css_code, Stylesheet):
+        styles = css_code.text
+    else:
+        styles = css_code
+    values = []
+    style_split = styles.split("{")
+    for i in style_split:
+        if ":" in i:
+            start = i.index(":")
+            stop = len(i)
+            if ";" in i:
+                stop = i.index(";")
+            elif "}" in i:
+                stop = i.index("}")
+            value_str = i[start:stop]
+            matches = re.findall(absolute_keyword_regex, value_str)
+        else:
+            matches = re.findall(absolute_keyword_regex, i)
+        if matches:
+            values += matches
+    return values
 
 
-def get_numeric_fontsize_values(css_code: str) -> list:
-    matches = re.findall(numeric_value_regex, css_code)
+def get_numeric_fontsize_values(css_code: Union[str, Stylesheet]) -> list:
+    """returns a list of all numeric font size values.
+
+    This should work for any standard size value (em, px, %,
+    rem). As of now, we are ignoring vw and vh because they are
+    based on the size of the window, and that is out of our control.
+    Args:
+        css_code: the CSS styles in either string or Stylesheet format.
+    """
+    if isinstance(css_code, Stylesheet):
+        code = css_code.text
+    else:
+        code = css_code
+    matches = re.findall(numeric_value_regex, code)
     full_matches = ["".join(match) for match in matches]
     return full_matches
 

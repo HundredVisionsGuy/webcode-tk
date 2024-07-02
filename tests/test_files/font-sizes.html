@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Font-size Experiment</title>
+    <style>
+        body {
+            font-size: 20px;
+            background-color: #18324c;
+            color:aliceblue;
+        }
+        span {
+            font-size: 1.1em;
+        }
+        p {
+            font-size: medium;
+        }
+        .xx-small {
+            font-size: xx-small;
+        }
+        .x-small {
+            font-size: x-small;
+        }
+        .small {
+            font-size: small;
+        }
+        .medium {
+            font-size: medium;
+        }
+        .large {
+            font-size: large;
+        }
+        .x-large {
+            font-size: x-large;
+        }
+        .xx-large {
+            font-size: xx-large;
+        }
+        .xxx-large {
+            font-size: xxx-large;
+        }
+        .smaller {
+            font-size: smaller;
+        }
+        .larger {
+            font-size: larger;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Font-size Experiment</h1>
+        <p>An experiment for testing computed font sizes.</p>
+    </header>
+    <article>
+        <h2>General Notes</h2>
+        <ul>
+            <li>The base font-size by default is 16px</li>
+            <li>I set the body element to 20px to make font-size calculations a little simpler</li>
+        </ul>
+        <h2>Keywords</h2>
+        <h3>Absolute Keywords</h3>
+        <p>Absolute keywords are always set in reference to the <b>root font size</b>. Each size in the list below will have that size applied.</p>
+        <ul>
+            <li class="xx-small"><code>xx-small</code></li>
+            <li class="x-small"><code>x-small</code></li>
+            <li class="small"><code>small</code></li>
+            <li class="medium"><code>medium</code></li>
+            <li class="large"><code>large</code></li>
+            <li class="x-large"><code>x-large</code></li>
+            <li class="xx-large"><code>xx-large</code></li>
+            <li class="xxx-large"><code>xxx-large</code></li>
+        </ul>
+        <h3>Relative Size Keywords</h3>
+        <p>There are just two relative size keywords: <code class="smaller">smaller</code> and <code class="larger">larger</code>. These bump up or down based on the computed font-size</p>
+        <p>The keyword <code class="larger">larger</code> makes the text 120% <span class="larger">larger</span> than whatever the computed font would be.</p>
+        <p>The keyword <code class="smaller">smaller</code> makes the text 83.3% <span class="smaller">smaller</span> than the computed font. Below are some examples.</p>
+        <ul>
+            <li class="small">this list item is small:
+                <ul>
+                    <li class="smaller">Smaller small text</li>
+                    <li class="larger">Larger small text</li>
+                </ul>
+            </li>
+            <li class="medium">this list item is medium (should be 16px in size (check inspector)
+                <ul>
+                    <li class="smaller">Smaller medium text</li>
+                    <li class="larger">Larger medium text</li>
+                </ul>
+            </li>
+            <li class="large">this list item is large
+                <ul>
+                    <li class="smaller">Smaller large text</li>
+                    <li class="larger">Larger large text</li>
+                </ul>
+            </li>
+        </ul>
+        <div>
+            A div of
+            <span id="outer-span">spans <span id="middle-span">within spans <span id="inner-span">within spans</span></span></span>
+        </div>
+
+    </article>
+</body>
+</html>
