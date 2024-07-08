@@ -65,12 +65,12 @@ compute_font_size_data = [
         22.0,
     ),
     (110, "percentage", 22.0, "span", 24.2),
-    (110, "percent", 24.2, "span", 26.6),
+    (110, "percent", 24.2, "span", 26.62),
     (1.2, "rem", 20.0, "p", 19.2),
     (1.2, "em", 20.0, "p", 24.0),
     ("x-small", "absolute_keyword", 20.0, "li", 10.0),
     ("larger", "relative_keyword", 13.0, "li", 15.6),
-    ("smaller", "relative_keyword", 13.0, "li", 10.8),
+    ("smaller", "relative_keyword", 13.0, "li", 10.83),
     ("unset", "unset", 20.0, "p", 20.0),
     ("revert", "revert", 20.0, "p", 20.0),
     ("revert", "revert", 20.0, "h3", 23.4),
@@ -138,4 +138,28 @@ def test_compute_keyword_size_for_xxxlarge():
 def test_compute_rem_for_1_2():
     expected = 19.2
     results = fonts.compute_rem("1.2")
+    assert results == expected
+
+
+def test_is_large_text_for_bold_under_18_66():
+    results = fonts.is_large_text(18.6, True)
+    expected = False
+    assert results == expected
+
+
+def test_is_large_text_for_bold_at_18_66():
+    results = fonts.is_large_text(18.66, True)
+    expected = True
+    assert results == expected
+
+
+def test_is_large_text_for_not_bold_at_24():
+    results = fonts.is_large_text(24.0, False)
+    expected = True
+    assert results == expected
+
+
+def test_is_large_text_for_not_bold_under_24():
+    results = fonts.is_large_text(23.9, False)
+    expected = False
     assert results == expected

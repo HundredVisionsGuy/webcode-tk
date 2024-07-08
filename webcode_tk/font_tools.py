@@ -191,6 +191,10 @@ def is_large_text(size: float, is_bold: bool) -> bool:
         is_large: whether the text is considered large or not.
     """
     is_large = False
+    if size >= 24:
+        is_large = True
+    elif is_bold and size >= 18.66:
+        is_large = True
     return is_large
 
 
@@ -250,8 +254,8 @@ def compute_font_size(
     elif unit == "initial":
         computed_size = 16.0
     else:
-        raise TypeError("I'm afraid I can't compute that, Dave")
-    return round(computed_size, 1)
+        raise TypeError("Cannot be computed! Value not recognized.")
+    return round(computed_size, 2)
 
 
 if __name__ == "__main__":
