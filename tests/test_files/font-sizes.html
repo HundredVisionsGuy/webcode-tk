@@ -13,9 +13,6 @@
         span {
             font-size: 1.1em;
         }
-        p {
-            font-size: medium;
-        }
         .xx-small {
             font-size: xx-small;
         }
@@ -46,6 +43,27 @@
         .larger {
             font-size: larger;
         }
+        .base-reset {
+            font-size: medium;
+        }
+        .rem-1_2 {
+            font-size: 1.2rem;
+        }
+        .em-1_2 {
+            font-size: 1.2em;
+        }
+        .percent-110 {
+            font-size: 110%;
+        }
+        .unset {
+            font-size: unset;
+        }
+        .revert {
+            font-size: revert;
+        }
+        .inherit {
+            font-size: inherit;
+        }
     </style>
 </head>
 <body>
@@ -54,7 +72,7 @@
         <p>An experiment for testing computed font sizes.</p>
     </header>
     <article>
-        <h2>General Notes</h2>
+        <h2 style="font-size: initial;">General Notes (font-size of initial)</h2>
         <ul>
             <li>The base font-size by default is 16px</li>
             <li>I set the body element to 20px to make font-size calculations a little simpler</li>
@@ -100,7 +118,46 @@
             A div of
             <span id="outer-span">spans <span id="middle-span">within spans <span id="inner-span">within spans</span></span></span>
         </div>
-
+        <div>
+            Using all spans of 110%, we have a div of
+            <span class="percent-110">spans <span class="percent-110">within spans <span class="percent-110">within spans - but <span class="medium">this span should be 16px because it has a class of medium</span></span></span></span> thereby proving that when using percentages (just like EMs), they are based on containing element's computed size.
+        </div>
     </article>
+    <article>
+        <h2><code>REM</code>s v <code>EM</code>s</h2>
+        <p class="rem-1_2">This paragraph has a REM of 1.2 (based on root 16px font size - computed: 19.2px)</p>
+        <p class="em-1_2">This paragraph has an EM of 1.2 (parent's computed font size should be 20px, so this should be 24px).</p>
+    </article>
+    <article class="base-reset">
+        <h1>A Note About headings &lt;h1&gt;&ndash;&lt;h6&gt;</h1>
+        <p>As you may recall, this page was set to a base font-size of 20px from the default size of 16px. This means, every font is increased by 125%, so an &lt;h2&gt; tag, which is 24px by default, is increased to 30px in this page (just check the inspector).</p>
+        <p><b><i>Wait! Why are the headers below smaller?</i></b></p>
+        <p>Ah, so you checked the inspector did you? Well, the article (the containing element) was set to a base font size of <code>medium</code>, so all headers (<i>except the &lt;h1&gt; element are at their standard size</i>.</p>
+
+        <h2>&lt;h2&gt;: Heading Level 2 (default size of 24px - 1.5rem)</h2>
+        <h3>&lt;h3&gt;: Heading Level 3 (default size of 18.72px - 1.17rem)</h3>
+        <h3 class="larger">&lt;h3 class="larger"&gt;: Heading Level 3 with a larger font-size applied inside a 16px parent (result: 19.2px)</h3>
+        <h4>&lt;h4&gt;: Heading Level 4 (default size of 16px - 1rem)</h4>
+        <h5>&lt;h5&gt;: Heading Level 5 (default size of 13.28px - 0.83rem)</h5>
+        <h6>&lt;h6&gt;: Heading Level 6 (default size of 10.72px - 0.67rem)</h6>
+
+        <h3>Notes</h3>
+        <ul>
+            <li>Why the &lt;h1&gt; tag is smaller in the context of an &lt;article&gt; tag is not readily apparent.</li>
+            <li>All sizes listed above are based on a Chrome browser at 100% viewing size.</li>
+        </ul>
+    </article>
+    <article>
+        <h2>Unset, Revert, Inherit</h2>
+        <h3 class="unset">Unset (this is unset)</h3>
+        <p class="unset">This little paragraph has unset.</p>
+        <h3 class="revert">Revert (this is revertted</h3>
+        <p class="revert">This little paragraph has revert.</p>
+        <h3 class="inherit">Inherit (this is inheritted)</h3>
+        <p class="inherit">And this little paragraph has inherit.</p>
+    </article>
+    <h3>&lt;h3&gt;: Heading Level 3 - as is (nothing else applied)</h3>
+    <h3 class="larger">&lt;h3 class="larger"&gt;: Heading Level 3 with a larger font-size applied</h3>
+    <h3 class="smaller">&lt;h3 class="smaller"&gt;: Heading Level 3 with a smaller font-size applied</h3>
 </body>
 </html>
