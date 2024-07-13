@@ -98,6 +98,14 @@ def attribute_selectors_header(attribute_selectors_tree):
     return header
 
 
+@pytest.fixture
+def font_sizes_body():
+    path = "tests/test_files/font-sizes.html"
+    styles = css.get_all_stylesheets_by_file(path)
+    tree = cascade.CSSAppliedTree(path, styles)
+    return tree.children[0].children
+
+
 def test_css_tree_for_tree(single_file_tree):
     assert single_file_tree
 
@@ -222,3 +230,60 @@ def test_attribute_selectors_for_ends_with_case_sensitive(
     link = attribute_selectors_header.children[0].children[0]
     results = link.color.get("value")
     assert results == expected
+
+
+def test_font_size_for_h1(font_sizes_body):
+    h1 = font_sizes_body[0].children[0]
+    expected = 40.0
+    results = h1.font_size
+    assert results == expected
+
+
+def test_font_size_for_p_with_20px_root_size_on_body(font_sizes_body):
+    p = font_sizes_body[0].children[1]
+    expected = 20.0
+    results = p.font_size
+    assert results == expected
+
+
+def test_font_size_for_x_small_li(font_sizes_body):
+    li = font_sizes_body[1].children[5].children[1]
+    results = li.font_size
+    expected = 10.0
+    assert results == expected
+
+
+def test_font_size_for_xxx_large_li(font_sizes_body):
+    li = font_sizes_body[1].children[5].children[7]
+    results = li.font_size
+    expected = 48.0
+    assert results == expected
+
+
+def test_font_size_for_smaller_large(font_sizes_body):
+    ul = font_sizes_body[1].children[10]
+    li = ul.children[2].children[0].children[0]
+    results = li.font_size
+    expected = 15
+    assert results == expected
+
+
+def test_font_size_for_larger_large(font_sizes_body):
+    ul = font_sizes_body[1].children[10]
+    li = ul.children[2].children[0].children[1]
+    results = li.font_size
+    expected = 21.6
+    assert results == expected
+
+
+if __name__ == "__main__":
+    path = "tests/test_files/font-sizes.html"
+    styles = css.get_all_stylesheets_by_file(path)
+    tree = cascade.CSSAppliedTree(path, styles)
+    children = tree.children[0].children
+    test_font_size_for_h1(children)
+    test_font_size_for_p_with_20px_root_size_on_body(children)
+    test_font_size_for_x_small_li(children)
+    test_font_size_for_xxx_large_li(children)
+    test_font_size_for_smaller_large(children)
+    test_font_size_for_larger_large(children)

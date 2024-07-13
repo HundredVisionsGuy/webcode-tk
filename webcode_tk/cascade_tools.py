@@ -15,6 +15,7 @@ from file_clerk import clerk
 
 from webcode_tk import color_tools as color
 from webcode_tk import css_tools as css
+from webcode_tk import font_tools as fonts
 from webcode_tk import html_tools
 
 
@@ -64,6 +65,7 @@ class Element(object):
         children=None,
         attributes=None,
         parent=None,
+        parent_size=root_font_size,
         ancestors=None,
     ) -> None:
         self.name = name
@@ -82,6 +84,16 @@ class Element(object):
             "specificity": "000",
             "applied_by": "default",
         }
+        if parent_size:
+            self.font_size = parent_size
+        else:
+            self.font_size = root_font_size
+        if name in fonts.HEADING_SIZES.keys():
+            value = fonts.HEADING_SIZES.get(name)
+            value, unit = fonts.split_value_unit(value)
+            self.font_size = fonts.compute_font_size(
+                value, unit, parent_size, name
+            )
         self.visited_color = {
             "value": "",
             "sheet": "",
@@ -103,6 +115,8 @@ class Element(object):
             "specificity": "",
             "applied_by": "context",
         }
+        self.is_bold = False
+        self.is_large = False
         self.is_link = bool(name == "a")
         self.contrast_data = {
             "ratio": 21.0,
@@ -116,11 +130,11 @@ class Element(object):
             "normal_aa": False,
             "large_aaa": False,
         }
-        self.font_size = root_font_size
         self.__set_link_color()
         self.get_contrast_data("default")
         self.children = children if children is not None else []
         self.parent = parent
+        self.parent_size = parent_size
         self.ancestors = ancestors.copy() if ancestors is not None else []
         if parent:
             self.ancestors.append(self.parent)
@@ -555,9 +569,13 @@ class CSSAppliedTree:
         self.file_path = path
         self.stylesheets = stylesheets
         self.root = None
+        self.root_font_size = 16.0
         self.children = []
+        self.font_rules = []
         self.__get_filename()
         self.__get_soup(path)
+        self.__get_font_rules()
+        self.__calculate_root_font_size()
         self.__build_tree()
         self.__apply_colors()
 
@@ -573,12 +591,32 @@ class CSSAppliedTree:
         """Extracts filename from path"""
         self.filename = clerk.get_file_name(self.file_path)
 
+    def __get_font_rules(self):
+        for sheet in self.stylesheets:
+            self.font_rules += css.get_all_font_rules(sheet)
+
+    def __calculate_root_font_size(self):
+        """checks stylesheets for global font-size settings and adjusts"""
+        for sheet in self.stylesheets:
+            font_rules = css.get_all_font_rules(sheet)
+            for rule in font_rules:
+                selector = rule[0]
+                is_global = selector in ("body", "html", "*")
+                not_at_rule = not rule[1].get("at_rule")
+                is_size_property = rule[1].get("property") == "font-size"
+                if is_global and is_size_property and not_at_rule:
+                    value = rule[1].get("value")
+                    size, unit = fonts.split_value_unit(value)
+                    computed_value = fonts.compute_font_size(size, unit)
+                    self.root_font_size = computed_value
+
     def __build_tree(self) -> None:
         """Constructs initial tree (recursively?)"""
         # Start with the body element, and divide and conquer
         root = Element("html")
         self.root = root
-        body = Element("body", parent="html")
+        body = Element("body", parent="html", parent_size=root_font_size)
+        body.parent_size = body.font_size
         self.children.append(body)
         body_soup = self.soup.body
         attributes = body_soup.attrs
@@ -602,6 +640,7 @@ class CSSAppliedTree:
             if isinstance(child, str):
                 continue
             contents.append(child)
+
         for tag in contents:
             tag_name = tag.name
             if tag_name == "script":
@@ -613,9 +652,10 @@ class CSSAppliedTree:
                 tag_name,
                 attributes=tag_attributes,
                 parent=parent,
+                parent_size=element.font_size,
                 ancestors=element.ancestors,
             )
-
+            self.__adjust_font_size(new_element)
             element.children.append(new_element)
             for tag in tag_children:
                 if tag and not isinstance(tag, str):
@@ -626,14 +666,17 @@ class CSSAppliedTree:
                             tag.name,
                             attributes=kids_attributes,
                             parent=new_element.name,
+                            parent_size=new_element.font_size,
                             ancestors=new_element.ancestors,
                         )
                     else:
                         kid_element = Element(
                             tag.name,
                             parent=new_element.name,
+                            parent_size=new_element.font_size,
                             ancestors=new_element.ancestors,
                         )
+                    self.__adjust_font_size(kid_element)
                     new_element.children.append(kid_element)
                     self.__get_children(kid_element, their_kids)
         return
@@ -818,18 +861,60 @@ class CSSAppliedTree:
         for kid in child.children:
             self.__adjust_child_colors(kid, ruleset, filename)
 
+    def __adjust_font_size(self, element: Element) -> None:
+        """looks for rules that apply and then adjusts accordingly
+
+        Args:
+            element: the Element object we wish to adjust.
+        """
+        ######################################################
+        # WHat happens if we first change size to parent size?
+        # element.font_size = element.parent_size
+        ######################################################
+
+        # loop through rules and if they apply, then adjust
+        # adjust for all children
+        for selector, rule in self.font_rules:
+            selector_applies = does_selector_apply(element, selector)
+            property = rule.get("property")
+            if property == "font":
+                input("We have a font shorthand - check for size")
+            adjusts_font_size = property in ("font", "font-size")
+            not_at_rule = not rule.get("at_rule")
+            if selector_applies and adjusts_font_size and not_at_rule:
+                value = rule.get("value")
+                val, unit = fonts.split_value_unit(value)
+                computed_size = fonts.compute_font_size(
+                    val, unit, element.parent_size, element.name
+                )
+                if computed_size != element.font_size:
+                    element.font_size = computed_size
+                    # recursively change font size on all children
+                    for child in element.children:
+                        child.font_size = computed_size
+
     def compute_font_size(self, element: Element, parent=None):
-        for sheet in self.stylesheets:
-            font_rules = css.get_all_font_rules(sheet)
-            for rule in font_rules:
-                selector = rule[0]
-                rule_applies = does_selector_apply(element, selector)
-                is_at_rule = bool(rule[1].get("at_rule"))
-                if rule_applies and not is_at_rule:
-                    # get the other stuff and process
-                    print()
-                else:
-                    print()
+        for selector, rule in self.font_rules:
+            selector_applies = does_selector_apply(element, selector)
+            is_at_rule = bool(rule.get("at_rule"))
+            if selector_applies and not is_at_rule:
+                # get the other stuff and process
+                property = rule.get("property")
+                if property in ("font", "font-size"):
+                    self.change_font_size(element, rule)
+
+    def change_font_size(self, element, declaration):
+        value = declaration.get("value")
+        if element.name == "body":
+            parent_size = element.font_size
+            element.parent_size = element.font_size
+        else:
+            parent_size = element.parent_size
+        size, unit = fonts.split_value_unit(value)
+        computed_size = fonts.compute_font_size(
+            size, unit, parent_size, element.name
+        )
+        element.font_size = computed_size
 
 
 def does_selector_apply(element: Element, selector: str) -> bool:

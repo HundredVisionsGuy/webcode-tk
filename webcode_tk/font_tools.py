@@ -136,9 +136,13 @@ def split_value_unit(value: str) -> tuple:
         value_unit = (value, "zero")
     else:
         # do a regex split
-        num = re.findall(r"[+-]?(\d*\.\d+|\d+)", value)[0]
-        unit = re.findall(r"%|rem|em|px", value)[0]
-        value_unit = (float(num), unit)
+        try:
+            num = re.findall(r"[+-]?(\d*\.\d+|\d+)", value)[0]
+            unit = re.findall(r"%|rem|em|px", value)[0]
+            value_unit = (float(num), unit)
+        except IndexError:
+            if value in ("inherit", "initial", "unset", "revert"):
+                value_unit = (value, value)
     return tuple(value_unit)
 
 
@@ -235,17 +239,23 @@ def compute_font_size(
             computed_size = parent_size * 1.2
         elif value == "smaller":
             computed_size = parent_size * 0.833
+    elif unit == "px":
+        computed_size = value
     elif unit == "rem":
         computed_size = compute_rem(value)
     elif unit in ("percent", "percentage", "%"):
         percentage = value * 0.01
         computed_size = parent_size * percentage
     elif unit == "em":
-        computed_size = parent_size * value
+        if element_name.lower() in HEADING_SIZES.keys():
+            # factor = HEADING_SIZES.get(element_name).split("e")[0]
+            computed_size = parent_size * value  # * factor
+        else:
+            computed_size = parent_size * value
     elif unit in ("unset", "inherit"):
         computed_size = parent_size
     elif unit in "revert":
-        if element_name in HEADING_SIZES.keys():
+        if element_name.lower() in HEADING_SIZES.keys():
             ems = HEADING_SIZES.get(element_name)
             multiplier = ems.split("e")[0]
             computed_size = parent_size * float(multiplier)
@@ -255,7 +265,7 @@ def compute_font_size(
         computed_size = 16.0
     else:
         raise TypeError("Cannot be computed! Value not recognized.")
-    return round(computed_size, 2)
+    return round(computed_size, 1)
 
 
 if __name__ == "__main__":
