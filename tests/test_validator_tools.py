@@ -80,14 +80,6 @@ def test_get_num_html_files_for_project_folder():
 
 
 # Test CSS validation
-
-
-def test_css_validator_link():
-    response = browser.open("https://jigsaw.w3.org/css-validator")
-    results = response.status_code
-    assert results == 200
-
-
 def test_is_css_valid_for_no_errors(valid_css_results):
     expected = True
     results = val.is_css_valid(valid_css_results)

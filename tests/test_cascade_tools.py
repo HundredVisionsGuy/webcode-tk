@@ -239,9 +239,16 @@ def test_font_size_for_h1(font_sizes_body):
     assert results == expected
 
 
+def test_font_size_for_p_with_descendant_selector(font_sizes_body):
+    p = font_sizes_body[1].children[4]
+    expected = 20.0
+    results = p.font_size
+    assert results == expected
+
+
 def test_font_size_for_p_with_20px_root_size_on_body(font_sizes_body):
     p = font_sizes_body[0].children[1]
-    expected = 20.0
+    expected = 23.0
     results = p.font_size
     assert results == expected
 
@@ -276,6 +283,94 @@ def test_font_size_for_larger_large(font_sizes_body):
     assert results == expected
 
 
+def test_font_size_for_1pt2_em_p(font_sizes_body):
+    p = font_sizes_body[2].children[2]
+    results = p.font_size
+    expected = 24
+    assert results == expected
+
+
+def test_font_size_for_1pt2_rem_p(font_sizes_body):
+    p = font_sizes_body[2].children[1]
+    results = p.font_size
+    expected = 19.2
+    assert results == expected
+
+
+def test_span_within_span_within_span_each_at_120percent(font_sizes_body):
+    outer_span = font_sizes_body[1].children[12].children[0]
+    innermost_span = outer_span.children[0].children[0]
+    results = innermost_span.font_size
+    expected = 26.6
+    assert results == expected
+
+
+def test_medium_span_within_span_within_span_each_120percent(font_sizes_body):
+    outer_span = font_sizes_body[1].children[12].children[0]
+    medium_span = outer_span.children[0].children[0].children[0]
+    results = medium_span.font_size
+    expected = 16
+    assert results == expected
+
+
+# Test for bold or not
+def test_is_bold_for_bold_p_in_header(font_sizes_body):
+    p = font_sizes_body[0].children[1]
+    results = p.is_bold
+    expected = True
+    assert results == expected
+
+
+def test_is_bold_for_normal_p_not(font_sizes_body):
+    p = font_sizes_body[1].children[4]
+    results = p.is_bold
+    expected = False
+    assert results == expected
+
+
+def test_is_bold_for_h3(font_sizes_body):
+    h3 = font_sizes_body[1].children[3]
+    results = h3.is_bold
+    expected = True
+    assert results == expected
+
+
+def test_is_bold_for_h4(font_sizes_body):
+    h4 = font_sizes_body[3].children[7]
+    results = h4.is_bold
+    expected = True
+    assert results == expected
+
+
+# Tests for if large or not
+def test_is_large_for_bold_p_in_header(font_sizes_body):
+    p = font_sizes_body[0].children[1]
+    results = p.is_large
+    expected = True
+    assert results == expected
+
+
+def test_is_large_for_normal_p_20_px(font_sizes_body):
+    p = font_sizes_body[1].children[4]
+    results = p.is_large
+    expected = False
+    assert results == expected
+
+
+def test_is_large_for_h3_bold(font_sizes_body):
+    h3 = font_sizes_body[1].children[3]
+    results = h3.is_large
+    expected = True
+    assert results == expected
+
+
+def test_is_large_for_h4_bold_not_bold_16px(font_sizes_body):
+    h4 = font_sizes_body[3].children[7]
+    results = h4.is_large
+    expected = False
+    assert results == expected
+
+
 if __name__ == "__main__":
     path = "tests/test_files/font-sizes.html"
     styles = css.get_all_stylesheets_by_file(path)
@@ -286,4 +381,6 @@ if __name__ == "__main__":
     test_font_size_for_x_small_li(children)
     test_font_size_for_xxx_large_li(children)
     test_font_size_for_smaller_large(children)
+    test_font_size_for_1pt2_em_p(children)
+    test_span_within_span_within_span_each_at_120percent(children)
     test_font_size_for_larger_large(children)

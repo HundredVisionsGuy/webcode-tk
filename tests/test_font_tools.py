@@ -124,7 +124,7 @@ def test_get_absolute_keyword_values_with_stylesheet(font_page):
 
 
 def test_get_numeric_fontsize_values_for_num(font_page_styles):
-    expected = 5
+    expected = 6
     results = fonts.get_numeric_fontsize_values(font_page_styles)
     assert len(results) == expected
 
@@ -161,5 +161,29 @@ def test_is_large_text_for_not_bold_at_24():
 
 def test_is_large_text_for_not_bold_under_24():
     results = fonts.is_large_text(23.9, False)
+    expected = False
+    assert results == expected
+
+
+def test_property_is_font_shorthand_for_true():
+    results = fonts.property_is_font_shorthand("font")
+    expected = True
+    assert results == expected
+
+
+def test_property_is_font_shorthand_for_false():
+    results = fonts.property_is_font_shorthand("font-family")
+    expected = False
+    assert results == expected
+
+
+def test_is_valid_shorthand_for_true():
+    results = fonts.is_valid_shorthand("italic 20px Serif")
+    expected = True
+    assert results == expected
+
+
+def test_is_valid_shorthand_for_false():
+    results = fonts.is_valid_shorthand("bold small-caps")
     expected = False
     assert results == expected

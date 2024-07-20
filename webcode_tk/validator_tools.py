@@ -233,12 +233,15 @@ def validate_css(css_code: str) -> bs4.ResultSet:
         results: A ResultSet of Tag objects.
     """
     try:
-        browser.open("https://jigsaw.w3.org/css-validator")
-        # Fill-in the search form based on css_code
-        browser.select_form("#validate-by-input form")
-        browser["text"] = css_code
-        browser.submit_selected()
-        results = browser.get_current_page().select("#results_container")
+        response = browser.open("https://jigsaw.w3.org/css-validator")
+        if not response.ok:
+            response = browser.open("https://css-validator.org/")
+        if response.ok:
+            # Fill-in the search form based on css_code
+            browser.select_form("#validate-by-input form")
+            browser["text"] = css_code
+            browser.submit_selected()
+            results = browser.get_current_page().select("#results_container")
     except Exception:
         # Convert the file "no_css_connection.html" into a soup tag object
         no_connection_code = clerk.file_to_string(

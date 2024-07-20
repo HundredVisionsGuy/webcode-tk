@@ -8,17 +8,35 @@ with font-related styles.
 One of the things I want to do is to compute the size of a
 particular element in the DOM, and the rules behind it can get a
 little daunting, so here we are.
+
+Some notes on sizing units:
+I could support in, cm, pc, or mm, but for now, since they are seldom used,
+I will wait on that until I'm bored or happen to read this statement
+again and decide it's worth doing (this could be a first-time commit).
+
+I will NOT support any algorithms dealing with `vh` or `vw` for font-size
+since that is dependent upon the viewport and can change.
+
+I will also not support calculating `ch` or `ex` since those are
+dependent upon the font-family itself and require information from the
+font-file or some other hidden calculation from the browser.
 """
 import re
 from typing import Union
 
 from webcode_tk.css_tools import Stylesheet
 
-absolute_keyword_regex = r"\b(?:xx-small|x-small|small|medium|large|x-large|"
+absolute_keyword_regex = (
+    r"\b(?:xx-small|x-small|small(?!-caps)|medium|large|x-large|"
+)
 absolute_keyword_regex += r"xx-large|xxx-large)\b"
 relative_keyword_regex = r"\b(?:smaller|larger)\b"
 numeric_value_regex = r"(\d+(\.\d+)?)(px|em|rem|pt|%)"
 relative_keyword = re.compile(relative_keyword_regex)
+font_family_regex = (
+    r"\b(?:(\'[^\']+\'|\"[^\"]+\")|([a-zA-Z\-]+))(?:\s*,\s*|\s*$)"
+)
+font_families = re.compile(font_family_regex)
 HEADING_SIZES = {
     "h1": "2.0em",
     "h2": "1.5em",
@@ -38,6 +56,24 @@ KEYWORD_SIZE_MAP = {
     "xx-large": 32,
     "xxx-large": 48,
 }
+
+UNIT_TO_PT_CONVERSIONS = {"pc": 16, "in": 96, "mm": 3.78, "cm": 37.8}
+
+FONT_NON_SIZE_NON_FAMILY_KEYWORDS = (
+    "normal",
+    "italic",
+    "oblique",
+    "bold",
+    "condensed",
+    "expanded",
+    "normal",
+    "all-small-caps",
+    "petite-caps",
+    "all-petite-caps",
+    "titling-caps",
+    "unicase",
+    "small-caps",
+)
 
 
 def get_absolute_keyword_values(css_code: Union[str, Stylesheet]) -> list:
@@ -266,6 +302,57 @@ def compute_font_size(
     else:
         raise TypeError("Cannot be computed! Value not recognized.")
     return round(computed_size, 1)
+
+
+def property_is_font_shorthand(property: str) -> bool:
+    """determines whether a property is a font shorthand.
+
+    Args:
+        property: the css property in question
+    """
+    return property == "font"
+
+
+def is_valid_shorthand(value: str) -> bool:
+    """returns whether the value of a font shorthand is valid or not.
+
+    In order for a font shorthand to be valid, it must target both size
+    and font-family, or else it's a syntax error, and nothing is changee.
+
+    Args:
+        value: the shorthand value.
+
+    Returns:
+        is_valid: whether both font-size and font-family are set.
+    """
+    is_valid = False
+    targets_size = False
+    targets_fontfamily = False
+    values = value.split()
+    for val in values:
+        # Not targetting size nor font family? ignore & continue
+        ignore = val in FONT_NON_SIZE_NON_FAMILY_KEYWORDS
+        if ignore:
+            continue
+        font_size_values = get_numeric_fontsize_values(val)
+        if font_size_values:
+            targets_size = True
+        elif val in KEYWORD_SIZE_MAP.keys():
+            targets_size = True
+        elif val in ("larger", "smaller"):
+            targets_size = True
+        elif val in UNIT_TO_PT_CONVERSIONS.keys():
+            targets_size = True
+
+        # check for font family.
+        if "," == val.strip()[-1]:
+            stop = val.index(",")
+            val = val[:stop]
+        font_matches = font_families.findall(val)
+        if font_matches:
+            targets_fontfamily = True
+    is_valid = targets_size and targets_fontfamily
+    return is_valid
 
 
 if __name__ == "__main__":

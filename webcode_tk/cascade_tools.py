@@ -8,6 +8,7 @@ all styles applied to every element on the page.
 With that, it scans each stylesheet and applies eacSh style one at a time
 to all elements and their children (if applicable) of a page.
 """
+import ctypes
 import re
 from collections import abc
 
@@ -88,12 +89,16 @@ class Element(object):
             self.font_size = parent_size
         else:
             self.font_size = root_font_size
+        self.is_bold = False
+        if name == "b":
+            self.is_bold = True
         if name in fonts.HEADING_SIZES.keys():
             value = fonts.HEADING_SIZES.get(name)
             value, unit = fonts.split_value_unit(value)
             self.font_size = fonts.compute_font_size(
                 value, unit, parent_size, name
             )
+            self.is_bold = True
         self.visited_color = {
             "value": "",
             "sheet": "",
@@ -115,7 +120,6 @@ class Element(object):
             "specificity": "",
             "applied_by": "context",
         }
-        self.is_bold = False
         self.is_large = False
         self.is_link = bool(name == "a")
         self.contrast_data = {
@@ -577,6 +581,7 @@ class CSSAppliedTree:
         self.__get_font_rules()
         self.__calculate_root_font_size()
         self.__build_tree()
+        self.__adjust_largeness()
         self.__apply_colors()
 
     def __get_soup(self, path: str):
@@ -615,7 +620,10 @@ class CSSAppliedTree:
         # Start with the body element, and divide and conquer
         root = Element("html")
         self.root = root
-        body = Element("body", parent="html", parent_size=root_font_size)
+        root_id = id(root)
+        body = Element(
+            "body", parent=("html", root_id), parent_size=root_font_size
+        )
         body.parent_size = body.font_size
         self.children.append(body)
         body_soup = self.soup.body
@@ -647,7 +655,7 @@ class CSSAppliedTree:
                 continue
             tag_children = tag.contents
             tag_attributes = tag.attrs
-            parent = element.name
+            parent = (element.name, id(element))
             new_element = Element(
                 tag_name,
                 attributes=tag_attributes,
@@ -665,14 +673,14 @@ class CSSAppliedTree:
                         kid_element = Element(
                             tag.name,
                             attributes=kids_attributes,
-                            parent=new_element.name,
+                            parent=(new_element.name, id(new_element)),
                             parent_size=new_element.font_size,
                             ancestors=new_element.ancestors,
                         )
                     else:
                         kid_element = Element(
                             tag.name,
-                            parent=new_element.name,
+                            parent=(new_element.name, id(new_element)),
                             parent_size=new_element.font_size,
                             ancestors=new_element.ancestors,
                         )
@@ -680,6 +688,24 @@ class CSSAppliedTree:
                     new_element.children.append(kid_element)
                     self.__get_children(kid_element, their_kids)
         return
+
+    def __adjust_largeness(self) -> None:
+        """sets the is_large property based on whether it's bold or not
+        and the computed font size.
+        """
+        for child in self.children:
+            self.set_is_large(child)
+            for kid in child.children:
+                self.set_is_large(kid)
+
+    def set_is_large(self, element):
+        size = element.font_size
+        is_bold = element.is_bold
+        is_large = fonts.is_large_text(size, is_bold)
+        element.is_large = is_large
+        if element.children:
+            for kiddo in element.children:
+                self.set_is_large(kiddo)
 
     def __apply_colors(self) -> None:
         """applies all color rules to any elements targeted by styles.
@@ -817,7 +843,7 @@ class CSSAppliedTree:
             for child in element.children:
                 self.__adjust_child_colors(child, ruleset, filename)
 
-        can_inherit = can_inherit_styles(element, selector, ruleset)
+        can_inherit = self.can_inherit_styles(element, selector, ruleset)
         if can_inherit and applies:
             declaration = ruleset.get(selector)
             new_specificity = css.get_specificity(selector)
@@ -878,7 +904,11 @@ class CSSAppliedTree:
             selector_applies = does_selector_apply(element, selector)
             property = rule.get("property")
             if property == "font":
-                input("We have a font shorthand - check for size")
+                is_valid_property = fonts.is_valid_shorthand(rule.get("value"))
+                if not is_valid_property:
+                    continue
+            if property in ("font", "font-weight") and selector_applies:
+                self.verify_weight(element, property, rule)
             adjusts_font_size = property in ("font", "font-size")
             not_at_rule = not rule.get("at_rule")
             if selector_applies and adjusts_font_size and not_at_rule:
@@ -915,6 +945,67 @@ class CSSAppliedTree:
             size, unit, parent_size, element.name
         )
         element.font_size = computed_size
+
+    def verify_weight(
+        self, element: Element, property: str, rule: dict
+    ) -> bool:
+        """verifies whether font weight is set to bold."""
+        is_bold = False
+        value = rule.get("value")
+        if property == "font":
+            is_valid_shorthand = fonts.is_valid_shorthand(value)
+            if is_valid_shorthand:
+                is_bold = "bold" in value
+        else:
+            is_bold = "bold" in value
+        if is_bold:
+            element.is_bold = True
+
+    def can_inherit_styles(
+        self, element: Element, selector: str, ruleset: dict
+    ) -> bool:
+        """returns whether element can get styles through inheritance.
+
+        Descendant elements may inherit styles, but only under certain
+        conditions: The element is not a link (or it is a link but the
+        selector is selecting it also by type, class, or id). The
+        element has not had other styles applied to it.
+
+        There may be more, but this is it for now.
+
+        Args:
+            element: the tag that is a descendant of another tag targetted
+                by the selector.
+            selector: the selector in question.
+            ruleset: the ruleset dictionary (the key is the selector, and
+                the value is the declaration block).
+
+        Returns:
+            can_inherit: whether the element should get the inherited
+                styles or not."""
+        can_inherit = False
+        element_name = element.name
+        # is it a link?
+        if element_name == "a":
+            is_link_selector = css.is_link_selector(selector)
+            if is_link_selector:
+                can_inherit = True
+                return can_inherit
+        selector_applies = does_selector_apply(element, selector)
+        if selector_applies:
+            can_inherit = True
+
+        if can_inherit:
+            # check to see how property has been changed.
+            (declaration,) = ruleset.values()
+            (property,) = declaration
+            if "background" in property:
+                applied_by = element.background_color.get("applied_by")
+            else:
+                applied_by = element.color.get("applied_by")
+            if "selector" not in applied_by:
+                can_inherit = True
+        return can_inherit
 
 
 def does_selector_apply(element: Element, selector: str) -> bool:
@@ -1032,13 +1123,68 @@ def does_selector_apply(element: Element, selector: str) -> bool:
         elif is_attribute_selector:
             applies = attribute_selector_applies(element, selector)
         elif is_descendant_selector:
-            items = sel.split()
-            applies = items[-1] == element_name
+            applies = descendant_selector_applies(element, sel)
             if applies:
                 break
         else:
             raise ValueError(f"Selector not recognized: Got {selector}")
     return applies
+
+
+def descendant_selector_applies(element: Element, sel: str) -> None:
+    """checks all ancestors to see if the descendant selector applies.
+
+    First, we need to check the last component of the descendant selector
+    to see if it applies to the element in question. If so, continue. If
+    not, return with a False.
+
+    If the element has a match, then we need to check each tag leading up to
+    our element in question. According to the article by Pavel Panchekha,
+    "What is the Complexity of Selector Matching?" we should start at the
+    top of the DOM and work our way down.
+    """
+    applies = False
+    selector_list = sel.split()
+    ancestor_list = element.ancestors
+    possible_child_selector = selector_list.pop()
+    child_selector_applies = does_selector_apply(
+        element, possible_child_selector
+    )
+    if not child_selector_applies:
+        return applies
+
+    # loop through the ancestor list
+    current_pos = 0
+    for ancestor in ancestor_list:
+        id = ancestor[1]
+        ancestor_element = __get_element_by_id(id)
+        selector = selector_list[current_pos]
+        cur_selector_applies = does_selector_apply(ancestor_element, selector)
+        if cur_selector_applies:
+            selector_list = selector_list[1:]
+    applies = not selector_list
+    return applies
+
+
+def __get_element_by_id(id: int) -> Element:
+    """returns element from id.
+
+    This is created to retrieve an element by its ID. The necessity
+    was born out of trying to ascertain whether a descendant selector
+    applies to an element while avoiding a recursive tree search through
+    the DOM.
+
+    Since a descendant selector could be using any type of selector
+    (example: `#main .nav ul a:hover {}`), then just knowing the name
+    is not enough.
+
+    Args:
+        id: the memory address of the element object.
+
+    Returns:
+        element: the element object."""
+    element = ctypes.cast(id, ctypes.py_object).value
+    return element
 
 
 def attribute_selector_applies(element: Element, selector: str) -> bool:
@@ -1128,51 +1274,6 @@ def is_selector_pseudoclass(selector: str) -> bool:
     is_pseudo_class_selector = bool(re.match(pc_regex, selector))
     is_pseudo_class_selector = is_pseudo_class_selector or ":" in selector
     return is_pseudo_class_selector
-
-
-def can_inherit_styles(element: Element, selector: str, ruleset: dict) -> bool:
-    """returns whether element can get styles through inheritance.
-
-    Descendant elements may inherit styles, but only under certain
-    conditions: The element is not a link (or it is a link but the
-    selector is selecting it also by type, class, or id). The
-    element has not had other styles applied to it.
-
-    There may be more, but this is it for now.
-
-    Args:
-        element: the tag that is a descendant of another tag targetted
-            by the selector.
-        selector: the selector in question.
-        ruleset: the ruleset dictionary (the key is the selector, and
-            the value is the declaration block).
-
-    Returns:
-        can_inherit: whether the element should get the inherited
-            styles or not."""
-    can_inherit = False
-    element_name = element.name
-    # is it a link?
-    if element_name == "a":
-        is_link_selector = css.is_link_selector(selector)
-        if is_link_selector:
-            can_inherit = True
-            return can_inherit
-    selector_applies = does_selector_apply(element, selector)
-    if selector_applies:
-        can_inherit = True
-
-    if can_inherit:
-        # check to see how property has been changed.
-        (declaration,) = ruleset.values()
-        (property,) = declaration
-        if "background" in property:
-            applied_by = element.background_color.get("applied_by")
-        else:
-            applied_by = element.color.get("applied_by")
-        if "selector" not in applied_by:
-            can_inherit = True
-    return can_inherit
 
 
 def targets_element_directly(element: Element, selector: str) -> bool:
