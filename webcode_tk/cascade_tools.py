@@ -1273,6 +1273,10 @@ def is_selector_pseudoclass(selector: str) -> bool:
     pc_regex = css.regex_patterns.get("pseudoclass_selector")
     is_pseudo_class_selector = bool(re.match(pc_regex, selector))
     is_pseudo_class_selector = is_pseudo_class_selector or ":" in selector
+
+    # pseudo-elements do NOT count - they are scored like a type selector
+    if "::" in selector:
+        is_pseudo_class_selector = False
     return is_pseudo_class_selector
 
 
@@ -1305,7 +1309,7 @@ def targets_element_directly(element: Element, selector: str) -> bool:
 
 
 def get_color_contrast_results(
-    element: Element, results, min_regular="AAA"
+    element: Element, results: dict, min_regular="AAA"
 ) -> dict:
     """returns a list of color contrast results for all elements in a file.
 
@@ -1319,17 +1323,15 @@ def get_color_contrast_results(
     [WebAim Contrast Checker](https://webaim.org/resources/contrastchecker/)
 
     Calculating whether an element qualifies as large depends on the styles
-    applied. With a standard font size (no changes to global font-size), h1-h3
-    qualify as large.
+    applied. The CSSAppliedTree and Element objects now support computed font
+    size as well as whether each Element object is large or not based on the
+    description in the WebAim Contrast Checker.
 
-    As of this version, we are not looking at calculated font sizes, but
-    that could be a feature implemented later. For future reference, we're
-    including some details:
+    It states, "Large text is defined as 14 point (typically 18.66px) and bold
+    or larger, or 18 point (typically 24px) or larger."
 
     Args:
         css_tree: the css tree of color styles for a particular file.
-        results: the overall results we want adjusted (increases as we
-            iterate through the css_tree).
         min_regular: the minimum passing size ('AAA' or 'AA') for color
             contrast for normal sized elements (anything except h1-h4).
 
@@ -1338,7 +1340,8 @@ def get_color_contrast_results(
             the file.
     """
     tag = element.name
-    if tag not in results.keys():
+    is_large = element.is_large
+    if not results.get(tag):
         results[tag] = {
             "num_elements": 0,
             "num_passed": 0,
@@ -1346,7 +1349,7 @@ def get_color_contrast_results(
             "all_pass": True,
         }
     results = update_contrast_results(
-        results, tag, element.contrast_data, min_regular
+        results, tag, is_large, element.contrast_data, min_regular
     )
     if element.children:
         for child in element.children:
@@ -1355,13 +1358,23 @@ def get_color_contrast_results(
 
 
 def update_contrast_results(
-    results: dict, tag: str, contrast_data: dict, min_regular: str
+    results: dict,
+    tag: str,
+    is_large: bool,
+    contrast_data: dict,
+    min_regular: str,
 ) -> dict:
     """updates the results of color contrast for the tag.
+
+    we've updated this to match whether the element computes as large or not
+    based on the WebAIM Color Contrast page which states, 'Large text is
+    defined as 14 point (typically 18.66px) and bold or larger, or 18 point
+    (typically 24px) or larger.'
 
     Args:
         results: the overall results we want to adjust.
         tag: the element we want to adjust.
+        is_large: whether the element is considered large.
         contrast_data: the contrast results for the tag.
         min_regular: the minimum level required for standard text passing.
 
@@ -1373,7 +1386,7 @@ def update_contrast_results(
 
     data["num_elements"] += 1
 
-    if tag in ("h1", "h2", "h3"):
+    if is_large:
         passes = contrast_data.get("large_aaa")
     else:
         if min_regular == "AAA":
@@ -1397,5 +1410,6 @@ if __name__ == "__main__":
         sheets = file.get("stylesheets")
         css_tree = CSSAppliedTree(filepath, sheets)
         results = {}
-        results = get_color_contrast_results(css_tree.children[0], results)
+        root = css_tree.children[0]
+        results = get_color_contrast_results(root, results)
         print(results)

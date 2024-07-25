@@ -371,6 +371,34 @@ def test_is_large_for_h4_bold_not_bold_16px(font_sizes_body):
     assert results == expected
 
 
+def test_is_selector_pseudoclass_for_only_pseudoclass():
+    selector = ":focus"
+    expected = True
+    results = cascade.is_selector_pseudoclass(selector)
+    assert expected == results
+
+
+def test_is_selector_pseudoclass_for_element_plus_pseudoclasss():
+    selector = "p:first-of_type"
+    expected = True
+    results = cascade.is_selector_pseudoclass(selector)
+    assert expected == results
+
+
+def test_is_selector_pseudoclass_for_only_pseudoelement():
+    selector = "::before"
+    expected = False
+    results = cascade.is_selector_pseudoclass(selector)
+    assert expected == results
+
+
+def test_is_selector_pseudoclass_for_element_plus_pseudo_element():
+    selector = "p::first-letter"
+    expected = False
+    results = cascade.is_selector_pseudoclass(selector)
+    assert expected == results
+
+
 if __name__ == "__main__":
     path = "tests/test_files/font-sizes.html"
     styles = css.get_all_stylesheets_by_file(path)

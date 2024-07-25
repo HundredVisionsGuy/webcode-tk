@@ -24,7 +24,8 @@ regex_patterns: dict = {
     "grouped_selector": r"\w+\s*,\s*\w+",
     "header_selector": r"h[1-6]",
     "id_selector": r"(.*?)#[a-zA-Z0-9-_.:]+",
-    "pseudoclass_selector": r":\w+",
+    "pseudoclass_selector": r"(?<!:):\w+",
+    "pseudoelement_selector": r"(\w+)?::\w+(-\w+)?",
     "single_attribute_selector": r"^[a-zA-Z]*\[(.*?)\]",
     "single_type_selector": r"^[a-zA-Z][a-zA-Z0-9]*$",
     "type_selector": r"(?:^|\s)([a-zA-Z][a-zA-Z0-9_-]*)",
@@ -1050,7 +1051,7 @@ def get_class_score(selector: str) -> int:
 
     Returns:
         score: the number of class selectors, which includes attribute
-        and pseudoclass selectors.
+        and pseudoclass selectors (but NOT pseudo-elements).
     """
     class_re = regex_patterns["class_selector"]
     selectors = re.findall(class_re, selector)
@@ -1693,9 +1694,19 @@ def get_specificity(selector: str) -> str:
     """
     id_selector = get_id_score(selector)
     class_selector = get_class_score(selector)
+    pseudo_element_selector = get_psuedo_element_score(selector)
     type_selector = get_type_score(selector)
-    specificity = "{}{}{}".format(id_selector, class_selector, type_selector)
+    type_count = type_selector + pseudo_element_selector
+    specificity = "{}{}{}".format(id_selector, class_selector, type_count)
     return specificity
+
+
+def get_psuedo_element_score(selector):
+    pseudo_element_selector = 0
+    psuedo_element_re = regex_patterns["pseudoelement_selector"]
+    matches = re.findall(psuedo_element_re, selector)
+    pseudo_element_selector = len(matches)
+    return pseudo_element_selector
 
 
 def get_styles_by_html_files(project_path: str) -> list:

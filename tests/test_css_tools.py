@@ -928,3 +928,17 @@ def test_get_project_color_contrast_for_single_file_project():
     single_file = "tests/test_files/single_file_project"
     results = css_tools.get_project_color_contrast(single_file)
     assert results
+
+
+def test_get_psuedo_element_score_for1():
+    selector = "nav > a:hover::before"
+    expected = 1
+    results = css_tools.get_psuedo_element_score(selector)
+    assert expected == results
+
+
+def test_get_specificity_for_pseudo_element_inclusion():
+    selector = "nav > a:hover::before"
+    expected = "013"
+    results = css_tools.get_specificity(selector)
+    assert results == expected
