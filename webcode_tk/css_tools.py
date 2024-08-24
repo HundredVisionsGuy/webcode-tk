@@ -1082,7 +1082,7 @@ def get_color_codes_of_type(color_type: str, gradient: str) -> list:
     elif color_type == "rgb":
         colors = re.findall(color_tools.rgb_all_forms_re, gradient)
     elif color_type == "hex":
-        colors = re.findall(color_tools.hex_regex, gradient)
+        colors = re.findall(color_tools.hex_re, gradient)
     elif color_type == "keywords":
         words = re.findall(r"[+a-z+A-Z]*", gradient)
         for i in words:

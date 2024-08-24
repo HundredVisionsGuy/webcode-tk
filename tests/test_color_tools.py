@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Tests for `colortools` package."""
 import pytest
 
@@ -264,3 +263,41 @@ def test_get_color_type_for_other_colors():
     assert color.get_color_type("rgb(143, 193, 242)") == "rgb"
     assert color.get_color_type("hsl(0, 100%, 50%)") == "hsl"
     assert color.get_color_type("hsla(100, 100%, 50%, 1)") == "hsla"
+
+
+@pytest.mark.parametrize(
+    "css_value,expected",
+    [
+        ("linear-gradient(to right, #ff7e5f, #feb47b)", True),
+        ("radial-gradient(circle, #ff7e5f, #feb47b)", True),
+        ("conic-gradient(from 0deg, red, yellow, green)", True),
+        ("background-color: #ff7e5f;", False),
+        ("border: 1px solid #000;", False),
+    ],
+)
+def test_is_gradient_for_value(css_value, expected):
+    results = color.is_gradient(css_value)
+    assert results == expected
+
+
+radial_gradient = (
+    "radial-gradient(circle at 7.5% 24%, #d7f8f7 0%, #fab2ac 25.5%,"
+)
+radial_gradient += "#bee4d2 62.3%, rgb(237, 161, 193) 93.8%);"
+four_mixed_gradient = ".gradient { background-image: linear-gradient( "
+four_mixed_gradient += "to right, red, #f06d06, rgb(255, 255, 0), green);}"
+
+
+@pytest.mark.parametrize(
+    "gradient,sorted_colors",
+    [
+        (
+            radial_gradient,
+            ["#d7f8f7", "#bee4d2", "#fab2ac", "rgb(237, 161, 193)"],
+        ),
+        (four_mixed_gradient, ["rgb(255, 255, 0)", "#f06d06", "red", "green"]),
+    ],
+)
+def test_sort_gradient_colors(gradient, sorted_colors):
+    results = color.sort_gradient_colors(gradient)
+    assert results == sorted_colors

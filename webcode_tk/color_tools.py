@@ -52,7 +52,8 @@ contrast_ratio_map = {
 
 rgb_all_forms_re = r"rgba\(.*?\)|rgb\(.*?\)"
 hsl_all_forms_re = r"hsl\(.*?\)|hsla\(.*?\)"
-hex_regex = r"(#\w{3}\s|#\w{6}\s|#\w{8}\s)"
+hex_re = r"#\w{3},*\s|#\w{6},*\s|#\w{8},*\s"
+gradient_re = r"\b(linear-gradient|radial-gradient|conic-gradient)\b"
 
 
 def passes_color_contrast(level: str, hex1: str, hex2: str) -> bool:
@@ -98,9 +99,9 @@ def get_color_contrast_report(hex1: str, hex2: str) -> dict:
     (https://webaim.org/resources/contrastchecker/)
 
     Args:
-        hex1 (str): a foreground or background color (doesn't matter
+        hex1: a foreground or background color (doesn't matter
             which)
-        hex2 (str): a foreground or background color (doesn't matter
+        hex2: a foreground or background color (doesn't matter
             which)
 
     Returns:
@@ -169,17 +170,17 @@ def rgb_to_hex(*args) -> str:
             # throw an exception
             return "err"
     # Convert r, g, b to hexidecimal format
-    r = hex(int(r))[2:]
-    g = hex(int(g))[2:]
-    b = hex(int(b))[2:]
+    r_hex = hex(int(r))[2:]
+    g_hex = hex(int(g))[2:]
+    b_hex = hex(int(b))[2:]
     # prepend 0 if necessary
-    if len(r) == 1:
-        r = "0" + r
-    if len(g) == 1:
-        g = "0" + g
-    if len(b) == 1:
-        b = "0" + b
-    hex_code = "#" + r + g + b
+    if len(r_hex) == 1:
+        r_hex = "0" + r_hex
+    if len(g_hex) == 1:
+        g_hex = "0" + g_hex
+    if len(b_hex) == 1:
+        b_hex = "0" + b_hex
+    hex_code = "#" + r_hex + g_hex + b_hex
     return hex_code
 
 
@@ -594,13 +595,138 @@ def get_color_type(code: str) -> str:
     return color_type
 
 
+def is_gradient(val: str) -> bool:
+    """returns whether the value is a gradient or not
+
+    Args:
+        val: the CSS value in question
+    """
+    gradient_pattern = re.compile(gradient_re, re.IGNORECASE)
+    return bool(gradient_pattern.search(val))
+
+
+def sort_gradient_colors(gradient: str) -> list:
+    """returns each gradient color from light to dark
+
+    Args:
+        val: the CSS gradient value
+    Returns:
+        sorted: a list of colors sorted by luminence (light to dark)
+    """
+    colors = get_gradient_colors(gradient)
+    # sort colors
+    sorted = sort_by_luminence(colors)
+    return sorted
+
+
+def get_gradient_colors(gradient: str) -> list:
+    """returns all color values from a gradient
+
+    Returns all hex, rgb, rgba, hsl, hsla, and keyword values.
+
+    Args:
+        gradient: the gradient value
+
+    Returns:
+        colors: a list of all colors in a gradient"""
+    colors = []
+
+    # Get all rgb, hex, hsl, and keywords through regex
+    all_rgbs = re.findall(rgb_all_forms_re, gradient)
+    if all_rgbs:
+        colors += all_rgbs
+    all_keywords = get_all_keywords(gradient)
+    if all_keywords:
+        colors += all_keywords
+    all_hex_codes = get_all_hex_codes(gradient)
+    if all_hex_codes:
+        colors += all_hex_codes
+    return colors
+
+
+def get_all_hex_codes(text: str) -> list:
+    """returns a list of all hex code in the text
+
+    Args:
+        text: the css_code or text you want to search.
+
+    Returns:
+        all_hex_codes: a list of all valid hexadecimal color codes
+    """
+    all_hex_codes = []
+    possible_hex_codes = re.findall(hex_re, text)
+    if possible_hex_codes:
+        for color in all_hex_codes:
+            color = color.strip()
+            if "," in color:
+                color = color.replace(",", "")
+            if is_hex(color):
+                all_hex_codes.append(color)
+    return all_hex_codes
+
+
+def get_all_keywords(text: str) -> list:
+    """returns any and all color kewords from text.
+
+    This was designed to capture all color keywords that
+    might be in a gradient, but there may be other uses.
+
+    Args:
+        text: the string in question (most likely a gradient)
+
+    Returns:
+        keywords: a list of color keywords
+    """
+    possible_keyword_re = r"([A-Za-z0-9\-]+)"
+    potential_keywords = re.findall(possible_keyword_re, text)
+    keywords = []
+    for word in potential_keywords:
+        if is_keyword(word):
+            keywords.append(word)
+    return keywords
+
+
+def sort_by_luminence(colors: list) -> list:
+    """sorts a list by luminence from light to dark
+
+    Args:
+        colors: a list of hex codes.
+
+    Returns:
+        sorted: sorted list of colors
+    """
+    sorted_list = []
+    for color in colors:
+        color = color.strip()
+        if not is_rgb(color):
+            if is_hex(color):
+                rgb = hex_to_rgb(color)
+            elif is_hsl(color):
+                rgb = hsl_to_rgb(color)
+            elif is_keyword(color):
+                hex = color_keywords.get_hex_by_keyword(color)
+                rgb = hex_to_rgb(hex)
+            else:
+                raise ValueError("color code not recognized")
+        else:
+            rgb = color
+        if isinstance(rgb, str):
+            rgb = extract_rgb_from_string(rgb)
+        lum = luminance(rgb)
+        sorted_list.append((lum, color))
+    sorted_list.sort()
+    sorted_list.reverse()
+    sorted = [color[1] for color in sorted_list]
+    return sorted
+
+
 if __name__ == "__main__":
-    r, g, b = hex_to_rgb("#336699")
-    hsl = get_hsl_from_string("hsl(355, 96%, 46%)")
-    rgb = hsl_to_rgb((355, 96, 46))
-    is_it_correct = is_rgb(rgb)
-    valid_hex = is_hex("#336699")
-    print(valid_hex)
-    ratio = contrast_ratio("#336699", "#ffffff")
-    print("Contrast ratio between #336699 and #ffffff is: {}".format(ratio))
-    get_color_contrast_report("#336699", "#ffffff")
+    # print()
+    # hex = rgb_to_hex("rgb(190, 228, 210)")
+    # print(hex)
+    # hex2 = rgb_to_hex("rgb(215, 248, 247)")
+    # print(hex2)
+    # hex = rgb_to_hex("rgb(250, 178, 172)")
+    # print(hex)
+    hex = rgb_to_hex("rgb(237, 161, 193)")
+    print(hex)

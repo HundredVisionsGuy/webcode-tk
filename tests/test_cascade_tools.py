@@ -400,6 +400,18 @@ def test_is_selector_pseudoclass_for_element_plus_pseudo_element():
 
 
 if __name__ == "__main__":
+    """
+    Test update_contrast_report on single_file_project/wiliwonka.html
+    Bell Schedule - link
+    color - #e4eadc
+    bg - #00008B
+    Pass
+
+    hover:
+    color - #008000
+    bg - #00008B
+    Utter failure
+    """
     path = "tests/test_files/font-sizes.html"
     styles = css.get_all_stylesheets_by_file(path)
     tree = cascade.CSSAppliedTree(path, styles)
