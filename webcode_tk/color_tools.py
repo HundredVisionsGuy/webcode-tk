@@ -165,7 +165,10 @@ def rgb_to_hex(*args) -> str:
     else:
         try:
             rgb = args[0]
-            r, g, b = extract_rgb_from_string(rgb)
+            if isinstance(rgb, str):
+                r, g, b = extract_rgb_from_string(rgb)
+            if isinstance(rgb, tuple) and len(rgb) == 3:
+                r, g, b = rgb
         except Exception:
             # throw an exception
             return "err"
@@ -549,9 +552,10 @@ def contrast_ratio(hex1: str, hex2: str) -> float:
         l2 = temp
     ratio = (l1 + 0.05) / (l2 + 0.05)
     # get the ratio to 2 decimal places without rounding
-    # take it to 3rd decimal place, then truncate (3rd has been rounded)
-    ratio = format(ratio, ".3f")[:-1]
-    return float(ratio)
+    ratio_string = str(ratio)
+    dot_pos = ratio_string.index(".")
+    ratio_string = ratio_string[: dot_pos + 3]
+    return float(ratio_string)
 
 
 def get_color_type(code: str) -> str:
@@ -605,20 +609,6 @@ def is_gradient(val: str) -> bool:
     return bool(gradient_pattern.search(val))
 
 
-def sort_gradient_colors(gradient: str) -> list:
-    """returns each gradient color from light to dark
-
-    Args:
-        val: the CSS gradient value
-    Returns:
-        sorted: a list of colors sorted by luminence (light to dark)
-    """
-    colors = get_gradient_colors(gradient)
-    # sort colors
-    sorted = sort_by_luminence(colors)
-    return sorted
-
-
 def get_gradient_colors(gradient: str) -> list:
     """returns all color values from a gradient
 
@@ -656,7 +646,7 @@ def get_all_hex_codes(text: str) -> list:
     all_hex_codes = []
     possible_hex_codes = re.findall(hex_re, text)
     if possible_hex_codes:
-        for color in all_hex_codes:
+        for color in possible_hex_codes:
             color = color.strip()
             if "," in color:
                 color = color.replace(",", "")
@@ -686,38 +676,81 @@ def get_all_keywords(text: str) -> list:
     return keywords
 
 
-def sort_by_luminence(colors: list) -> list:
-    """sorts a list by luminence from light to dark
+def get_color_contrast_with_gradients(fg_color: str, bg_color: str) -> list:
+    """gets a list of all color contrast permutations with 1 or 2 gradients
+
+    Checks all combinations of foreground and background colors when one or
+    both are gradients. Creates a tuple of results (starting with contrast)
+    and original color code sort by contrast.
 
     Args:
-        colors: a list of hex codes.
+        fg_color: foreground color, could be any color type (including
+            gradient).
+        bg_color: background color, could also be any color type (including
+            gradient).
 
     Returns:
-        sorted: sorted list of colors
+        results: a list of all color contrast result data sorted by
+            contrast ratio (lowest to highest)"""
+    results = []
+
+    # if foreground color is a gradient, get all colors or convert to list
+    if is_gradient(fg_color):
+        foreground_colors = get_gradient_colors(fg_color)
+    else:
+        foreground_colors = [
+            fg_color,
+        ]
+    if is_gradient(bg_color):
+        bg_colors = get_gradient_colors(bg_color)
+    else:
+        bg_colors = [
+            bg_color,
+        ]
+
+    # check all permutations of color combinations for contrast results
+    for foreground in foreground_colors:
+        for background in bg_colors:
+            # convert each to hex
+            hex1 = to_hex(foreground)
+            hex2 = to_hex(background)
+
+            # get color contrast
+            contrast = contrast_ratio(hex1, hex2)
+
+            # append to results list
+            results.append((contrast, foreground, background))
+    results.sort()
+    return results
+
+
+def to_hex(color_code: str) -> str:
+    """converts any color code to hex
+
+    Checks to see if it is a hex and returns if so. Then sees which type of
+    color code it is and converts to hex and returns the value.
+
+    Args:
+        color_code: a string version of a color code.
+
+    Returns:
+        str: a hexadecimal color code based on the original color
     """
-    sorted_list = []
-    for color in colors:
-        color = color.strip()
-        if not is_rgb(color):
-            if is_hex(color):
-                rgb = hex_to_rgb(color)
-            elif is_hsl(color):
-                rgb = hsl_to_rgb(color)
-            elif is_keyword(color):
-                hex = color_keywords.get_hex_by_keyword(color)
-                rgb = hex_to_rgb(hex)
-            else:
-                raise ValueError("color code not recognized")
+    hex = ""
+    if is_hex(color_code):
+        hex = color_code
+    elif is_rgb(color_code):
+        hex = rgb_to_hex(color_code)
+    elif is_keyword(color_code):
+        hex = color_keywords.get_hex_by_keyword(color_code)
+    elif is_hsl(color_code):
+        if isinstance(color_code, str):
+            hsl = get_hsl_from_string(color_code)
         else:
-            rgb = color
-        if isinstance(rgb, str):
-            rgb = extract_rgb_from_string(rgb)
-        lum = luminance(rgb)
-        sorted_list.append((lum, color))
-    sorted_list.sort()
-    sorted_list.reverse()
-    sorted = [color[1] for color in sorted_list]
-    return sorted
+            hsl = color_code
+        rgb = hsl_to_rgb(hsl)
+        hex = rgb_to_hex(rgb)
+    return hex
 
 
 if __name__ == "__main__":

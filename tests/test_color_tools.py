@@ -289,15 +289,34 @@ four_mixed_gradient += "to right, red, #f06d06, rgb(255, 255, 0), green);}"
 
 
 @pytest.mark.parametrize(
-    "gradient,sorted_colors",
+    "color_code,output",
+    [
+        ("#336699", "#336699"),
+        ("red", "#FF0000"),
+        ("rgb(255, 255, 0)", "#ffff00"),
+        ("hsl(120, 100%, 25%)", "#008000"),
+    ],
+)
+def test_to_hex(color_code, output):
+    results = color.to_hex(color_code)
+    assert results == output
+
+
+@pytest.mark.parametrize(
+    "fg_color,bg_color,expected",
     [
         (
             radial_gradient,
-            ["#d7f8f7", "#bee4d2", "#fab2ac", "rgb(237, 161, 193)"],
+            "#ffffff",
+            [
+                (1.12, "#d7f8f7", "#ffffff"),
+                (1.37, "#bee4d2", "#ffffff"),
+                (1.74, "#fab2ac", "#ffffff"),
+                (2.0, "rgb(237, 161, 193)", "#ffffff"),
+            ],
         ),
-        (four_mixed_gradient, ["rgb(255, 255, 0)", "#f06d06", "red", "green"]),
     ],
 )
-def test_sort_gradient_colors(gradient, sorted_colors):
-    results = color.sort_gradient_colors(gradient)
-    assert results == sorted_colors
+def test_get_color_contrast_with_gradients(fg_color, bg_color, expected):
+    results = color.get_color_contrast_with_gradients(fg_color, bg_color)
+    assert results == expected
