@@ -256,6 +256,9 @@ class Element(object):
         """
         col = self.color.get("value")
         bg = self.background_color.get("value")
+        if color.is_gradient(col) or color.is_gradient(bg):
+            print("process gradient")
+            # Get and use the lowest contrast ratio (first item)
         hexc = color.get_hex(col)
         hexbg = color.get_hex(bg)
         self.__build_contrast_report(hexc, hexbg)
@@ -1404,6 +1407,15 @@ def update_contrast_results(
 if __name__ == "__main__":
     project_path = "tests/test_files/attribute_selector_file"
     project_path = "tests/test_files/large_project/"
+    gradients_path = "tests/test_files/gradients.html"
+    contents = clerk.file_to_string(gradients_path)
+    sheet = css.Stylesheet(gradients_path, contents)
+    gradient_tree = CSSAppliedTree(
+        gradients_path,
+        [
+            sheet,
+        ],
+    )
     styles_by_html_files = css.get_styles_by_html_files(project_path)
     for file in styles_by_html_files:
         filepath = file.get("file")
