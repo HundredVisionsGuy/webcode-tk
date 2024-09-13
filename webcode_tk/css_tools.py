@@ -253,11 +253,17 @@ class Stylesheet:
                 ):
                     property = declaration.property
                     value = declaration.value
+
+                    # Check for a gradient bg color
+                    is_bg_gradient = color_tools.is_gradient(value)
+                    if is_bg_gradient:
+                        print()
                     # skip if has vendor prefix
                     if has_vendor_prefix(value):
                         continue
                     # skip if not valid color value
-                    if not color_tools.is_color_value(value):
+                    is_valid_color = color_tools.is_color_value(value)
+                    if not is_valid_color and not is_bg_gradient:
                         continue
                     # make sure the value is a color (not other)
                     rule = {selector: {property: value}}

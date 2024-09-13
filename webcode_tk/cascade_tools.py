@@ -278,6 +278,10 @@ class Element(object):
             hexbg: the hex code for the background color.
         """
         link_contrast = color.get_color_contrast_report(hexc, hexbg)
+        bg_gradient = color.is_gradient(hexbg)
+        c_gradient = color.is_gradient(hexc)
+        if bg_gradient or c_gradient:
+            print("let's process this")
         link_ratio = color.contrast_ratio(hexc, hexbg)
 
         self.contrast_data["ratio"] = link_ratio
@@ -301,6 +305,9 @@ class Element(object):
             hexc: the hex code for the color value.
             hexbg: the hex code for the background color.
         """
+        has_gradient = color.is_gradient(hexc) or color.is_gradient(hexbg)
+        if has_gradient:
+            print()
         link_contrast = color.get_color_contrast_report(hexc, hexbg)
         link_ratio = color.contrast_ratio(hexc, hexbg)
 
@@ -528,7 +535,9 @@ class Element(object):
         # Are we directly targeted or not?
         directly_targeted = self.directly_targets(selector)
         previously_set = self.background_color.get("applied_by") == "directly"
-
+        bg_gradient = color.is_gradient(val)
+        if bg_gradient:
+            print("Now what?")
         # If directly, check specificity
         if directly_targeted:
             if previously_set:
