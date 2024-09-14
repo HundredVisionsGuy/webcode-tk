@@ -77,6 +77,8 @@ class Element(object):
             "selector": "",
             "specificity": "000",
             "applied_by": "context",
+            "is_gradient": False,
+            "gradient_colors": [],
         }
         self.color = {
             "value": "#000000",
@@ -257,8 +259,9 @@ class Element(object):
         col = self.color.get("value")
         bg = self.background_color.get("value")
         if color.is_gradient(col) or color.is_gradient(bg):
-            print("process gradient")
+            results = color.get_color_contrast_with_gradients(col, bg)
             # Get and use the lowest contrast ratio (first item)
+            print(results)
         hexc = color.get_hex(col)
         hexbg = color.get_hex(bg)
         self.__build_contrast_report(hexc, hexbg)
@@ -537,7 +540,9 @@ class Element(object):
         previously_set = self.background_color.get("applied_by") == "directly"
         bg_gradient = color.is_gradient(val)
         if bg_gradient:
-            print("Now what?")
+            self.background_color["is_gradient"] = True
+            colors = color.get_gradient_colors(val)
+            self.background_color["gradient_colors"] = colors
         # If directly, check specificity
         if directly_targeted:
             if previously_set:
@@ -834,6 +839,8 @@ class CSSAppliedTree:
         if selector_applies:
             if is_background_prop:
                 value = declaration.get("background-color")
+                if property:
+                    value = declaration.get("background-image")
                 element.apply_background_color(
                     selector,
                     property,
