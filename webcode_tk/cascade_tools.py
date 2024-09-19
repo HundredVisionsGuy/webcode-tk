@@ -844,7 +844,9 @@ class CSSAppliedTree:
         if selector_applies:
             if is_background_prop:
                 value = declaration.get("background-color")
-                if property:
+                if not value:
+                    value = declaration.get("background")
+                if property == "background-image":
                     value = declaration.get("background-image")
                 element.apply_background_color(
                     selector,
