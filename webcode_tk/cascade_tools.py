@@ -258,8 +258,10 @@ class Element(object):
         """
         col = self.color.get("value")
         bg = self.background_color.get("value")
-        if color.is_gradient(col) or color.is_gradient(bg):
-            results = color.get_color_contrast_with_gradients(col, bg)
+        if color.is_gradient(bg):
+            results = color.get_color_contrast_with_gradients(
+                col, bg, self.ancestors
+            )
             # Get and use the lowest contrast ratio (first item)
             print(results)
         hexc = color.get_hex(col)
@@ -638,8 +640,11 @@ class CSSAppliedTree:
         root = Element("html")
         self.root = root
         root_id = id(root)
+        parent_bg = root.background_color.get("value")
         body = Element(
-            "body", parent=("html", root_id), parent_size=root_font_size
+            "body",
+            parent=("html", root_id, parent_bg),
+            parent_size=root_font_size,
         )
         body.parent_size = body.font_size
         self.children.append(body)

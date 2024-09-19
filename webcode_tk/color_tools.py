@@ -676,7 +676,9 @@ def get_all_keywords(text: str) -> list:
     return keywords
 
 
-def get_color_contrast_with_gradients(fg_color: str, bg_color: str) -> list:
+def get_color_contrast_with_gradients(
+    fg_color: str, bg_color: str, ancestors=None
+) -> list:
     """gets a list of all color contrast permutations with 1 or 2 gradients
 
     Checks all combinations of foreground and background colors when one or
@@ -707,10 +709,26 @@ def get_color_contrast_with_gradients(fg_color: str, bg_color: str) -> list:
         bg_colors = [
             bg_color,
         ]
-
+    composite_color = ""
     # check all permutations of color combinations for contrast results
     for foreground in foreground_colors:
         for background in bg_colors:
+            # check for background alpha transparency
+            bg_has_alpha = has_alpha_channel(background)
+            if bg_has_alpha:
+                container_bg = ""
+                for ancestor in ancestors:
+                    if len(ancestor) > 2:
+                        base_color = ancestor[2]
+                        if ancestor[0] != "html" and has_alpha_channel(
+                            base_color
+                        ):
+                            composite_color = blend_alpha(
+                                base_color, background
+                            )
+                        container_bg = ancestor[2]
+                if not composite_color:
+                    composite_color = blend_alpha(container_bg, background)
             # convert each to hex
             hex1 = to_hex(foreground)
             hex2 = to_hex(background)
@@ -751,6 +769,23 @@ def to_hex(color_code: str) -> str:
         rgb = hsl_to_rgb(hsl)
         hex = rgb_to_hex(rgb)
     return hex
+
+
+def blend_alpha(base: str, color_with_alpha: str) -> str:
+    """blend a color with an alpha channel other"""
+    alpha_color_type = get_color_type(color_with_alpha)
+    if alpha_color_type == "hsla":
+        print()
+    elif alpha_color_type == "rgba":
+        if isinstance(color_with_alpha, str):
+            values = color_with_alpha.split("(")[1]
+            alpha_raw = values.split(",")
+            alpha_raw = alpha_raw[-1]
+            alpha = int(alpha_raw[:-1])
+            print(alpha)
+    elif alpha_color_type == "hex_alpha":
+        print("get last two and convert")
+    return ""
 
 
 if __name__ == "__main__":
