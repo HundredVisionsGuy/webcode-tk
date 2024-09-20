@@ -713,6 +713,7 @@ def get_color_contrast_with_gradients(
     # check all permutations of color combinations for contrast results
     for foreground in foreground_colors:
         for background in bg_colors:
+            composite_color = ""
             # check for background alpha transparency
             bg_has_alpha = has_alpha_channel(background)
             if bg_has_alpha:
@@ -727,13 +728,21 @@ def get_color_contrast_with_gradients(
                     composite_color = blend_alpha(container_bg, background)
             # convert each to hex
             hex1 = to_hex(foreground)
-            hex2 = to_hex(background)
+            if composite_color:
+                hex2 = to_hex(composite_color)
+            else:
+                hex2 = to_hex(background)
 
             # get color contrast
             contrast = contrast_ratio(hex1, hex2)
 
             # append to results list
-            results.append((contrast, foreground, background))
+            if composite_color:
+                results.append(
+                    (contrast, foreground, background, composite_color)
+                )
+            else:
+                results.append((contrast, foreground, background, background))
     results.sort()
     return results
 

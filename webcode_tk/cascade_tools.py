@@ -262,8 +262,8 @@ class Element(object):
             results = color.get_color_contrast_with_gradients(
                 col, bg, self.ancestors
             )
-            # Get and use the lowest contrast ratio (first item)
-            print(results)
+            # Set bg to composite color with lowest contrast ratio
+            bg = results[0][-1]
         hexc = color.get_hex(col)
         hexbg = color.get_hex(bg)
         self.__build_contrast_report(hexc, hexbg)
@@ -501,15 +501,16 @@ class Element(object):
         else:
             # check for attribute selector
             selector_type = css.get_selector_type(selector)
-            if selector_type == "class_selector":
-                if "class" in self.attributes.keys():
-                    for val in self.attributes.get("class"):
-                        if val == selector[1:]:
-                            targets = True
-                            break
-            if selector_type == "id_selector":
-                if "id" in self.attributes.keys():
-                    print("do like we do for classes")
+            if self.attributes:
+                if selector_type == "class_selector":
+                    if "class" in self.attributes.keys():
+                        for val in self.attributes.get("class"):
+                            if val == selector[1:]:
+                                targets = True
+                                break
+                if selector_type == "id_selector":
+                    if "id" in self.attributes.keys():
+                        print("do like we do for classes")
         return targets
 
     def been_applied(self, property: str) -> bool:
