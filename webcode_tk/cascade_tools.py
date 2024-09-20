@@ -78,7 +78,7 @@ class Element(object):
             "specificity": "000",
             "applied_by": "context",
             "is_gradient": False,
-            "gradient_colors": [],
+            "gradiparentent_colors": [],
         }
         self.color = {
             "value": "#000000",
@@ -282,11 +282,12 @@ class Element(object):
             hexc: the hex code for the color value.
             hexbg: the hex code for the background color.
         """
-        link_contrast = color.get_color_contrast_report(hexc, hexbg)
         bg_gradient = color.is_gradient(hexbg)
         c_gradient = color.is_gradient(hexc)
         if bg_gradient or c_gradient:
+            # worst contrast ratio takes the hit
             print("let's process this")
+        link_contrast = color.get_color_contrast_report(hexc, hexbg)
         link_ratio = color.contrast_ratio(hexc, hexbg)
 
         self.contrast_data["ratio"] = link_ratio
@@ -468,7 +469,6 @@ class Element(object):
 
         if selector == self.name:
             targets = True
-
         elif element_name in selector:
             selector_type = css.get_selector_type(selector)
             if selector_type == "descendant_selector":
@@ -498,6 +498,18 @@ class Element(object):
             elif selector_type == "advanced_link_selector":
                 if ":hover" in selector and element_name == "a":
                     targets = True
+        else:
+            # check for attribute selector
+            selector_type = css.get_selector_type(selector)
+            if selector_type == "class_selector":
+                if "class" in self.attributes.keys():
+                    for val in self.attributes.get("class"):
+                        if val == selector[1:]:
+                            targets = True
+                            break
+            if selector_type == "id_selector":
+                if "id" in self.attributes.keys():
+                    print("do like we do for classes")
         return targets
 
     def been_applied(self, property: str) -> bool:
@@ -541,15 +553,16 @@ class Element(object):
         directly_targeted = self.directly_targets(selector)
         previously_set = self.background_color.get("applied_by") == "directly"
         bg_gradient = color.is_gradient(val)
-        if bg_gradient:
-            self.background_color["is_gradient"] = True
-            colors = color.get_gradient_colors(val)
-            self.background_color["gradient_colors"] = colors
         # If directly, check specificity
         if directly_targeted:
             if previously_set:
                 if new_specificity < old_specificity:
                     return
+            colors = []
+            if bg_gradient:
+                self.background_color["is_gradient"] = True
+                colors = color.get_gradient_colors(val)
+                self.background_color["gradient_colors"] = colors
             # set color, specificity, and directly applied
             self.background_color["value"] = val
             self.background_color["sheet"] = filename

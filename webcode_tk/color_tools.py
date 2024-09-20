@@ -717,15 +717,11 @@ def get_color_contrast_with_gradients(
             bg_has_alpha = has_alpha_channel(background)
             if bg_has_alpha:
                 container_bg = ""
-                for ancestor in ancestors:
+                for i in range(len(ancestors) - 1, -1, -1):
+                    ancestor = ancestors[i]
                     if len(ancestor) > 2:
                         base_color = ancestor[2]
-                        if ancestor[0] != "html" and has_alpha_channel(
-                            base_color
-                        ):
-                            composite_color = blend_alpha(
-                                base_color, background
-                            )
+                        composite_color = blend_alpha(base_color, background)
                         container_bg = ancestor[2]
                 if not composite_color:
                     composite_color = blend_alpha(container_bg, background)
@@ -773,6 +769,9 @@ def to_hex(color_code: str) -> str:
 
 def blend_alpha(base: str, color_with_alpha: str) -> str:
     """blend a color with an alpha channel other"""
+    result = ""
+    color_minus_alpha = ""
+    alpha = 0.0
     alpha_color_type = get_color_type(color_with_alpha)
     if alpha_color_type == "hsla":
         print()
@@ -780,12 +779,17 @@ def blend_alpha(base: str, color_with_alpha: str) -> str:
         if isinstance(color_with_alpha, str):
             values = color_with_alpha.split("(")[1]
             alpha_raw = values.split(",")
+            r_g_b = ",".join(alpha_raw[:-1])
+            color_minus_alpha = f"rgb({r_g_b})"
             alpha_raw = alpha_raw[-1]
-            alpha = int(alpha_raw[:-1])
-            print(alpha)
+            alpha = float(alpha_raw[:-1])
     elif alpha_color_type == "hex_alpha":
         print("get last two and convert")
-    return ""
+    if alpha == 0.0:
+        result = base
+    elif alpha == 1.0:
+        result = color_minus_alpha
+    return result
 
 
 if __name__ == "__main__":

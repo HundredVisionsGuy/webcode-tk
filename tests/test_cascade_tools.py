@@ -11,6 +11,15 @@ attribute_selector_styles = css.get_styles_by_html_files(
 )
 styles_by_html_files = css.get_styles_by_html_files(project_path)
 large_project_styles = css.get_styles_by_html_files(large_project)
+gradients_path = "tests/test_files/gradients.html"
+
+
+@pytest.fixture
+def gradients_file_tree():
+    css_tree = None
+    sheets = css.get_all_stylesheets_by_file(gradients_path)
+    css_tree = cascade.CSSAppliedTree(gradients_path, sheets)
+    return css_tree
 
 
 @pytest.fixture
@@ -397,6 +406,10 @@ def test_is_selector_pseudoclass_for_element_plus_pseudo_element():
     expected = False
     results = cascade.is_selector_pseudoclass(selector)
     assert expected == results
+
+
+def test_gradients_file_tree_for_tree(gradients_file_tree):
+    assert gradients_file_tree
 
 
 if __name__ == "__main__":
