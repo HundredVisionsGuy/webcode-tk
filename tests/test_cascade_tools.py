@@ -15,14 +15,6 @@ gradients_path = "tests/test_files/gradients.html"
 
 
 @pytest.fixture
-def gradients_file_tree():
-    css_tree = None
-    sheets = css.get_all_stylesheets_by_file(gradients_path)
-    css_tree = cascade.CSSAppliedTree(gradients_path, sheets)
-    return css_tree
-
-
-@pytest.fixture
 def single_file_tree():
     css_tree = None
     file = styles_by_html_files[0]
@@ -408,8 +400,85 @@ def test_is_selector_pseudoclass_for_element_plus_pseudo_element():
     assert expected == results
 
 
+##########################
+# Test gradients on a page
+##########################
+
+
+@pytest.fixture
+def gradients_file_tree():
+    css_tree = None
+    sheets = css.get_all_stylesheets_by_file(gradients_path)
+    css_tree = cascade.CSSAppliedTree(gradients_path, sheets)
+    return css_tree
+
+
 def test_gradients_file_tree_for_tree(gradients_file_tree):
     assert gradients_file_tree
+
+
+@pytest.fixture
+def radial_gradient_children(gradients_file_tree):
+    body = gradients_file_tree.children[0]
+    main = body.children[0]
+    return main.children
+
+
+@pytest.fixture
+def radial_gradient_section(radial_gradient_children):
+    radial_section = radial_gradient_children[1]
+    return radial_section
+
+
+def test_radial_gradient_section_for_contrast_ratio_failure(
+    radial_gradient_section,
+):
+    # contrast should fail at 4.08
+    expected_results = 4.08
+    actual_contrast_data = radial_gradient_section.contrast_data
+    actual_results = actual_contrast_data.get("ratio")
+    assert expected_results == actual_results
+
+
+def test_radial_gradient_section_for_contrast_results(radial_gradient_section):
+    # contrast should fail
+    expected_results = False
+    actual_contrast_data = radial_gradient_section.contrast_data
+    actual_results = actual_contrast_data.get("normal_aa")
+    assert expected_results == actual_results
+
+
+@pytest.fixture
+def horizontal_gradient_section(radial_gradient_children):
+    horizontal_section = radial_gradient_children[2]
+    return horizontal_section
+
+
+def test_horizontal_gradient_for_expected_child_ratio(
+    horizontal_gradient_section,
+):
+    child = horizontal_gradient_section.children[0]
+    actual_ratio = child.contrast_data.get("ratio")
+    expected_ratio = 2.44
+    assert actual_ratio == expected_ratio
+
+
+@pytest.fixture
+def other_gradient_section(radial_gradient_children):
+    other_section = radial_gradient_children[3]
+    return other_section
+
+
+def test_other_gradient_section_for_pass_results(other_gradient_section):
+    expected_result = True
+    actual_results = other_gradient_section.contrast_data.get("normal_aaa")
+    assert expected_result == actual_results
+
+
+@pytest.fixture
+def footer_gradient(radial_gradient_children):
+    footer = radial_gradient_children[4]
+    return footer
 
 
 if __name__ == "__main__":

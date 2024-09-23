@@ -125,6 +125,8 @@ def get_hex(value: str) -> str:
     Determines what type of color code it is, converts it to hex
     if necessary, and returns a hex value.
 
+    This will NOT work with an alpha channel.
+
     Args:
         code: a CSS color code value (any type)
 
@@ -257,6 +259,9 @@ def has_alpha_channel(code: str) -> bool:
     rgb, or rgba and determine whether there is an alpha channel or
     not.
 
+    NOTE: hsl() might have an alpha channel. If there is a slash, then
+    there is an alpha channel.
+
     Args:
         code: any form of hex, rgb or hsl with alpha channel or not.
 
@@ -268,6 +273,8 @@ def has_alpha_channel(code: str) -> bool:
         if len(code) == 9:
             has_alpha = True
     if "hsla(" in code:
+        has_alpha = True
+    if "hsl(" in code and "/" in code:
         has_alpha = True
     if "rgba(" in code:
         has_alpha = True
@@ -631,6 +638,9 @@ def get_gradient_colors(gradient: str) -> list:
     all_hex_codes = get_all_hex_codes(gradient)
     if all_hex_codes:
         colors += all_hex_codes
+    if "hsl" in gradient:
+        all_hsl_codes = get_all_hsl_codes(gradient)
+        colors += all_hsl_codes
     return colors
 
 
@@ -674,6 +684,37 @@ def get_all_keywords(text: str) -> list:
         if is_keyword(word):
             keywords.append(word)
     return keywords
+
+
+def get_all_hsl_codes(text: str) -> list:
+    """returns a list of all hsl code in the text
+
+    Args:
+        text: the css_code or text you want to search.
+
+    Returns:
+        all_hex_codes: a list of all valid hexadecimal color codes
+    """
+    all_hsl_codes = []
+    possible_hsl_codes = re.findall(hsl_all_forms_re, text)
+    if possible_hsl_codes:
+        for color in possible_hsl_codes:
+            hsl_code = ""
+            if "hsla" in color:
+                hsl_code = "hsla("
+            else:
+                hsl_code = "hsl("
+            color_values = color.split(",")
+            hue = color_values[0].split("(")[1]
+            sat = color_values[1]
+            light = color_values[2]
+            if "hsla" in color:
+                alpha = color_values[3]
+                hsl_code = f"{hsl_code}{hue},{sat},{light},{alpha}"
+            else:
+                hsl_code = f"{hsl_code}{hue},{sat},{light}"
+            all_hsl_codes.append(hsl_code)
+    return all_hsl_codes
 
 
 def get_color_contrast_with_gradients(
@@ -777,13 +818,64 @@ def to_hex(color_code: str) -> str:
 
 
 def blend_alpha(base: str, color_with_alpha: str) -> str:
-    """blend a color with an alpha channel other"""
+    """blend a color with an alpha channel with base color
+
+    returns a color in the same format as the alpha color but
+    without the alpha channel.
+
+    The algorithm:
+    new_color = (alpha)*(foreground_color) + (1 - alpha)*(background_color)
+
+    This computation is done separately for the red, blue, and green color
+    components.
+
+    Args:
+        base: the background color (must be computed and not alpha).
+        color_with_alpha: a color code as a string that has an alpha value
+
+    Returns:
+        result: the computed code using the original type of color value but
+            without an alpha channel
+
+    Raises:
+        ValueError: if we don't recognize the color value with an alpha
+        channel.
+    """
     result = ""
+    # Get the RGB for base color
+    red1, green1, blue1 = get_rgb(base)
     color_minus_alpha = ""
     alpha = 0.0
     alpha_color_type = get_color_type(color_with_alpha)
     if alpha_color_type == "hsla":
-        print()
+        # Get alpha channel
+        if "," in color_with_alpha:
+            hsl_values = color_with_alpha.split(",")
+        else:
+            hsl_values = color_with_alpha.split(" ")
+        if "/" in color_with_alpha:
+            alpha = color_with_alpha.split("/")[-1]
+            alpha = alpha.replace("%", "")
+            alpha = alpha.replace(")", "")
+            alpha = alpha.strip()
+            alpha = float(alpha) / 100.0
+        else:
+            alpha = hsl_values[-1].strip()
+            alpha = alpha.replace(")", "")
+            alpha = float(alpha)
+
+        # just get hsl (no alpha)
+        color_minus_alpha = "hsl("
+        hue = hsl_values[0].split("(")[-1].strip()
+        hue = int(hue)
+        sat = hsl_values[1].strip().replace("%", "")
+        sat = int(sat)
+        light = hsl_values[2].strip().replace("%", "")
+        light = int(light)
+
+        # Get RGB from hue saturation and lightness
+        red2, green2, blue2 = hsl_to_rgb((hue, sat, light))
+
     elif alpha_color_type == "rgba":
         if isinstance(color_with_alpha, str):
             values = color_with_alpha.split("(")[1]
@@ -794,11 +886,46 @@ def blend_alpha(base: str, color_with_alpha: str) -> str:
             alpha = float(alpha_raw[:-1])
     elif alpha_color_type == "hex_alpha":
         print("get last two and convert")
+    else:
+        raise ValueError("I don't recognize that color type")
     if alpha == 0.0:
         result = base
     elif alpha == 1.0:
         result = color_minus_alpha
+    else:
+        # Here is the math part where we calculate to composite color
+        # new_color =
+        # (alpha)*(foreground_color) + (1 - alpha)*(background_color)
+        new_red = alpha * 1
+        print(new_red)
+        input("This is where we left off")
     return result
+
+
+def get_rgb(code: str) -> tuple:
+    """returns tuple of r,g,b values from any color value"""
+    return ()
+
+
+def color_to_hsl(color_code: str) -> str:
+    """converts keyword, hex, or rgb to hsl
+
+    Args:
+        color_code: string version of color code
+    Returns:
+        hsl: hsl color code as a string
+    """
+    hsl = "hsl("
+
+    # Get the RGB color channels from code
+    if is_keyword(color_code):
+        hex = color_keywords.get_hex_by_keyword(color_code)
+        r, g, b = hex_to_rgb(hex)
+    elif is_hex(color_code):
+        r, g, b = hex_to_rgb(color_code)
+    elif is_rgb(color_code):
+        r, g, b = extract_rgb_from_string(color_code)
+    return hsl
 
 
 if __name__ == "__main__":

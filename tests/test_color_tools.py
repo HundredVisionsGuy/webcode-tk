@@ -201,6 +201,12 @@ def test_has_alpha_channel_for_hex_code_without_alpha():
     assert expected == results
 
 
+def test_has_alpha_channel_for_hsl_with_alpha():
+    expected = True
+    results = color.has_alpha_channel("hsl(120deg 75% 25% / 60%)")
+    assert results == expected
+
+
 def test_is_rgb_for_non_rgb():
     value = "hsla(0, 0, 0, 0)"
     results = color.is_rgb(value)
@@ -320,3 +326,15 @@ def test_to_hex(color_code, output):
 def test_get_color_contrast_with_gradients(fg_color, bg_color, expected):
     results = color.get_color_contrast_with_gradients(fg_color, bg_color)
     assert results == expected
+
+
+def test_blend_alpha_for_hsla():
+    expected = "hsl(240deg, 100%, 60%)"
+    actual = color.blend_alpha("#ffffff", "hsla(240, 100%, 50%, 0.8)")
+    assert expected == actual
+
+
+def test_blend_alpha_for_hexa():
+    expected = "#ffd5dd"
+    actual = color.blend_alpha("#ffffff", "#ffc0cbaa")
+    assert actual == expected
