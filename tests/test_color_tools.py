@@ -338,3 +338,33 @@ def test_blend_alpha_for_hexa():
     expected = "#ffd5dd"
     actual = color.blend_alpha("#ffffff", "#ffc0cbaa")
     assert actual == expected
+
+
+def test_get_rgb_for_standard_hex():
+    expected = (51, 102, 153)
+    actual = color.get_rgb("#336699")
+    assert actual == expected
+
+
+def test_get_rgb_for_hex_with_alpha():
+    expected = (51, 102, 153)
+    actual = color.get_rgb("#336699aa")
+    assert actual == expected
+
+
+def test_get_rgb_for_rgba():
+    expected = (0, 170, 255)
+    actual = color.get_rgb("rgba(0, 170, 255, 0.56)")
+    assert actual == expected
+
+
+def test_get_rgb_for_keyword():
+    expected = (30, 144, 255)
+    actual = color.get_rgb("DodgerBlue")
+    assert actual == expected
+
+
+def test_get_rgb_for_hsl_with_commas():
+    expected = (31, 143, 255)
+    actual = color.get_rgb("hsl(210, 100%, 56%)")
+    assert actual == expected

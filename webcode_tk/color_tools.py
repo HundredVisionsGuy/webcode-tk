@@ -479,6 +479,7 @@ def is_keyword(val: str) -> bool:
 
     Returns:
         is_keyword: if the value is a color keyword or not."""
+    val = val.lower()
     is_keyword = val in color_keywords.get_all_keywords()
     return is_keyword
 
@@ -599,6 +600,8 @@ def get_color_type(code: str) -> str:
         color_type = "rgba"
     elif "rgb" in code[:3]:
         color_type = "rgb"
+    elif color_keywords.is_a_keyword(code):
+        color_type = "keyword"
     else:
         msg = "The color code is not a recognized color code. "
         msg += "It must be a variation of hex, hsl, or rgb."
@@ -893,18 +896,50 @@ def blend_alpha(base: str, color_with_alpha: str) -> str:
     elif alpha == 1.0:
         result = color_minus_alpha
     else:
+        # get red, green, and blue channel values
+        red2, green2, blue2 = get_rgb(color_with_alpha)
         # Here is the math part where we calculate to composite color
         # new_color =
         # (alpha)*(foreground_color) + (1 - alpha)*(background_color)
-        new_red = alpha * 1
-        print(new_red)
-        input("This is where we left off")
+        new_red = blend_channel(red1, alpha, red2)
+        new_green = blend_channel(green1, green2, alpha)
+        new_blue = blend_channel(blue1, blue2, alpha)
+        rgb_string = rgb_as_string((new_red, new_green, new_blue))
+        result = color_to_hsl(rgb_string)
     return result
+
+
+def blend_channel(red1, alpha, red2):
+    new_red = (alpha * red1) + ((1 - alpha) * red2)
+    return new_red
 
 
 def get_rgb(code: str) -> tuple:
     """returns tuple of r,g,b values from any color value"""
-    return ()
+    # make code lowercase, just in case (mostly for keywords)
+    code = code.lower()
+    red, green, blue = (0, 0, 0)
+    color_type = get_color_type(code)
+    if color_type == "hex":
+        red, green, blue = hex_to_rgb(code)
+    if color_type == "hex_alpha":
+        code = code[:7]
+        red, green, blue = hex_to_rgb(code)
+    if "rgb" in code:
+        red, green, blue = extract_rgb_from_string(code)
+    if color_type == "hsl" or color_type == "hsla":
+        # get just hsl as a tuple
+        color_split = re.findall(r"-?\d+\.?\d*", code)
+        values = (
+            int(color_split[0]),
+            int(color_split[1]),
+            int(color_split[2]),
+        )
+        red, green, blue = hsl_to_rgb(values)
+    if is_keyword(code):
+        hex = color_keywords.get_hex_by_keyword(code)
+        red, green, blue = hex_to_rgb(hex)
+    return (red, green, blue)
 
 
 def color_to_hsl(color_code: str) -> str:

@@ -243,6 +243,7 @@ def get_hex_by_keyword(word: (str)) -> str:
     Returns:
         str: the 6-digit hex code of that value in the format `#663399`
     """
+    word = word.lower()
     if not is_a_keyword(word):
         msg = "That keyword value is not a valid keyword. Did you"
         msg += "misspell the keyword?"
