@@ -70,6 +70,12 @@ def test_hsl_to_rgb():
     assert results == expected
 
 
+def test_hsl_to_rgb_240_100_50():
+    results = color.hsl_to_rgb((240, 100, 50))
+    expected = (255, 255, 255)
+    assert results == expected
+
+
 def test_hex_to_decimal_for_bc():
     bc_hex = "bc"
     expected = 188
@@ -328,8 +334,26 @@ def test_get_color_contrast_with_gradients(fg_color, bg_color, expected):
     assert results == expected
 
 
+def test_color_to_hsl_for_rgb_green():
+    results = color.color_to_hsl("rgb(51, 151, 51)")
+    expected = "hsl(120, 50%, 40%)"
+    assert results == expected
+
+
+def test_color_to_hsl_for_hex336699():
+    results = color.color_to_hsl("#336699")
+    expected = "hsl(210, 50%, 40%)"
+    assert results == expected
+
+
+def test_color_to_hsl_for_hex_gray():
+    results = color.color_to_hsl("#efefef")
+    expected = "hsl(0, 0%, 94%)"
+    assert results == expected
+
+
 def test_blend_alpha_for_hsla():
-    expected = "hsl(240deg, 100%, 60%)"
+    expected = "hsl(240, 100%, 60%)"
     actual = color.blend_alpha("#ffffff", "hsla(240, 100%, 50%, 0.8)")
     assert expected == actual
 
