@@ -352,6 +352,18 @@ def test_color_to_hsl_for_hex_gray():
     assert results == expected
 
 
+def test_color_to_hsl_for_white():
+    results = color.color_to_hsl("rgb(255, 255, 255)")
+    expected = "hsl(0, 0%, 100%)"
+    assert results == expected
+
+
+def test_color_to_hsl_for_deepskyblue_rgb():
+    results = color.color_to_hsl("rgb(0, 191, 255)")
+    expected = "hsl(195, 100%, 50%)"
+    assert results == expected
+
+
 def test_blend_alpha_for_hsla():
     expected = "hsl(240, 100%, 60%)"
     actual = color.blend_alpha("#ffffff", "hsla(240, 100%, 50%, 0.8)")

@@ -296,44 +296,38 @@ def hsl_to_rgb(hsl: tuple) -> tuple:
             and blue channels.
     """
     hue, sat, light = hsl
-    sat /= 100
-    light /= 100
+    if sat == 0:
+        r = light
+        g = light
+        b = light
+    else:
+        sat /= 100
+        light /= 100
 
-    c = (1 - abs(2 * light - 1)) * sat
-    x = c * (1 - abs((hue / 60) % 2 - 1))
-    m = light - c / 2
-    r = 0
-    g = 0
-    b = 0
+        def hue2rgb(p, q, t):
+            if t < 0:
+                t += 1
+            if t > 1:
+                t -= 1
+            if t < 1 / 6:
+                return p + (q - p) * 6 * t
+            if t < 1 / 2:
+                return q
+            if t < 2 / 3:
+                return p + (q - p) * (2 / 3 - t) * 6
+            return q
 
-    if hue >= 0 and hue < 60:
-        r = c
-        g = x
-        b = 0
-    elif hue >= 60 and hue < 120:
-        r = x
-        g = c
-        b = x
-    elif hue >= 120 and hue < 180:
-        r = 0
-        g = c
-        b = x
-    elif hue >= 180 and hue < 240:
-        r = 0
-        g = x
-        b = c
-    elif hue >= 240 and hue < 300:
-        r = x
-        g = 0
-        b = c
-    elif hue >= 300 and hue < 360:
-        r = c
-        g = 0
-        b = x
-    r = round((r + m) * 255)
-    g = round((g + m) * 255)
-    b = round((b + m) * 255)
-    return (r, g, b)
+    if light < 0.5:
+        q = light * (1 + sat)
+    else:
+        q = light + sat - light * sat
+    p = 2 * light - q
+
+    r = hue2rgb(p, q, hue + 1 / 3)
+    g = hue2rgb(p, q, hue)
+    b = hue2rgb(p, q, hue - 1 / 3)
+
+    return (round(r * 255), round(g * 255), round(b * 255))
 
 
 def rgb_as_string(rgb: tuple) -> str:
@@ -978,41 +972,45 @@ def color_to_hsl(color_code: str) -> str:
         red, green, blue = extract_rgb_from_string(color_code)
 
     # Convert each channel to a decimal between 0 and 1
-    red_decimal = red / 255
-    green_decimal = green / 255
-    blue_decimal = blue / 255
-    decimal_values = (red_decimal, green_decimal, blue_decimal)
+    red = red / 255
+    green = green / 255
+    blue = blue / 255
+    decimal_values = (red, green, blue)
 
     # Calculate luminance
     minimum = min(decimal_values)
     maximum = max(decimal_values)
-    luminance = (maximum + minimum) / 2
-    luminance *= 100
-    luminance = round(luminance)
+    lightness = (maximum + minimum) / 2
+    hue = (maximum + minimum) / 2
+    saturation = (maximum + minimum) / 2
 
-    # Calculate Saturation
-    if minimum == maximum:
+    if maximum == minimum:
+        hue = 0
         saturation = 0
-    elif luminance <= 50:
-        saturation = (maximum - minimum) / (maximum + minimum)
     else:
-        saturation = (maximum - minimum) / (2.0 - maximum - minimum)
+        delta = maximum - minimum
+        saturation = (
+            delta / (2 - maximum - minimum)
+            if lightness > 0.5
+            else delta / (maximum + minimum)
+        )
+        if red == maximum:
+            if green < blue:
+                hue = (green - blue) / delta + 6
+            else:
+                hue = (green - blue) / delta
+        if green == maximum:
+            hue = (blue - red) / delta + 2
+        else:
+            hue = (red - green) / delta + 4
+        hue /= 6
+        hue *= 360
+        hue = round(hue)
+    lightness *= 100
+    lightness = round(lightness)
     saturation *= 100
     saturation = round(saturation)
-
-    # Calculate Hue
-    if saturation == 0:
-        hue = 0
-    elif maximum == red_decimal:
-        hue = (green_decimal - blue_decimal) / (maximum - minimum)
-    elif maximum == green_decimal:
-        hue = 2.0 + (blue_decimal - red_decimal) / (maximum - minimum)
-    else:
-        hue = 4.0 + (red_decimal - green_decimal) / (maximum - minimum)
-    hue = hue * 60
-    hue = round(hue)
-
-    hsl = f"{hsl}{hue}, {saturation}%, {luminance}%)"
+    hsl = f"{hsl}{hue}, {saturation}%, {lightness}%)"
     return hsl
 
 
