@@ -376,6 +376,14 @@ def test_blend_alpha_for_hexa():
     assert actual == expected
 
 
+def test_blend_alpha_for_rgba():
+    expected = "rgb(185,208,216)"
+    actual = color.blend_alpha(
+        "rgb(255, 255, 255)", "rgba(102, 153, 170, 0.46)"
+    )
+    assert actual == expected
+
+
 def test_get_rgb_for_standard_hex():
     expected = (51, 102, 153)
     actual = color.get_rgb("#336699")
