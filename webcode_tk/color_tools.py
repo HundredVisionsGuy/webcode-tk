@@ -296,6 +296,7 @@ def hsl_to_rgb(hsl: tuple) -> tuple:
             and blue channels.
     """
     hue, sat, light = hsl
+    hue /= 360
     if sat == 0:
         r = light
         g = light
@@ -305,7 +306,7 @@ def hsl_to_rgb(hsl: tuple) -> tuple:
         light /= 100
 
         def hue2rgb(p, q, t):
-            if t < 0:
+            if t < 0.0:
                 t += 1
             if t > 1:
                 t -= 1
@@ -315,7 +316,7 @@ def hsl_to_rgb(hsl: tuple) -> tuple:
                 return q
             if t < 2 / 3:
                 return p + (q - p) * (2 / 3 - t) * 6
-            return q
+            return p
 
     if light < 0.5:
         q = light * (1 + sat)
@@ -839,6 +840,10 @@ def blend_alpha(base: str, color_with_alpha: str) -> str:
     The algorithm:
     new_color = (alpha)*(foreground_color) + (1 - alpha)*(background_color)
 
+    Try this:
+    result.r = background.r * (1 - A) + foreground.r * A
+    result.g = background.g * (1 - A) + foreground.g * A
+    result.b = background.b * (1 - A) + foreground.b * A
     This computation is done separately for the red, blue, and green color
     components.
 
@@ -858,7 +863,7 @@ def blend_alpha(base: str, color_with_alpha: str) -> str:
     # Get the RGB for base color
     red1, green1, blue1 = get_rgb(base)
     color_minus_alpha = ""
-    alpha = 0.0
+    alpha_a = 0.0
     alpha_color_type = get_color_type(color_with_alpha)
     if alpha_color_type == "hsla":
         # Get alpha channel
@@ -867,15 +872,15 @@ def blend_alpha(base: str, color_with_alpha: str) -> str:
         else:
             hsl_values = color_with_alpha.split(" ")
         if "/" in color_with_alpha:
-            alpha = color_with_alpha.split("/")[-1]
-            alpha = alpha.replace("%", "")
-            alpha = alpha.replace(")", "")
-            alpha = alpha.strip()
-            alpha = float(alpha) / 100.0
+            alpha_a = color_with_alpha.split("/")[-1]
+            alpha_a = alpha_a.replace("%", "")
+            alpha_a = alpha_a.replace(")", "")
+            alpha_a = alpha_a.strip()
+            alpha_a = float(alpha_a) / 100.0
         else:
-            alpha = hsl_values[-1].strip()
-            alpha = alpha.replace(")", "")
-            alpha = float(alpha)
+            alpha_a = hsl_values[-1].strip()
+            alpha_a = alpha_a.replace(")", "")
+            alpha_a = float(alpha_a)
 
         # just get hsl (no alpha)
         color_minus_alpha = "hsl("
@@ -896,32 +901,45 @@ def blend_alpha(base: str, color_with_alpha: str) -> str:
             r_g_b = ",".join(alpha_raw[:-1])
             color_minus_alpha = f"rgb({r_g_b})"
             alpha_raw = alpha_raw[-1]
-            alpha = float(alpha_raw[:-1])
+            alpha_a = float(alpha_raw[:-1])
     elif alpha_color_type == "hex_alpha":
-        print("get last two and convert")
+        alpha_a = color_with_alpha[-2:]
+        alpha_a = hex_to_decimal(alpha_a) / 255
+        alpha_a = round(alpha_a, 2)
+        color_minus_alpha = color_with_alpha[:-2]
     else:
         raise ValueError("I don't recognize that color type")
-    if alpha == 0.0:
+    if alpha_a == 0.0:
         result = base
-    elif alpha == 1.0:
+    elif alpha_a == 1.0:
         result = color_minus_alpha
     else:
         # get red, green, and blue channel values
         red2, green2, blue2 = get_rgb(color_with_alpha)
         # Here is the math part where we calculate to composite color
-        # new_color =
+        # alpha_b = 1.0
+        # alpha = alpha_a + alpha_b * (1 - alpha_a)
+
         # (alpha)*(foreground_color) + (1 - alpha)*(background_color)
-        new_red = blend_channel(red1, red2, alpha)
-        new_green = blend_channel(green1, green2, alpha)
-        new_blue = blend_channel(blue1, blue2, alpha)
+        new_red = blend_channel(red1, red2, alpha_a)
+        new_green = blend_channel(green1, green2, alpha_a)
+        new_blue = blend_channel(blue1, blue2, alpha_a)
         rgb_string = rgb_as_string((new_red, new_green, new_blue))
-        result = color_to_hsl(rgb_string)
+        if "hsl" in alpha_color_type:
+            result = color_to_hsl(rgb_string)
+        elif "hex" in alpha_color_type:
+            result = get_hex(rgb_string)
+        else:
+            result = rgb_string
     return result
 
 
-def blend_channel(color1, color2, alpha):
-    new_color = (alpha * color1) + ((1 - alpha) * color2)
-    return int(new_color)
+def blend_channel(background, foreground, alpha):
+    """
+    result.c = background.c * (1 - A) + foreground.c * A
+    """
+    new_color = background * (1 - alpha) + foreground * alpha
+    return round(new_color)
 
 
 def get_rgb(code: str) -> tuple:

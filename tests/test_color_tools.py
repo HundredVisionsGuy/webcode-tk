@@ -72,7 +72,7 @@ def test_hsl_to_rgb():
 
 def test_hsl_to_rgb_240_100_50():
     results = color.hsl_to_rgb((240, 100, 50))
-    expected = (255, 255, 255)
+    expected = (0, 0, 255)
     assert results == expected
 
 
@@ -371,8 +371,8 @@ def test_blend_alpha_for_hsla():
 
 
 def test_blend_alpha_for_hexa():
-    expected = "#ffd5dd"
-    actual = color.blend_alpha("#ffffff", "#ffc0cbaa")
+    expected = "#c4d3e1"
+    actual = color.blend_alpha("#ffffff", "#3366994a")
     assert actual == expected
 
 
