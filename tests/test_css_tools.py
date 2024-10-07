@@ -942,3 +942,9 @@ def test_get_specificity_for_pseudo_element_inclusion():
     expected = "013"
     results = css_tools.get_specificity(selector)
     assert results == expected
+
+
+def test_get_font_families_for_at_import_url():
+    path = "tests/test_files/file_with_at_import_url.html"
+    results = css_tools.get_all_stylesheets_by_file(path)
+    assert len(results[0].rulesets) > 1

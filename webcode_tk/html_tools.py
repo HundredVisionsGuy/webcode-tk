@@ -17,6 +17,7 @@ import re
 from typing import Union
 
 from bs4 import BeautifulSoup
+from bs4 import Comment
 from bs4 import Tag
 from file_clerk import clerk
 from lxml import html
@@ -295,9 +296,9 @@ def get_style_attribute_data(file: str) -> list:
 
     # Check all other tags in the body for style attributes
     for tag in body_tag.children:
-        # deal with any "tag" that is a navigable string
+        # deal with any "tag" that is a navigable string or comment
         tag_string = str(tag).strip()
-        if not tag_string:
+        if not tag_string or isinstance(tag, Comment):
             continue
         value = tag.attrs.get("style")
         if not value:

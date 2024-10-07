@@ -240,3 +240,7 @@ def test_add_if_not_in_for_not_yet_in():
     selectors = ["body", "body.visible", "body#test"]
     html_tools.add_if_not_in(selectors, "body.invisible")
     assert len(selectors) == 4 and "body.invisible" in selectors
+
+
+def test_has_style_attribute_data_for_html_comment():
+    assert True

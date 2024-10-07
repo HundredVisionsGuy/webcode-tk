@@ -1000,8 +1000,23 @@ def get_all_stylesheets_by_file(file_path: str) -> list:
                         css_sheet = Stylesheet(sheet_path, code)
                         all_styles.append(css_sheet)
             if tag.name == "style":
-                css_sheet = Stylesheet(file_path, tag.text, "styletag")
-                all_styles.append(css_sheet)
+                # first check for @import url
+                contents = tag.text
+                if "@import url(" in contents:
+                    filename = contents.split("url(")[1]
+                    filename = filename.split(")")[0]
+                    filename = filename.replace('"', "")
+                    filename = filename.replace("'", "")
+                    path_list = clerk.get_path_list(file_path)
+                    path_list.pop()
+                    path_list.append(filename)
+                    sheet_path = "/".join(path_list)
+                    code = clerk.file_to_string(sheet_path)
+                    css_sheet = Stylesheet(sheet_path, code)
+                    all_styles.append(css_sheet)
+                else:
+                    css_sheet = Stylesheet(file_path, tag.text, "styletag")
+                    all_styles.append(css_sheet)
     return all_styles
 
 
