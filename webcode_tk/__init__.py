@@ -2,6 +2,9 @@
 """Deals with html and css documents to check their code.
 
 Modules exported by this package:
+- `cascade_tools`: library to calculate how the cascade affects font-size
+          and background color and color through inheritance and will be
+          used for calculating color contrast.
 - `color_keywords`: helper library to align color keywords with their
           properties and hex and rgb values.
 - `color_tools`: processes CSS color related properties and values.
@@ -15,4 +18,4 @@ Modules exported by this package:
 - `validator_tools`: sends HTML or CSS code to the W3C Validator to check
           for errors.
 """
-__version__ = "0.7.10"
+__version__ = "0.7.11"
