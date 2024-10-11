@@ -264,6 +264,9 @@ class Element(object):
             )
             # Set bg to composite color with lowest contrast ratio
             bg = results[0][-1]
+
+            # Note that it's a gradient
+
         hexc = color.get_hex(col)
         hexbg = color.get_hex(bg)
         self.__build_contrast_report(hexc, hexbg)

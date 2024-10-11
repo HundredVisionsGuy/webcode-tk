@@ -240,6 +240,13 @@ def test_font_size_for_h1(font_sizes_body):
     assert results == expected
 
 
+def test_font_size_for_inline_child_of_h1(font_sizes_body):
+    code = font_sizes_body[0].children[0].children[0]
+    expected = 40.0
+    results = code.font_size
+    assert results == expected
+
+
 def test_font_size_for_p_with_descendant_selector(font_sizes_body):
     p = font_sizes_body[1].children[4]
     expected = 20.0
@@ -494,7 +501,7 @@ if __name__ == "__main__":
     bg - #00008B
     Utter failure
     """
-    path = "tests/test_files/font-sizes.html"
+    path = "tests/test_files/gradients.html"
     styles = css.get_all_stylesheets_by_file(path)
     tree = cascade.CSSAppliedTree(path, styles)
     children = tree.children[0].children
