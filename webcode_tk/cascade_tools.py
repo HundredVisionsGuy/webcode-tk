@@ -73,12 +73,14 @@ class Element(object):
         self.attributes = attributes
         self.background_color = {
             "value": "#ffffff",
+            "has_alpha": False,
+            "computed_value": "",
             "sheet": "user-agent",
             "selector": "",
             "specificity": "000",
             "applied_by": "context",
             "is_gradient": False,
-            "gradiparentent_colors": [],
+            "gradient_colors": [],
         }
         self.color = {
             "value": "#000000",
