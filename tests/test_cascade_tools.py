@@ -413,20 +413,80 @@ def test_is_selector_pseudoclass_for_element_plus_pseudo_element():
 
 
 @pytest.fixture
-def gradients_file_tree():
+def gradients_file_large_tree():
     css_tree = None
     sheets = css.get_all_stylesheets_by_file(gradients_path)
     css_tree = cascade.CSSAppliedTree(gradients_path, sheets)
     return css_tree
 
 
-def test_gradients_file_tree_for_tree(gradients_file_tree):
-    assert gradients_file_tree
+@pytest.fixture
+def gradients_file_normal_tree():
+    gradient_path = "tests/test_files/gradients-large.html"
+    sheets = css.get_all_stylesheets_by_file(gradient_path)
+    css_tree = cascade.CSSAppliedTree(gradient_path, sheets)
+    return css_tree
+
+
+def test_gradients_file_tree_for_tree(gradients_file_large_tree):
+    assert gradients_file_large_tree
+
+
+def test_get_color_contrast_details_for_AAA_large(gradients_file_large_tree):
+    results = cascade.get_color_contrast_details(gradients_file_large_tree)
+    expected = 3  # fail normal (radial) fail all (horizontal), footer (fails)
+    assert len(results) == expected
+
+
+def test_get_color_contrast_details_for_AA_large(gradients_file_large_tree):
+    results = cascade.get_color_contrast_details(
+        gradients_file_large_tree, "AA"
+    )
+    # Should fail: horizontal
+    expected = 1
+    assert len(results) == expected
+
+
+def test_get_color_contrast_for_AAA_normal(gradients_file_normal_tree):
+    results = cascade.get_color_contrast_details(gradients_file_normal_tree)
+    expected = 4
+    assert len(results) == expected
+
+
+def test_get_color_contrast_for_AA_normal(gradients_file_normal_tree):
+    results = cascade.get_color_contrast_details(
+        gradients_file_normal_tree, "AA"
+    )
+    # Should fail: radial, footer
+    expected = 3
+    assert len(results) == expected
 
 
 @pytest.fixture
-def radial_gradient_children(gradients_file_tree):
-    body = gradients_file_tree.children[0]
+def font_sizes_tree():
+    path = "tests/test_files/font-sizes.html"
+    sheets = css.get_all_stylesheets_by_file(path)
+    css_tree = cascade.CSSAppliedTree(path, sheets)
+    return css_tree
+
+
+def test_get_color_contrast_for_AAA_success(font_sizes_tree):
+    expected = "success: font-sizes.html passes color contrast for AAA Normal"
+    expected += " and Large."
+    results = cascade.get_color_contrast_details(font_sizes_tree)
+    assert results[0] == expected
+
+
+def test_get_color_contrast_for_AA_success(font_sizes_tree):
+    expected = "success: font-sizes.html passes color contrast for AA Normal "
+    expected += "and Large."
+    results = cascade.get_color_contrast_details(font_sizes_tree, "AA")
+    assert results[0] == expected
+
+
+@pytest.fixture
+def radial_gradient_children(gradients_file_large_tree):
+    body = gradients_file_large_tree.children[0]
     main = body.children[0]
     return main.children
 

@@ -78,6 +78,44 @@ def passes_color_contrast(level: str, hex1: str, hex2: str) -> bool:
     return passes
 
 
+def get_contrast_results_from_ratio(
+    ratio: float, size: float, is_bold: bool
+) -> str:
+    """takes contrast, compares to map and returns results as a string
+
+    Args:
+        ratio: the contrast ratio.
+        size: calculated font size.
+
+    Returns:
+        str: whether it passes or not with details.
+    """
+    # is the text large or not?
+    is_large = size >= 24 or is_bold and size >= 16.66
+    if is_large:
+        aaa_goal = contrast_ratio_map.get("Large AAA")
+        passes = ratio >= aaa_goal
+        if passes:
+            return "pass: Large AAA contrast rating"
+        aa_goal = contrast_ratio_map.get("Large AA")
+        conditionally_passes = ratio >= aa_goal
+        if conditionally_passes:
+            return "conditional pass: Large AA contrast rating"
+        else:
+            return "fail: fails all contrast ratings"
+    else:
+        aaa_goal = contrast_ratio_map.get("Normal AAA")
+        passes = ratio >= aaa_goal
+        if passes:
+            return "pass: Normal AAA contrast rating"
+        aa_goal = contrast_ratio_map.get("Normal AA")
+        conditionally_passes = ratio >= aa_goal
+        if conditionally_passes:
+            return "conditional pass: Normal AA contrast rating"
+        else:
+            return "fail: fails normal sized text contrast"
+
+
 def get_color_contrast_report(hex1: str, hex2: str) -> dict:
     """creates a report on how the two hex colors rate on the color
     contrast chart
@@ -794,10 +832,18 @@ def get_color_contrast_with_gradients(
             # append to results list
             if composite_color:
                 results.append(
-                    (contrast, foreground, background, composite_color)
+                    (
+                        contrast,
+                        foreground,
+                        background,
+                        composite_color,
+                        bg_has_alpha,
+                    )
                 )
             else:
-                results.append((contrast, foreground, background, background))
+                results.append(
+                    (contrast, foreground, background, background, False)
+                )
     results.sort()
     return results
 

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gradients Testing Grounds</title>
+    <style>
+        body {
+            font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+            padding: 1em 0.5em;
+            margin: 0;
+        }
+        header, section, article, footer {
+            margin: 0;
+            padding: 0.5em 1em;
+        }
+        main {
+            display: flex;
+            flex-direction: column;
+            width: 60em;
+            max-width: 90%;
+            margin: 0 auto;
+        }
+        .linear-grad {
+          background-image: linear-gradient(to right, rgba(255,0,0,0), rgba(255,0,0,1));
+        }
+        .radial-grad {
+          background-image: radial-gradient(red, yellow, green);
+        }
+        /*
+            radial-grad
+            red pass normal AA
+            normal AAA fails
+            yellow passes all
+            green - passes only large AA
+            as a whole, it should fail
+        */
+        .simple-linear {
+          background: linear-gradient(hsla(240, 100%, 50%, 0.8), #ffc0cbaa);
+        }
+        .horizontal-gradient {
+          background: linear-gradient(to right, blue, pink);
+        }
+        /*
+            horizontal-gradient
+            blue fails all
+            pink passes all
+        */
+        .something {
+            background: linear-gradient(112.1deg, rgb(32, 38, 57) 11.4%, rgb(63, 76, 119) 70.2%);
+        }
+        .other {
+            background: radial-gradient(circle at 7.5% 24%, rgb(237, 161, 193) 0%, rgb(250, 178, 172) 25.5%, rgb(190, 228, 210) 62.3%, rgb(215, 248, 247) 93.8%);
+        }
+        /* .other (all pass normal aaa) - applied to body, so no actual test will work
+            text: #000
+            rgb(237, 161, 193) - pass normal aaa
+            rgb(250, 178, 172) - pass normal aaa
+            rgb(190, 228, 210) -
+        */
+        .yet-another {
+            background: linear-gradient(111.1deg, rgb(0, 40, 70) -4.8%, rgb(255, 115, 115) 82.7%, rgb(255, 175, 123) 97.2%);
+        }
+
+    </style>
+</head>
+<body>
+    <main>
+        <header class="linear-grad">
+            <h1>Gradients Testing Grounds</h1>
+            <p>A dive into CSS gradients</p>
+        </header>
+        <section class="radial-grad">
+            <h2>The details</h2>
+            <article>
+                <h3>The blending algorithm</h3>
+                <p>Alpha Blending can be accomplished in computer graphics by blending each pixel from the first source image with the corresponding pixel in the second source image. Here's the equation for doing the blending, first in English math, then in pseudocode.</p>
+            </article>
+        </section>
+        <section class="horizontal-gradient">
+            <h2>Changing the direction</h2>
+            <p>By default, linear gradients run from top to bottom. You can change their rotation by specifying a direction.</p>
+        </section>
+        <section class="other">
+            <h2>Other - should pass</h2>
+            <p>You don't have to leave your color stops at their default positions. To fine-tune their locations, you can give each one zero, one, or two percentage or, for radial and linear gradients, absolute length values. </p>
+            <p>If you specify the location as a percentage, 0% represents the starting point, while 100% represents the ending point; however, you can use values outside that range if necessary to get the effect you want.</p>
+            <p>If you leave a location unspecified, the position of that particular color stop will be automatically calculated for you, with the first color stop being at 0% and the last color stop being at 100%, and any other color stops being half way between their adjacent color stops.</p>
+        </section>
+        <footer class="simple-linear">
+            <h2>Credits</h2>
+            <p>Page &amp; Project by <a href="https://github.com/HundredVisionsGuy">HundredVisionsGuy</a>.</p>
+            <p>Algorithm from <a href="https://www.phatcode.net/articles.php?id=233">Alpha Blending Tutorial</a> by Toshi (Toshihiro Horie)</p>
+        </footer>
+    </main>
+</body>
+</html>
