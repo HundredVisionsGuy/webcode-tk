@@ -5,7 +5,7 @@ inheritance and the cascade.
 The goal is to use the DOM, inheritance, and the cascade, to determine
 all styles applied to every element on the page.
 
-With that, it scans each stylesheet and applies eacSh style one at a time
+With that, it scans each stylesheet and applies each style one at a time
 to all elements and their children (if applicable) of a page.
 """
 import ctypes
