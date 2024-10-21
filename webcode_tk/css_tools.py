@@ -2222,6 +2222,27 @@ def is_link_selector(selector: str) -> bool:
     return bool(selector_match)
 
 
+def get_all_project_stylesheets(project_dir: str) -> list:
+    """returns a list of all styles and stylesheets from a project folder.
+
+    This includes styles from style tags as well as linked stylesheets.
+
+    Args:
+        project_dir: the relative link to the folder with the web docs.
+
+    Returns:
+        all_files_styles: a list of all stylesheets and style tag contents.
+    """
+    directory = project_dir
+    html_files = clerk.get_all_files_of_type(directory, "html")
+    all_files_styles = []
+    for file in html_files:
+        filename = clerk.get_file_name(file)
+        stylesheets = get_all_stylesheets_by_file(file)
+        all_files_styles.append((filename, stylesheets))
+    return all_files_styles
+
+
 if __name__ == "__main__":
     insane_gradient = """
     -moz-radial-gradient(0% 200%, ellipse cover,

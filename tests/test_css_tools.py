@@ -948,3 +948,11 @@ def test_get_font_families_for_at_import_url():
     path = "tests/test_files/file_with_at_import_url.html"
     results = css_tools.get_all_stylesheets_by_file(path)
     assert len(results[0].rulesets) > 1
+
+
+# Test CSS report style functions
+def test_get_all_project_stylesheets_for_large_project(large_project_path):
+    expected = 4
+    sheets = css_tools.get_all_project_stylesheets(large_project_path)
+    results = len(sheets[0][1])
+    assert expected == results
