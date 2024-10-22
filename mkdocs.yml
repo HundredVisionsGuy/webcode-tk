@@ -20,6 +20,7 @@ nav:
   - tutorials.md
   - html_tools.py: reference/html_tools.md
   - css_tools.py: reference/css_tools.md
+  - cascade_tools.py: reference/cascade_tools.md
   - color_keywords.py: reference/color_keywords.md
   - color_tools.py: reference/color_tools.md
   - ux_tools.py: reference/ux_tools.md

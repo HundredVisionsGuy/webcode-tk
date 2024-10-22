@@ -5,12 +5,13 @@ inheritance and the cascade.
 The goal is to use the DOM, inheritance, and the cascade, to determine
 all styles applied to every element on the page.
 
-With that, it scans each stylesheet and applies eacSh style one at a time
+With that, it scans each stylesheet and applies each style one at a time
 to all elements and their children (if applicable) of a page.
 """
 import ctypes
 import re
 from collections import abc
+from typing import Union
 
 from file_clerk import clerk
 
@@ -131,12 +132,14 @@ class Element(object):
             "normal_aaa": True,
             "normal_aa": True,
             "large_aaa": True,
+            "large_aa": True,
         }
         self.visited_contrast_data = {
             "ratio": 0.0,
             "normal_aaa": False,
             "normal_aa": False,
             "large_aaa": False,
+            "large_aa": False,
         }
         self.__set_link_color()
         self.get_contrast_data("default")
@@ -168,6 +171,7 @@ class Element(object):
         # get relevant specificity
         new_specificity = new_styles.get("specificity")
         col_specificity = self.color.get("specificity")
+
         # Check for overrides
         color_has_override = new_specificity >= col_specificity
 
@@ -265,7 +269,12 @@ class Element(object):
                 col, bg, self.ancestors
             )
             # Set bg to composite color with lowest contrast ratio
-            bg = results[0][-1]
+            bg = results[0][-2]
+            has_alpha = results[0][-1]
+            if has_alpha:
+                self.background_color["has_alpha"] = True
+                self.background_color["computed_value"] = bg
+
         hexc = color.get_hex(col)
         hexbg = color.get_hex(bg)
         self.__build_contrast_report(hexc, hexbg)
@@ -328,6 +337,9 @@ class Element(object):
         )
         self.visited_contrast_data["large_aaa"] = bool(
             link_contrast.get("Large AAA") == "Pass"
+        )
+        self.visited_contrast_data["large_aa"] = bool(
+            link_contrast.get("Large AA") == "Pass"
         )
 
     def change_styles(
@@ -556,6 +568,7 @@ class Element(object):
         directly_targeted = self.directly_targets(selector)
         previously_set = self.background_color.get("applied_by") == "directly"
         bg_gradient = color.is_gradient(val)
+
         # If directly, check specificity
         if directly_targeted:
             if previously_set:
@@ -564,13 +577,49 @@ class Element(object):
             colors = []
             if bg_gradient:
                 self.background_color["is_gradient"] = True
+                c = self.color.get("value")
+                details = color.get_color_contrast_with_gradients(
+                    c, val, self.ancestors
+                )
                 colors = color.get_gradient_colors(val)
+
+                # Set gradient colors with highest and lowest contrast
+                self.background_color["best_contrast"] = {}
+                self.background_color["worst_contrast"] = {}
+
+                def process_gradient_data(details, bg_dict):
+                    contrast_ratio = details[0]
+                    size = self.font_size
+                    is_bold = self.is_bold
+                    results = color.get_contrast_results_from_ratio(
+                        contrast_ratio, size, is_bold
+                    )
+                    has_alpha = details[-1]
+                    if has_alpha:
+                        bg_dict["has_alpha"] = has_alpha
+                        self.background_color["has_alpha"] = True
+                        self.background_color["computed_value"] = details[3]
+                        bg_dict["computed_value"] = details[-2]
+                    else:
+                        bg_dict["value"] = details[2]
+                    bg_dict["contrast_ratio"] = details[0]
+                    bg_dict["results"] = results
+
+                best = details[-1]
+                worst = details[0]
+                process_gradient_data(
+                    best, self.background_color["best_contrast"]
+                )
+                process_gradient_data(
+                    worst, self.background_color["worst_contrast"]
+                )
                 self.background_color["gradient_colors"] = colors
             # set color, specificity, and directly applied
             self.background_color["value"] = val
             self.background_color["sheet"] = filename
             self.background_color["specificity"] = new_specificity
             self.background_color["applied_by"] = "directly"
+            self.background_color["selector"] = selector
         else:
             if not previously_set:
                 self.background_color["value"] = val
@@ -1443,6 +1492,89 @@ def update_contrast_results(
     return results
 
 
+def get_color_contrast_details(tree: CSSAppliedTree, rating="AAA") -> list:
+    """returns a list of all all failures or a pass based on rating
+
+    We'll create a recursive inner nested function to traverse the DOM. We will
+    target only the styles that are applied directly so as to not overwhelm the
+    user and allow fixing the error more easily.
+
+    Args:
+        tree: the cascade tree for a single file.
+        rating: the rating of contrast we check for (AAA or AA). The default
+            is AAA.
+    Returns:
+        results"""
+    results = []
+    filename = tree.filename
+    # Loop recursively through the tree
+    elements = tree.children
+
+    def check_element(
+        el: Element, rating: str, filename: str
+    ) -> Union[list, None]:
+        children = el.children
+        msg = ""
+        applied_directly = (
+            el.background_color.get("applied_by") == "directly"
+            or el.color.get("applied_by") == "directly"
+        )
+        if applied_directly or el.name == "body":
+            is_gradient = el.background_color.get("is_gradient")
+            if is_gradient:
+                # get worst case
+                worst_case = el.background_color.get("worst_contrast")
+                worst_results = worst_case.get("results")
+                fails = "fail" in worst_results[:5]
+                if fails:
+                    selector = el.background_color.get("selector")
+                    if el.is_large:
+                        size = "Large"
+                    else:
+                        size = "Normal"
+                    msg = f"{el.name} tag (selector: {selector}) fails color "
+                    msg += f"contrast at {size} {rating}."
+                    results.append(msg)
+                    return
+            contrast_data = el.contrast_data
+            if el.is_large:
+                if rating == "AAA":
+                    passes = contrast_data.get("large_aaa")
+                else:
+                    passes = contrast_data.get("large_aa")
+            else:
+                if rating == "AAA":
+                    passes = contrast_data.get("normal_aaa")
+                else:
+                    passes = contrast_data.get("normal_aa")
+            # only add results if failure
+            if not passes:
+                if el.is_large:
+                    size = "Large"
+                else:
+                    size = "Normal"
+                selector = el.background_color.get("selector")
+                if not selector:
+                    selector = el.color.get("selector")
+                msg = f"{el.name} tag (selector: {selector}) fails color "
+                msg += f"contrast at {size} {rating}."
+                results.append(msg)
+        if not children:
+            return
+        else:
+            for kid in children:
+                check_element(kid, rating, filename)
+
+    for element in elements:
+        check_element(element, rating, filename)
+    if not results:
+        # It's a success! Let's let them know
+        msg = f"success: {filename} passes color contrast for {rating} Normal"
+        msg += " and Large."
+        results.append(msg)
+    return results
+
+
 if __name__ == "__main__":
     project_path = "tests/test_files/attribute_selector_file"
     project_path = "tests/test_files/large_project/"
@@ -1455,6 +1587,7 @@ if __name__ == "__main__":
             sheet,
         ],
     )
+    results = get_color_contrast_details(gradient_tree, "AAA")
     styles_by_html_files = css.get_styles_by_html_files(project_path)
     for file in styles_by_html_files:
         filepath = file.get("file")
@@ -1463,4 +1596,3 @@ if __name__ == "__main__":
         results = {}
         root = css_tree.children[0]
         results = get_color_contrast_results(root, results)
-        print(results)
