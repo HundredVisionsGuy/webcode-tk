@@ -244,3 +244,16 @@ def test_add_if_not_in_for_not_yet_in():
 
 def test_has_style_attribute_data_for_html_comment():
     assert True
+
+
+def test_get_number_of_elements_per_file_for_large_project():
+    required_elements = [
+        ("doctype", 1),
+        ("html", 1),
+        ("head", 1),
+        ("title", 1),
+    ]
+    results = html_tools.get_number_of_elements_per_file(
+        large_project_path, required_elements
+    )
+    assert len(results) == 12

@@ -410,6 +410,30 @@ def add_if_not_in(my_list: list, item: str) -> None:
         my_list.append(item)
 
 
+def get_number_of_elements_per_file(
+    project_dir: str, element_data: list
+) -> list:
+    """returns a list of number of elements per file in a project folder.
+
+    Args:
+        project_dir: the folder we want to check
+        element_data: a list of tuples of element (str) and required number
+        (int)
+
+    Returns:
+        elements_per_file: a list of tuples that includes the file, the
+            element, and the number of occurrences.
+    """
+    elements_per_file = []
+    all_html_files = get_all_html_files(project_dir)
+    for file in all_html_files:
+        for i in range(len(element_data)):
+            # Get requirements for exact number
+            element, number = element_data[i]
+            elements_per_file.append((file, element, number))
+    return elements_per_file
+
+
 if __name__ == "__main__":
     file_with_inline_styles = "tests/test_files/sample_with_inline_styles.html"
     markup = clerk.file_to_string(file_with_inline_styles)
