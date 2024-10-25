@@ -89,7 +89,7 @@ def get_markup_validity(file_path: str) -> list:
         errors: a list of dictionary types (converted from the JSON
             response from the validator."""
     errors = []
-    payload = open(file_path)
+    # payload = open(file_path)
     with open(file_path, "rb") as payload:
         headers = {
             "content-type": "text/html; charset=utf-8",
@@ -251,6 +251,16 @@ def validate_css(css_code: str) -> bs4.ResultSet:
         # Convert string to result set
         results = soup.select("#results_container")
     return results
+
+
+def get_project_validation(project_dir: str, type="html") -> list:
+    """returns a report on HTML or CSS validation per HTML file.
+
+    You choose the project folder and the type (html or css), and it
+    will return a list of per-files errors
+    """
+    report = []
+    return report
 
 
 if __name__ == "__main__":

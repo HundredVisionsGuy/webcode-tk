@@ -2243,6 +2243,59 @@ def get_all_project_stylesheets(project_dir: str) -> list:
     return all_files_styles
 
 
+def no_style_attributes_allowed_report(project_dir: str) -> list:
+    """returns a report on whether HTML docs use style attributes or not.
+
+    Only call this report if you do not allow a style attribute in an
+    HTML doc
+
+    Args:
+        project_dir: the relative link to the folder with the web docs.
+
+    Returns:
+        report: a list of all HTML docs and a pass or fail message.
+    """
+    report = []
+
+    html_files = clerk.get_all_files_of_type(project_dir, "html")
+    for file in html_files:
+        try:
+            has_style_attr = html_tools.has_style_attribute_data(file)
+        except AttributeError:
+            continue
+        if has_style_attr:
+            result = f"fail: {file} uses style attributes"
+        else:
+            result = f"pass: {file} does not use style attributes"
+        report.append(result)
+    return report
+
+
+def styles_applied_report(project_dir: str) -> list:
+    """returns a report of all files in a project folder that apply styles
+
+    This lets us know for each HTML doc if they apply styles (pass) or
+    if they do not apply styles (fail)
+
+    Args:
+        project_dir: a relative path to the project folder.
+
+    Returns:
+        report: a list of HTML docs and whether they pass or fail (pass) means
+            they did apply styles and fail is the opposite.
+    """
+    report = []
+    html_files = clerk.get_all_files_of_type(project_dir, "html")
+    for file in html_files:
+        styles = get_all_stylesheets_by_file(file)
+        if not styles:
+            results = f"fail: {file} does NOT apply CSS."
+        else:
+            results = f"pass: {file} applies CSS."
+        report.append(results)
+    return report
+
+
 if __name__ == "__main__":
     insane_gradient = """
     -moz-radial-gradient(0% 200%, ellipse cover,

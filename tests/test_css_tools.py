@@ -956,3 +956,48 @@ def test_get_all_project_stylesheets_for_large_project(large_project_path):
     sheets = css_tools.get_all_project_stylesheets(large_project_path)
     results = len(sheets[0][1])
     assert expected == results
+
+
+@pytest.fixture
+def project_attribute_report():
+    directory = "tests/test_files/project"
+    results = css_tools.no_style_attributes_allowed_report(directory)
+    return results
+
+
+def test_no_style_attributes_allowed_report_for_number_files(
+    project_attribute_report,
+):
+    expected = 5
+    assert len(project_attribute_report) == expected
+
+
+def test_no_style_attributes_allowed_report_for_fail(project_attribute_report):
+    failures = 0
+    for i in project_attribute_report:
+        if "fail" in i[:5]:
+            failures += 1
+    expected = 4
+    assert failures == expected
+
+
+def test_no_style_attributes_allowed_report_for_pass(project_attribute_report):
+    successes = 0
+    for i in project_attribute_report:
+        if "pass" in i[:5]:
+            successes += 1
+    expected = 1
+    assert successes == expected
+
+
+def test_styles_applied_report_for_large_project(large_project_path):
+    report = css_tools.styles_applied_report(large_project_path)
+    passes = 0
+    fails = 0
+    for item in report:
+        if "pass" in item[:4]:
+            passes += 1
+        else:
+            fails += 1
+    expected = passes == 2 and fails == 1
+    assert expected
