@@ -126,3 +126,23 @@ def test_validate_css_with_no_errors(valid_css_results):
 def test_validate_css_with_errors(invalid_css_results):
     results = val.validate_css(invalid_css_code)
     assert results == invalid_css_results
+
+
+def test_get_project_validation_for_project_html_fails():
+    results = val.get_project_validation(project_folder, "html")
+    fails = 0
+    for result in results:
+        if "fail" in result[:4]:
+            fails += 1
+    expected_fails = 5
+    assert len(results) == expected_fails
+
+
+def test_get_project_validation_for_project_css_fail():
+    results = val.get_project_validation(project_folder, "css")
+    fails = 0
+    for result in results:
+        if "fail" in result[:4]:
+            fails += 1
+    expected_fails = 1
+    assert len(results) == expected_fails
