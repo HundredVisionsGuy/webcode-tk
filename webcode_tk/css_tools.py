@@ -2349,6 +2349,54 @@ def fonts_applied_report(project_dir: str, min=1, max=2) -> list:
     return report
 
 
+def get_global_color_report(project_dir: str) -> list:
+    """Returns a report on which files in a project apply global colors
+
+    Args:
+        project_dir: the project folder path.
+
+    Returns:
+        report: a list of files and a pass or fail message for each."""
+    report = []
+    all_file_data = get_all_project_stylesheets(project_dir)
+    for data in all_file_data:
+        filename = data[0]
+        passes = []
+        for sheet in data[1]:
+            rules = sheet.rulesets
+            global_color_data = get_global_color_details(rules)
+            if global_color_data:
+                for item in global_color_data:
+                    file, result = get_color_data(filename, item)
+                    passes.append(f"pass: {file} {result}")
+        if passes:
+            details = ""
+            for detail in passes:
+                details += detail
+        else:
+            details = f"fail: {filename} does NOT apply global colors"
+        report.append(details)
+    if not report:
+        report.append("fail: no html files to apply color styles to")
+    return report
+
+
+def get_color_data(file: str, color_details: dict) -> tuple:
+    """returns the color contrast data on a color"""
+    selector = color_details.get("selector")
+    bg_color = color_details.get("background-color")
+    color = color_details.get("color")
+    contrast_ratio = color_details.get("contrast_ratio")
+    passes = color_details.get("passes_normal_aaa")
+    if passes:
+        results = "passes global colors"
+    else:
+        results = f"{selector} {bg_color} and {color} fail with a contrast"
+        results += f" ratio of {contrast_ratio}."
+    color_data = (file, results)
+    return color_data
+
+
 if __name__ == "__main__":
     insane_gradient = """
     -moz-radial-gradient(0% 200%, ellipse cover,

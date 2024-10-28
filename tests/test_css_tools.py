@@ -1028,3 +1028,21 @@ def test_fonts_applied_report_for_min_2_fail():
             has_one_font += 1
     expected = fails == 5 and has_one_font == 1
     assert expected
+
+
+def test_get_global_color_report_for_single_file_pass():
+    path = "tests/test_files/single_file_project"
+    report = css_tools.get_global_color_report(path)
+    assert "pass:" in report[0]
+
+
+def test_get_global_color_report_for_large_project_pass(large_project_path):
+    report = css_tools.get_global_color_report(large_project_path)
+    passes = 0
+    fails = 0
+    for file in report:
+        if "pass" in file[:4]:
+            passes += 1
+        else:
+            fails += 1
+    assert passes == 2 and fails == 1
