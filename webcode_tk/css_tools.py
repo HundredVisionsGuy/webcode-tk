@@ -2349,11 +2349,12 @@ def fonts_applied_report(project_dir: str, min=1, max=2) -> list:
     return report
 
 
-def get_global_color_report(project_dir: str) -> list:
+def get_global_color_report(project_dir: str, level="aaa") -> list:
     """Returns a report on which files in a project apply global colors
 
     Args:
         project_dir: the project folder path.
+        level: whether we are testing for Normal AAA or Normal AA
 
     Returns:
         report: a list of files and a pass or fail message for each."""
@@ -2367,7 +2368,7 @@ def get_global_color_report(project_dir: str) -> list:
             global_color_data = get_global_color_details(rules)
             if global_color_data:
                 for item in global_color_data:
-                    file, result = get_color_data(filename, item)
+                    file, result = get_color_data(filename, item, level)
                     passes.append(f"pass: {file} {result}")
         if passes:
             details = ""
@@ -2381,13 +2382,27 @@ def get_global_color_report(project_dir: str) -> list:
     return report
 
 
-def get_color_data(file: str, color_details: dict) -> tuple:
-    """returns the color contrast data on a color"""
+def get_color_data(file: str, color_details: dict, level="aaa") -> tuple:
+    """returns the color contrast data on a color.
+
+    pulls out the selector, background color, text color, contrast
+    ratio, and whether it passes color contrast.
+
+    Args:
+        file: just the name of the file (not path).
+        color_details: tuple of full color & bg color details.
+        level: the level of normal text (AAA or AA).
+
+    Returns:
+        color_data: a tuple with filename and results as a string"""
     selector = color_details.get("selector")
     bg_color = color_details.get("background-color")
     color = color_details.get("color")
     contrast_ratio = color_details.get("contrast_ratio")
-    passes = color_details.get("passes_normal_aaa")
+    if level == "aaa":
+        passes = color_details.get("passes_normal_aaa")
+    else:
+        passes = color_details.get("passes_normal_aa")
     if passes:
         results = "passes global colors"
     else:
@@ -2395,6 +2410,55 @@ def get_color_data(file: str, color_details: dict) -> tuple:
         results += f" ratio of {contrast_ratio}."
     color_data = (file, results)
     return color_data
+
+
+def get_heading_color_report(project_dir: str) -> list:
+    """Returns a report on which files in a project apply heading colors
+
+    For now, we just want to have at least a color or background color
+    applied.
+
+    Args:
+        project_dir: the project folder path.
+
+    Returns:
+        report: a list of files and a pass or fail message for each."""
+    report = []
+    header_re = regex_patterns.get("header_selector")
+    if project_dir[-1] != "/":
+        project_dir += "/"
+    all_file_data = get_all_project_stylesheets(project_dir)
+    for file in all_file_data:
+        filename = file[0]
+        filepath = project_dir + filename
+        all_color_rules = get_all_color_rules(filepath)
+        header_selectors = []
+        for key, val in all_color_rules.items():
+            if key == "file":
+                continue
+            is_header_selector = re.findall(header_re, key)
+            if is_header_selector:
+                # we have a header selector
+                # we only need to check color
+                color_data = val
+                color_value = color_data.get("color")
+                bg_value = color_data.get("background-color")
+                if color_value:
+                    if bg_value:
+                        header_selectors.append(
+                            (filename, color_value, bg_value)
+                        )
+                    else:
+                        header_selectors.append((filename, color_value, None))
+                if bg_value:
+                    header_selectors.append((filename, None, bg_value))
+        if header_selectors:
+            report.append(f"pass: {filename} applies colors to headers")
+        else:
+            report.append(f"fail: {filename} does NOT apply colors to headers")
+    if not report:
+        report.append("fail: no html files to apply header colors to")
+    return report
 
 
 if __name__ == "__main__":

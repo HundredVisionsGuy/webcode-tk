@@ -1046,3 +1046,21 @@ def test_get_global_color_report_for_large_project_pass(large_project_path):
         else:
             fails += 1
     assert passes == 2 and fails == 1
+
+
+def test_get_heading_color_report_for_large_project(large_project_path):
+    report = css_tools.get_heading_color_report(large_project_path)
+    passes = 0
+    fails = 0
+    for file in report:
+        if "pass" in file[:4]:
+            passes += 1
+        else:
+            fails += 1
+    assert passes == 2 and fails == 1
+
+
+def test_get_heading_color_report_for_project_inner():
+    path = "tests/test_files/project/inner_folder"
+    report = css_tools.get_heading_color_report(path)
+    assert "pass:" in report[0]
