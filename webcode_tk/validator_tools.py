@@ -7,6 +7,8 @@ import requests
 from bs4 import BeautifulSoup
 from file_clerk import clerk
 
+from webcode_tk import html_tools as html
+
 w3cURL = "https://validator.w3.org/nu/?out=json"
 
 # Instantiate a stateful browser
@@ -89,7 +91,7 @@ def get_markup_validity(file_path: str) -> list:
         errors: a list of dictionary types (converted from the JSON
             response from the validator."""
     errors = []
-    payload = open(file_path)
+    # payload = open(file_path)
     with open(file_path, "rb") as payload:
         headers = {
             "content-type": "text/html; charset=utf-8",
@@ -251,6 +253,47 @@ def validate_css(css_code: str) -> bs4.ResultSet:
         # Convert string to result set
         results = soup.select("#results_container")
     return results
+
+
+def get_project_validation(project_dir: str, type="html") -> list:
+    """returns a report on HTML or CSS validation per HTML file.
+
+    You choose the project folder and the type (html or css), and it
+    will return a list of per-files errors
+    """
+    report = []
+    all_files = clerk.get_all_project_files(project_dir)
+    for file in all_files:
+        errors = []
+        file_type = clerk.get_file_type(file)
+        filename = clerk.get_file_name(file)
+        if type == "html" and file_type == "html":
+            errors = get_markup_validity(file)
+            if errors:
+                report.append(
+                    f"fail: {filename} has {len(errors)} validation errors."
+                )
+            else:
+                report.append(f"pass: {filename} passes HTML validation!")
+        else:
+            if file_type == "html":
+                style_tag = html.get_elements("style", file)
+                if style_tag:
+                    code = html.get_element_content(style_tag)
+                    result = validate_css(code)
+                    errors += get_css_errors_list(result)
+            if file_type == "css":
+                code = clerk.file_to_string(file)
+                result = validate_css(code)
+                errors += get_css_errors_list(result)
+            if errors:
+                report.append(
+                    f"fail: {filename} has {len(errors)} css errors."
+                )
+    if not report:
+        report.append("fail: no files present to validate")
+    # TODO - make sure this covers all scenarios
+    return report
 
 
 if __name__ == "__main__":
