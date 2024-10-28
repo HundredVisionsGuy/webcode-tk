@@ -1001,3 +1001,30 @@ def test_styles_applied_report_for_large_project(large_project_path):
             fails += 1
     expected = passes == 2 and fails == 1
     assert expected
+
+
+def test_fonts_applied_report_for_one_fail_2_required(large_project_path):
+    report = css_tools.fonts_applied_report(large_project_path, min=2)
+    passes = 0
+    fails = 0
+    for file in report:
+        if "pass" in file[:4]:
+            passes += 1
+        else:
+            fails += 1
+    expected = passes == 4 and fails == 1
+    assert expected
+
+
+def test_fonts_applied_report_for_min_2_fail():
+    dir = "tests/test_files/project"
+    report = css_tools.fonts_applied_report(dir, min=2)
+    fails = 0
+    has_one_font = 0
+    for file in report:
+        if "fail" in file[:4]:
+            fails += 1
+        if "fail: test.html did not apply 2" in file:
+            has_one_font += 1
+    expected = fails == 5 and has_one_font == 1
+    assert expected

@@ -2296,6 +2296,59 @@ def styles_applied_report(project_dir: str) -> list:
     return report
 
 
+def fonts_applied_report(project_dir: str, min=1, max=2) -> list:
+    """returns a report of all files in a project folder that apply font
+    families.
+
+    You can set the minimum and maximum number of fonts applied per page.
+
+    Args:
+        project_dir: the relative path to the project folder we want to check.
+        min: the minimum number of fonts applied per file.
+        max: the maximum number of fonts applied per file.
+    Returns:
+        report: a list of font data results.
+    """
+    report = []
+    all_file_data = get_styles_by_html_files(project_dir)
+    for file in all_file_data:
+        number_of_fonts = 0
+        filename = clerk.get_file_name(file.get("file"))
+        stylesheets = file.get("stylesheets")
+        font_styles = []
+        for sheet in stylesheets:
+            font_details = get_font_families(sheet)
+            number_of_fonts += len(font_details)
+            for item in font_details:
+                selector = item.get("selector")
+                family = item.get("family")
+                if "," in family:
+                    first_font = family.split(",")[0].strip()
+                else:
+                    first_font = family
+                first_font = first_font.replace("'", "")
+                first_font = first_font.replace('"', "")
+                if first_font.lower() == "times new roman":
+                    results = f"fail: {filename}: {selector} element was set "
+                    results += "to the default font"
+                elif number_of_fonts >= min and number_of_fonts <= max:
+                    results = f"pass: {filename}: {selector} element "
+                    results += f"was set to {first_font}"
+                elif number_of_fonts < min:
+                    results = f"fail: {filename} did not apply {min} fonts, "
+                    results += f"instead, it applied {number_of_fonts} fonts."
+                if results not in font_styles:
+                    font_styles.append(results)
+        # We have all font styles applied
+        if not font_styles:
+            report.append(f"fail: {filename} No modified fonts for {filename}")
+        else:
+            report += font_styles
+    if not report:
+        report.append("fail: no html files to apply font styling to")
+    return report
+
+
 if __name__ == "__main__":
     insane_gradient = """
     -moz-radial-gradient(0% 200%, ellipse cover,
