@@ -438,6 +438,17 @@ def test_get_color_contrast_details_for_AAA_large(gradients_file_large_tree):
     assert len(results) == expected
 
 
+def test_get_color_contrast_details_for_AAA_fail_single_file_style_tag():
+    path = "tests/test_files/color_contrast_test/"
+    styles = css.get_all_styles_in_order(path)
+    file = styles[0].get("file")
+    sheets = styles[0].get("stylesheets")
+    tree = cascade.CSSAppliedTree(file, sheets)
+    results = cascade.get_color_contrast_details(tree)
+    print(results)
+    assert "pass" in results[0]
+
+
 def test_get_color_contrast_details_for_AA_large(gradients_file_large_tree):
     results = cascade.get_color_contrast_details(
         gradients_file_large_tree, "AA"

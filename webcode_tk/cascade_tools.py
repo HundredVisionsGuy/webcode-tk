@@ -1493,7 +1493,7 @@ def update_contrast_results(
 
 
 def get_color_contrast_details(tree: CSSAppliedTree, rating="AAA") -> list:
-    """returns a list of all all failures or a pass based on rating
+    """returns a list of all failures or a pass based on rating
 
     We'll create a recursive inner nested function to traverse the DOM. We will
     target only the styles that are applied directly so as to not overwhelm the
@@ -1572,7 +1572,7 @@ def get_color_contrast_details(tree: CSSAppliedTree, rating="AAA") -> list:
         msg = f"success: {filename} passes color contrast for {rating} Normal"
         msg += " and Large."
         results.append(msg)
-    return results
+    return len(results) == 4
 
 
 if __name__ == "__main__":
