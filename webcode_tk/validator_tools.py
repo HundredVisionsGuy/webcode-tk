@@ -262,6 +262,7 @@ def get_project_validation(project_dir: str, type="html") -> list:
     will return a list of per-files errors
     """
     report = []
+    passing_files = []
     all_files = clerk.get_all_project_files(project_dir)
     for file in all_files:
         errors = []
@@ -274,24 +275,37 @@ def get_project_validation(project_dir: str, type="html") -> list:
                     f"fail: {filename} has {len(errors)} validation errors."
                 )
             else:
-                report.append(f"pass: {filename} passes HTML validation!")
+                passing_files.append(filename)
         else:
-            if file_type == "html":
+            if file_type == "html" and type == "css":
                 style_tag = html.get_elements("style", file)
                 if style_tag:
                     code = html.get_element_content(style_tag)
                     result = validate_css(code)
-                    errors += get_css_errors_list(result)
+                    errors_list = get_css_errors_list(result)
+                    if errors_list:
+                        errors += errors_list
+                    else:
+                        passing_files.append(filename)
             if file_type == "css":
                 code = clerk.file_to_string(file)
                 result = validate_css(code)
-                errors += get_css_errors_list(result)
+                errors_list = get_css_errors_list(result)
+                if errors_list:
+                    errors += errors_list
+                else:
+                    passing_files.append(filename)
             if errors:
                 report.append(
                     f"fail: {filename} has {len(errors)} css errors."
                 )
     if not report:
-        report.append("fail: no files present to validate")
+        if passing_files:
+            for passing_file in passing_files:
+                msg = f"pass: {passing_file} passes {type.upper()} validation"
+                report.append(msg)
+        if not passing_files:
+            report.append("fail: no files present to validate")
     # TODO - make sure this covers all scenarios
     return report
 
