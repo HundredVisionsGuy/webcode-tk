@@ -2312,14 +2312,15 @@ def fonts_applied_report(project_dir: str, min=1, max=2) -> list:
     report = []
     all_file_data = get_styles_by_html_files(project_dir)
     for file in all_file_data:
+        font_families_applied = []
         number_of_fonts = 0
         filename = clerk.get_file_name(file.get("file"))
         stylesheets = file.get("stylesheets")
-        font_styles = []
         for sheet in stylesheets:
             font_details = get_font_families(sheet)
             number_of_fonts += len(font_details)
             for item in font_details:
+                results = None
                 selector = item.get("selector")
                 family = item.get("family")
                 if "," in family:
@@ -2328,22 +2329,36 @@ def fonts_applied_report(project_dir: str, min=1, max=2) -> list:
                     first_font = family
                 first_font = first_font.replace("'", "")
                 first_font = first_font.replace('"', "")
+                if first_font not in font_families_applied:
+                    font_families_applied.append(first_font)
                 if first_font.lower() == "times new roman":
                     results = f"fail: {filename}: {selector} element was set "
                     results += "to the default font"
-                elif number_of_fonts >= min and number_of_fonts <= max:
-                    results = f"pass: {filename}: {selector} element "
-                    results += f"was set to {first_font}"
-                elif number_of_fonts < min:
-                    results = f"fail: {filename} did not apply {min} fonts, "
-                    results += f"instead, it applied {number_of_fonts} fonts."
-                if results not in font_styles:
-                    font_styles.append(results)
-        # We have all font styles applied
-        if not font_styles:
-            report.append(f"fail: {filename} No modified fonts for {filename}")
-        else:
-            report += font_styles
+        num_fonts = len(font_families_applied)
+        if num_fonts >= min and num_fonts <= max:
+            results = f"pass: {filename} applied {num_fonts} "
+            if num_fonts == 1:
+                current_font = font_families_applied[0]
+                results += f"font: {current_font}"
+            else:
+                results += "fonts:"
+                for i in range(num_fonts):
+                    current_font = font_families_applied[i]
+                    if current_font == font_families_applied[-1]:
+                        results += f"and {current_font}"
+                    elif num_fonts > 2:
+                        results += f" {current_font}, "
+                    else:
+                        results += f" {current_font} "
+            results += "."
+        elif num_fonts < min:
+            results = f"fail: {filename} did not apply {min} fonts, "
+            results += f"instead, it applied {num_fonts} fonts."
+        elif num_fonts > max:
+            results = f"fail: {filename} applied too many fonts; "
+            results += f" it applied {num_fonts} fonts."
+        if results and results not in report:
+            report.append(results)
     if not report:
         report.append("fail: no html files to apply font styling to")
     return report

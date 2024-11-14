@@ -1012,7 +1012,7 @@ def test_fonts_applied_report_for_one_fail_2_required(large_project_path):
             passes += 1
         else:
             fails += 1
-    expected = passes == 4 and fails == 1
+    expected = passes == 2 and fails == 1
     assert expected
 
 
