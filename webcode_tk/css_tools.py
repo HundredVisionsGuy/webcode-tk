@@ -2476,6 +2476,38 @@ def get_heading_color_report(project_dir: str) -> list:
     return report
 
 
+def get_project_color_contrast_report(project_dir: str, level="AAA") -> list:
+    """returns a report of pass or fail for each element targetting color.
+
+    Args:
+        project_dir: the project folder where the html and css files are found.
+        level: the level for the report (AAA or AA)
+    Returns:
+        report: a report of every targetted color and whether it passes or
+            fails.
+    """
+    report = []
+    large = "Large " + level
+    normal = "Normal " + level
+    results = get_project_color_contrast(project_dir, normal, large)
+    for result in results:
+        filename = clerk.get_file_name(result[0])
+        selector = result[1]
+        level = result[2]
+        color = result[3]
+        bg_color = result[4]
+        ratio = result[5]
+        passes = result[6]
+        if passes:
+            msg = f"pass: {filename} selector: {selector} meets color contrast"
+        else:
+            msg = f"fail: {filename} selector: {selector} DOES NOT meet"
+        msg += f" report (level {level} for colors ({color} & {bg_color})"
+        msg += f" at a ratio of {ratio}."
+        report.append(msg)
+    return report
+
+
 if __name__ == "__main__":
     insane_gradient = """
     -moz-radial-gradient(0% 200%, ellipse cover,
