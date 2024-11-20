@@ -1,0 +1,25 @@
+body {
+    color: #e1dab6;
+    background-color: #292628;
+}
+a:link {
+    color: #ebd51a;
+}
+a:visited {
+    color: #f4c497;
+}
+a:hover {
+    color: #f7b170;
+}
+
+/* How to add a background image for a bullet */
+ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+ul li {
+    background-image: url("paper_bullet.svg");
+    background-repeat: no-repeat;
+    background-position: 0.5em 0.1em;
+    padding-left: 1.6em;
+}

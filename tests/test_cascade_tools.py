@@ -5,6 +5,7 @@ from webcode_tk import css_tools as css
 
 project_path = "tests/test_files/single_file_project/"
 large_project = "tests/test_files/large_project/"
+
 attribute_selector_path = "tests/test_files/attribute_selector_file/"
 attribute_selector_styles = css.get_styles_by_html_files(
     attribute_selector_path
@@ -557,6 +558,20 @@ def test_other_gradient_section_for_pass_results(other_gradient_section):
 def footer_gradient(radial_gradient_children):
     footer = radial_gradient_children[4]
     return footer
+
+
+# Tests on nested color report
+
+debugging_project_dir = "tests/test_files/debugging_project"
+debugging_styles_report = css.get_project_color_contrast_report(
+    debugging_project_dir
+)
+
+
+def test_color_contrast_on_nested_links():
+    expected = True
+    results = "pass" in debugging_styles_report[2]
+    assert results == expected
 
 
 if __name__ == "__main__":

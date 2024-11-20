@@ -1519,6 +1519,9 @@ def get_color_contrast_details(tree: CSSAppliedTree, rating="AAA") -> list:
             el.background_color.get("applied_by") == "directly"
             or el.color.get("applied_by") == "directly"
         )
+        bg_applied_by_context = (
+            el.background_color.get("applied_by") == "context"
+        )
         if applied_directly or el.name == "body":
             is_gradient = el.background_color.get("is_gradient")
             if is_gradient:
@@ -1559,6 +1562,9 @@ def get_color_contrast_details(tree: CSSAppliedTree, rating="AAA") -> list:
                 msg = f"{el.name} tag (selector: {selector}) fails color "
                 msg += f"contrast at {size} {rating}."
                 results.append(msg)
+        elif bg_applied_by_context:
+            print("Now what?")
+
         if not children:
             return
         else:

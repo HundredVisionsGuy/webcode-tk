@@ -1064,3 +1064,21 @@ def test_get_heading_color_report_for_project_inner():
     path = "tests/test_files/project/inner_folder"
     report = css_tools.get_heading_color_report(path)
     assert "pass:" in report[0]
+
+
+# Test get_project_color_contrast_report
+debugging_dir = "tests/test_files/debugging_project/"
+
+
+@pytest.fixture
+def debugging_project_color_report():
+    report = css_tools.get_project_color_contrast_report(debugging_dir)
+    return report
+
+
+def test_css_for_color_contrast_report_a_visited_passes(
+    debugging_project_color_report,
+):
+    results = "pass" in debugging_project_color_report[2]
+    expected = True
+    assert results == expected
