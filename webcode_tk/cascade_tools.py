@@ -933,7 +933,32 @@ class CSSAppliedTree:
                 color["applied_by"] = "directly"
             for child in element.children:
                 self.__adjust_child_colors(child, ruleset, filename)
+        elif is_background_prop:
+            # background - if not set directly - apply by context
+            value = declaration.get("background-color")
+            if not value:
+                value = declaration.get("background")
+            if property == "background-image":
+                value = declaration.get("background-image")
 
+            # adjust if value is not the same as current value
+            applied_by = element.background_color.get("applied_by")
+            current_value = element.background_color.get("value")
+            time_to_adjust = (
+                applied_by == "default"
+                or applied_by == "context"
+                and value != current_value
+            )
+
+            if time_to_adjust:
+                element.apply_background_color(
+                    selector,
+                    property,
+                    value,
+                    old_specificity,
+                    specificity,
+                    filename,
+                )
         can_inherit = self.can_inherit_styles(element, selector, ruleset)
         if can_inherit and applies:
             declaration = ruleset.get(selector)
@@ -1504,7 +1529,8 @@ def get_color_contrast_details(tree: CSSAppliedTree, rating="AAA") -> list:
         rating: the rating of contrast we check for (AAA or AA). The default
             is AAA.
     Returns:
-        results"""
+        results
+    """
     results = []
     filename = tree.filename
     # Loop recursively through the tree
@@ -1583,6 +1609,30 @@ def get_color_contrast_details(tree: CSSAppliedTree, rating="AAA") -> list:
         msg = f"success: {filename} passes color contrast for {rating} Normal"
         msg += " and Large."
         results.append(msg)
+    return results
+
+
+def get_color_contrast_report(dir_path: str, rating="AAA") -> list:
+    """returns a list of all failures or a pass based on rating
+
+    Args:
+        dir_path: the path to the directory in question
+        rating: the rating of contrast we check for (AAA or AA). The default
+            is AAA.
+    Returns:
+        results: a list of pass or fail messages.
+    """
+    results = []
+    files = css.get_styles_by_html_files(dir_path)
+    for file in files:
+        filepath = file.get("file")
+        stylesheets = file.get("stylesheets")
+        tree = CSSAppliedTree(filepath, stylesheets)
+
+        report = get_color_contrast_details(tree, rating)
+        for item in report:
+            if item not in results:
+                results.append(item)
     return results
 
 

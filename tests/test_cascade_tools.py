@@ -563,14 +563,14 @@ def footer_gradient(radial_gradient_children):
 # Tests on nested color report
 
 debugging_project_dir = "tests/test_files/debugging_project"
-debugging_styles_report = css.get_project_color_contrast_report(
+debugging_styles_report = cascade.get_color_contrast_report(
     debugging_project_dir
 )
 
 
 def test_color_contrast_on_nested_links():
     expected = True
-    results = "pass" in debugging_styles_report[2]
+    results = "fail" in debugging_styles_report[0]
     assert results == expected
 
 
