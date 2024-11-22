@@ -247,6 +247,11 @@ class Element(object):
             # If it was not directly set, we can change it
             if not bg_was_directly_set:
                 self.background_color["value"] = bg_color
+                if self.children:
+                    for kid in self.children:
+                        kid.ammend_bg_color(
+                            bg_color, new_selector, new_specificity, filename
+                        )
 
     def get_contrast_data(self, type="default") -> None:
         """get color contrast for the type specified
@@ -808,7 +813,14 @@ class CSSAppliedTree:
             for ruleset in color_rules:
                 # get filename
                 filename = clerk.get_file_name(sheet.href)
-                self.__adjust_colors(body, ruleset, filename)
+                selector_source = ""
+                if body.name == "body":
+                    selector_source = "body"
+                else:
+                    input("Wait, what?")
+                self.__adjust_colors(
+                    body, ruleset, filename, selector_src=selector_source
+                )
 
     def targets_body(self, ruleset: dict) -> bool:
         """returns whether the ruleset is targetting the body or not.
@@ -873,7 +885,12 @@ class CSSAppliedTree:
         return
 
     def __adjust_colors(
-        self, element: Element, ruleset: dict, filename: str
+        self,
+        element: Element,
+        ruleset: dict,
+        filename: str,
+        applied_by="default",
+        selector_src="",
     ) -> None:
         """recursively adjust color where necessary to all elements that
         apply.
@@ -932,7 +949,10 @@ class CSSAppliedTree:
                 color["specificity"] = specificity
                 color["applied_by"] = "directly"
             for child in element.children:
-                self.__adjust_child_colors(child, ruleset, filename)
+                element_name = element.name
+                self.__adjust_child_colors(
+                    child, ruleset, filename, element_name
+                )
         elif is_background_prop:
             # background - if not set directly - apply by context
             value = declaration.get("background-color")
@@ -949,16 +969,16 @@ class CSSAppliedTree:
                 or applied_by == "context"
                 and value != current_value
             )
-
+            # But only if the value was applied to an ancestor
+            # For example, a th is not a parent of a td
+            applied_to_ancestor = False
+            for ancestor in element.ancestors:
+                ancestor_tag = ancestor[0]
+                if ancestor_tag == selector_src:
+                    applied_to_ancestor = True
+            time_to_adjust = time_to_adjust and applied_to_ancestor
             if time_to_adjust:
-                element.apply_background_color(
-                    selector,
-                    property,
-                    value,
-                    old_specificity,
-                    specificity,
-                    filename,
-                )
+                print("Wait")
         can_inherit = self.can_inherit_styles(element, selector, ruleset)
         if can_inherit and applies:
             declaration = ruleset.get(selector)
@@ -970,7 +990,11 @@ class CSSAppliedTree:
             self.__adjust_colors(child, ruleset, filename)
 
     def __adjust_child_colors(
-        self, child: Element, ruleset: dict, filename: str
+        self,
+        child: Element,
+        ruleset: dict,
+        filename: str,
+        applied_by="default",
     ) -> None:
         """adjusts colors for child of an element.
 
@@ -978,10 +1002,16 @@ class CSSAppliedTree:
         to see if the child element is a link or not (as well as the selector)
         and check the specificity of the ruleset.
 
+        To help with background colors, we need to know where it was applied
+        from (name of tag) - that way we can check if a declaration was applied
+        by one of the tag's parents. If it was, then we apply that color by
+        context taking the background from the nearest parent.
+
         Args:
             child: the child element in question
             ruleset: the CSS rule being applied
             filename: name of the file where the styles came from
+            applied_from: the name of the element that was targetted
         """
         # Adjust colors if necessary - if there was a change,
         # adjust colors for children
@@ -1633,7 +1663,103 @@ def get_color_contrast_report(dir_path: str, rating="AAA") -> list:
         for item in report:
             if item not in results:
                 results.append(item)
+        # Do one more pass on hyperlinks and double check contrast
+        link_report = verify_links(tree, stylesheets, rating)
+        print(link_report)
     return results
+
+
+def verify_links(
+    tree: CSSAppliedTree, stylesheets: list, rating="AAA"
+) -> list:
+    """
+    Double checks all links in DOM to ensure they meet color contrast
+
+    This is a recursive function that only inspects all links to make
+    sure they meet color contrast
+
+    Args:
+        tree: the DOM tree to check
+        stylesheets: a list of stylesheet objects to check for link
+            selectors and act accordingly
+        rating: the level of rating to look for
+
+    Returns:
+        link_report: a list of any links that fail color contrast.
+    """
+    link_report = []
+    # recurse through children of body
+    elements = tree.children[0].children
+    link_elements = []
+
+    def get_link(element: Element) -> None:
+        if element.name == "a":
+            link_elements.append(element)
+        if element.children:
+            for kid in element.children:
+                get_link(kid)
+        else:
+            return
+
+    for element in elements:
+        get_link(element)
+
+    link_rules = []
+    for sheet in stylesheets:
+        for ruleset in sheet.color_rulesets:
+            for key in ruleset.keys():
+                if key == "a" or "a:" in key:
+                    link_rules.append(ruleset)
+    for link in link_elements:
+        # apply if we are able, get new contrast, add to report
+        for rule in link_rules:
+            # get specificity
+            selectors = list(rule.keys())
+            selector = selectors[0]
+            specificity = css.get_specificity(selector)
+            declaration_block = rule.get(selector)
+            bg_color = declaration_block.get("background")
+            color = declaration_block.get("color")
+
+            # apply if able based on selector type and specificity
+            if selector == "a" or "a:link" == selector[-6:]:
+                if bg_color:
+                    background = link.background_color
+                    bg_specificity = background.get("specificity")
+                    if specificity >= bg_specificity:
+                        background.value = bg_color
+                        background.specificity = specificity
+                        contrast_report = (
+                            css.color_tools.get_color_contrast_report(
+                                bg_color, link.color.get("value")
+                            )
+                        )
+                        link.contrast_data = contrast_report
+                elif color:
+                    current_color = link.color
+                    color_specificity = current_color.get("specificity")
+                    if specificity >= color_specificity:
+                        print()
+                        link.color["value"] = color
+                        link.color["specificity"] = specificity
+                        current_background = link.background_color
+                        current_background = current_background.get("value")
+                        contrast_report = (
+                            css.color_tools.get_color_contrast_report(
+                                color, current_background
+                            )
+                        )
+                        link.contrast_data = contrast_report
+                else:
+                    print("This must not be. What's going on?")
+            elif selector[-9:] == "a:visited":
+                print("visited time")
+            elif selector[-7:] == "a:hover":
+                print("STOP!!!! It's hover time!")
+
+        # add to report if necessary
+
+    return link_report
 
 
 if __name__ == "__main__":

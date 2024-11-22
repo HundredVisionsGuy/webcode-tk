@@ -1076,9 +1076,9 @@ def debugging_project_color_report():
     return report
 
 
-def test_css_for_color_contrast_report_a_visited_passes(
+def test_css_for_color_contrast_report_a_visited_fails(
     debugging_project_color_report,
 ):
-    results = "pass" in debugging_project_color_report[2]
+    results = "fail" in debugging_project_color_report[2]
     expected = True
     assert results == expected
