@@ -111,6 +111,13 @@ class Element(object):
             "specificity": "",
             "applied_by": "default",
         }
+        self.visited_background = {
+            "value": "",
+            "sheet": "",
+            "selector": "",
+            "specificity": "",
+            "applied_by": "default",
+        }
         self.hover_color = {
             "value": "",
             "sheet": "",
@@ -156,6 +163,10 @@ class Element(object):
             self.visited_color["value"] = default_link_visited
             self.visited_color["sheet"] = "user-agent"
             self.visited_color["specificity"] = "000"
+            self.visited_background["value"] = default_global_background
+            self.visited_background["sheet"] = "user-agent"
+            self.visited_background["specificity"] = "000"
+            self.visited_background["applied_by"] = "context"
 
     def ammend_color_styles(self, new_styles: dict, filename: str) -> None:
         """adjust color styles based on specificity.
@@ -1753,7 +1764,8 @@ def verify_links(
                 else:
                     print("This must not be. What's going on?")
             elif selector[-9:] == "a:visited":
-                print("visited time")
+                if bg_color:
+                    background = link.background_visited
             elif selector[-7:] == "a:hover":
                 print("STOP!!!! It's hover time!")
 
