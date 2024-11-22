@@ -10,6 +10,7 @@ a:visited {
 }
 a:hover {
     color: #f7b170;
+    background: #000000;
 }
 
 /* How to add a background image for a bullet */

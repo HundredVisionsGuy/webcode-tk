@@ -141,6 +141,13 @@ class Element(object):
             "large_aaa": True,
             "large_aa": True,
         }
+        self.hover_contrast_data = {
+            "ratio": 21.0,
+            "normal_aaa": True,
+            "normal_aa": True,
+            "large_aaa": True,
+            "large_aa": True,
+        }
         self.visited_contrast_data = {
             "ratio": 0.0,
             "normal_aaa": False,
@@ -1699,6 +1706,7 @@ def verify_links(
         link_report: a list of any links that fail color contrast.
     """
     link_report = []
+
     # recurse through children of body
     elements = tree.children[0].children
     link_elements = []
@@ -1721,6 +1729,7 @@ def verify_links(
             for key in ruleset.keys():
                 if key == "a" or "a:" in key:
                     link_rules.append(ruleset)
+
     for link in link_elements:
         # apply if we are able, get new contrast, add to report
         for rule in link_rules:
@@ -1750,11 +1759,14 @@ def verify_links(
                     current_color = link.color
                     color_specificity = current_color.get("specificity")
                     if specificity >= color_specificity:
-                        print()
                         link.color["value"] = color
                         link.color["specificity"] = specificity
                         current_background = link.background_color
                         current_background = current_background.get("value")
+                        if css.color_tools.is_keyword(current_background):
+                            current_background = css.color_tools.get_hex(
+                                current_background
+                            )
                         contrast_report = (
                             css.color_tools.get_color_contrast_report(
                                 color, current_background
@@ -1765,9 +1777,48 @@ def verify_links(
                     print("This must not be. What's going on?")
             elif selector[-9:] == "a:visited":
                 if bg_color:
-                    background = link.background_visited
+                    print()
+                    # background = link.background_visited
+
             elif selector[-7:] == "a:hover":
-                print("STOP!!!! It's hover time!")
+                if bg_color:
+                    print()
+                    background = link.hover_background
+                    bg_specificity = background.get("specificity")
+                    if specificity >= bg_specificity:
+                        background["value"] = bg_color
+                        background["specificity"] = specificity
+                        if css.color_tools.is_keyword(bg_color):
+                            bg_color = css.color_tools.get_hex(bg_color)
+                        contrast_report = (
+                            css.color_tools.get_color_contrast_report(
+                                bg_color, link.hover_color.get("value")
+                            )
+                        )
+                        link.hover_contrast_data = contrast_report
+                elif color:
+                    current_color = link.hover_color
+                    color_specificity = current_color.get("specificity")
+                    if specificity >= color_specificity:
+                        link.hover_color["value"] = color
+                        link.hover_color["specificity"] = specificity
+                        current_background = link.hover_background
+                        current_background = current_background.get("value")
+                        if not current_background:
+                            current_background = link.background_color
+                            current_background = current_background.get(
+                                "value"
+                            )
+                        else:
+                            print("There is a problem here.")
+
+                        # get hover_contrast
+                        contrast_report = (
+                            css.color_tools.get_color_contrast_report(
+                                color, current_background
+                            )
+                        )
+                        link.hover_contrast_data = contrast_report
 
         # add to report if necessary
 
