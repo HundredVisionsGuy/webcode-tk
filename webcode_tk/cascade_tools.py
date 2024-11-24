@@ -21,8 +21,8 @@ from webcode_tk import font_tools as fonts
 from webcode_tk import html_tools
 
 
-default_global_color = "#FFFFFF"
-default_global_background = None
+default_global_color = "#000000"
+default_global_background = "#ffffff"
 default_link_color = "#0000EE"
 default_link_visited = "#551A8B"
 root_font_size = 16
@@ -220,6 +220,25 @@ class Element(object):
                 # get contrast for color & bg_color
                 self.get_contrast_data("standard")
         else:
+            # be sure to change at least the background color for pseudo-states
+            if targets_bg_color:
+                # check hover background
+                hover_bg = self.hover_background.get("value")
+                hover_specificity = self.hover_background.get("specificity")
+                new_bg = new_styles.get("background-color")
+                if not hover_bg or new_specificity >= hover_specificity:
+                    self.hover_background["value"] = new_bg
+                    self.hover_background["specificity"] = new_specificity
+
+                # check visited background
+                visited_bg = self.visited_background.get("value")
+                visited_specificity = self.visited_background.get(
+                    "specificity"
+                )
+                if not visited_bg or new_specificity >= visited_specificity:
+                    self.visited_background["value"] = new_bg
+                    self.visited_background["specificity"] = new_specificity
+
             # Do we have a link selector?
             is_link_selector = css.is_link_selector(selector)
             if is_link_selector:
@@ -638,11 +657,17 @@ class Element(object):
                 )
                 self.background_color["gradient_colors"] = colors
             # set color, specificity, and directly applied
-            self.background_color["value"] = val
-            self.background_color["sheet"] = filename
-            self.background_color["specificity"] = new_specificity
-            self.background_color["applied_by"] = "directly"
-            self.background_color["selector"] = selector
+            if ":hover" in selector:
+                background_color_dict = self.hover_background
+            elif ":visited" in selector:
+                background_color_dict = self.visited_background
+            else:
+                background_color_dict = self.background_color
+            background_color_dict["value"] = val
+            background_color_dict["sheet"] = filename
+            background_color_dict["specificity"] = new_specificity
+            background_color_dict["applied_by"] = "directly"
+            background_color_dict["selector"] = selector
         else:
             if not previously_set:
                 self.background_color["value"] = val
@@ -959,6 +984,8 @@ class CSSAppliedTree:
             else:
                 if ":hover" in selector:
                     color = element.hover_color
+                elif ":visited" in selector:
+                    color = element.visited_color
                 else:
                     color = element.color
                 color["value"] = declaration.get("color")
@@ -1593,9 +1620,6 @@ def get_color_contrast_details(tree: CSSAppliedTree, rating="AAA") -> list:
             el.background_color.get("applied_by") == "directly"
             or el.color.get("applied_by") == "directly"
         )
-        bg_applied_by_context = (
-            el.background_color.get("applied_by") == "context"
-        )
         if applied_directly or el.name == "body":
             is_gradient = el.background_color.get("is_gradient")
             if is_gradient:
@@ -1624,6 +1648,7 @@ def get_color_contrast_details(tree: CSSAppliedTree, rating="AAA") -> list:
                     passes = contrast_data.get("normal_aaa")
                 else:
                     passes = contrast_data.get("normal_aa")
+
             # only add results if failure
             if not passes:
                 if el.is_large:
@@ -1633,11 +1658,9 @@ def get_color_contrast_details(tree: CSSAppliedTree, rating="AAA") -> list:
                 selector = el.background_color.get("selector")
                 if not selector:
                     selector = el.color.get("selector")
-                msg = f"{el.name} tag (selector: {selector}) fails color "
-                msg += f"contrast at {size} {rating}."
+                msg = f"selector: {selector} fails color contrast {size}"
+                msg += f"{rating}"
                 results.append(msg)
-        elif bg_applied_by_context:
-            print("Now what?")
 
         if not children:
             return
@@ -1650,7 +1673,7 @@ def get_color_contrast_details(tree: CSSAppliedTree, rating="AAA") -> list:
     if results:
         adjusted = []
         for result in results:
-            adjusted.append("fail: " + result)
+            adjusted.append(f"fail: ({filename}) " + result)
         results = adjusted
     else:
         # It's a success! Let's let them know
@@ -1682,147 +1705,8 @@ def get_color_contrast_report(dir_path: str, rating="AAA") -> list:
             if item not in results:
                 results.append(item)
         # Do one more pass on hyperlinks and double check contrast
-        link_report = verify_links(tree, stylesheets, rating)
-        print(link_report)
+        print(results)
     return results
-
-
-def verify_links(
-    tree: CSSAppliedTree, stylesheets: list, rating="AAA"
-) -> list:
-    """
-    Double checks all links in DOM to ensure they meet color contrast
-
-    This is a recursive function that only inspects all links to make
-    sure they meet color contrast
-
-    Args:
-        tree: the DOM tree to check
-        stylesheets: a list of stylesheet objects to check for link
-            selectors and act accordingly
-        rating: the level of rating to look for
-
-    Returns:
-        link_report: a list of any links that fail color contrast.
-    """
-    link_report = []
-
-    # recurse through children of body
-    elements = tree.children[0].children
-    link_elements = []
-
-    def get_link(element: Element) -> None:
-        if element.name == "a":
-            link_elements.append(element)
-        if element.children:
-            for kid in element.children:
-                get_link(kid)
-        else:
-            return
-
-    for element in elements:
-        get_link(element)
-
-    link_rules = []
-    for sheet in stylesheets:
-        for ruleset in sheet.color_rulesets:
-            for key in ruleset.keys():
-                if key == "a" or "a:" in key:
-                    link_rules.append(ruleset)
-
-    for link in link_elements:
-        # apply if we are able, get new contrast, add to report
-        for rule in link_rules:
-            # get specificity
-            selectors = list(rule.keys())
-            selector = selectors[0]
-            specificity = css.get_specificity(selector)
-            declaration_block = rule.get(selector)
-            bg_color = declaration_block.get("background")
-            color = declaration_block.get("color")
-
-            # apply if able based on selector type and specificity
-            if selector == "a" or "a:link" == selector[-6:]:
-                if bg_color:
-                    background = link.background_color
-                    bg_specificity = background.get("specificity")
-                    if specificity >= bg_specificity:
-                        background.value = bg_color
-                        background.specificity = specificity
-                        contrast_report = (
-                            css.color_tools.get_color_contrast_report(
-                                bg_color, link.color.get("value")
-                            )
-                        )
-                        link.contrast_data = contrast_report
-                elif color:
-                    current_color = link.color
-                    color_specificity = current_color.get("specificity")
-                    if specificity >= color_specificity:
-                        link.color["value"] = color
-                        link.color["specificity"] = specificity
-                        current_background = link.background_color
-                        current_background = current_background.get("value")
-                        if css.color_tools.is_keyword(current_background):
-                            current_background = css.color_tools.get_hex(
-                                current_background
-                            )
-                        contrast_report = (
-                            css.color_tools.get_color_contrast_report(
-                                color, current_background
-                            )
-                        )
-                        link.contrast_data = contrast_report
-                else:
-                    print("This must not be. What's going on?")
-            elif selector[-9:] == "a:visited":
-                if bg_color:
-                    print()
-                    # background = link.background_visited
-
-            elif selector[-7:] == "a:hover":
-                if bg_color:
-                    print()
-                    background = link.hover_background
-                    bg_specificity = background.get("specificity")
-                    if specificity >= bg_specificity:
-                        background["value"] = bg_color
-                        background["specificity"] = specificity
-                        if css.color_tools.is_keyword(bg_color):
-                            bg_color = css.color_tools.get_hex(bg_color)
-                        contrast_report = (
-                            css.color_tools.get_color_contrast_report(
-                                bg_color, link.hover_color.get("value")
-                            )
-                        )
-                        link.hover_contrast_data = contrast_report
-                elif color:
-                    current_color = link.hover_color
-                    color_specificity = current_color.get("specificity")
-                    if specificity >= color_specificity:
-                        link.hover_color["value"] = color
-                        link.hover_color["specificity"] = specificity
-                        current_background = link.hover_background
-                        current_background = current_background.get("value")
-                        if not current_background:
-                            current_background = link.background_color
-                            current_background = current_background.get(
-                                "value"
-                            )
-                        else:
-                            print("There is a problem here.")
-
-                        # get hover_contrast
-                        contrast_report = (
-                            css.color_tools.get_color_contrast_report(
-                                color, current_background
-                            )
-                        )
-                        link.hover_contrast_data = contrast_report
-
-        # add to report if necessary
-
-    return link_report
 
 
 if __name__ == "__main__":
