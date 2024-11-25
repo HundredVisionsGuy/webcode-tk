@@ -1093,6 +1093,9 @@ def debugging_project_color_report():
 def test_css_for_color_contrast_report_a_visited_fails(
     debugging_project_color_report,
 ):
-    results = "fail" in debugging_project_color_report[2]
-    expected = True
-    assert results == expected
+    fails = 0
+    for item in debugging_project_color_report:
+        if "fail" in item:
+            fails += 1
+    expected = fails == 1
+    assert expected

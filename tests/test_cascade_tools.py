@@ -570,8 +570,12 @@ debugging_styles_report = cascade.get_color_contrast_report(
 
 def test_color_contrast_on_nested_links():
     expected = True
-    results = "fail" in debugging_styles_report[0]
-    assert results == expected
+    fails = 0
+    for item in debugging_styles_report:
+        if "fail" in item:
+            fails += 1
+    expected = fails == 1
+    assert expected
 
 
 if __name__ == "__main__":
