@@ -483,14 +483,14 @@ def font_sizes_tree():
 
 
 def test_get_color_contrast_for_AAA_success(font_sizes_tree):
-    expected = "success: font-sizes.html passes color contrast for AAA Normal"
+    expected = "pass: font-sizes.html passes color contrast for AAA Normal"
     expected += " and Large."
     results = cascade.get_color_contrast_details(font_sizes_tree)
     assert results[0] == expected
 
 
 def test_get_color_contrast_for_AA_success(font_sizes_tree):
-    expected = "success: font-sizes.html passes color contrast for AA Normal "
+    expected = "pass: font-sizes.html passes color contrast for AA Normal "
     expected += "and Large."
     results = cascade.get_color_contrast_details(font_sizes_tree, "AA")
     assert results[0] == expected

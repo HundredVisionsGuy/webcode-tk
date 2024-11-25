@@ -1677,7 +1677,7 @@ def get_color_contrast_details(tree: CSSAppliedTree, rating="AAA") -> list:
         results = adjusted
     else:
         # It's a success! Let's let them know
-        msg = f"success: {filename} passes color contrast for {rating} Normal"
+        msg = f"pass: {filename} passes color contrast for {rating} Normal"
         msg += " and Large."
         results.append(msg)
     return results
