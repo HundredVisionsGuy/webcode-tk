@@ -1016,6 +1016,20 @@ def test_fonts_applied_report_for_one_fail_2_required(large_project_path):
     assert expected
 
 
+def test_fonts_applied_for_NoneType_error():
+    path = "tests/test_files/debugging_project/"
+    passes = 0
+    fails = 0
+    report = css_tools.fonts_applied_report(path, min=2)
+    for file in report:
+        if "psss" in file[:4]:
+            passes += 1
+        else:
+            fails += 1
+    expected = passes == 1 and fails == 1
+    assert expected
+
+
 def test_fonts_applied_report_for_min_2_fail():
     dir = "tests/test_files/project"
     report = css_tools.fonts_applied_report(dir, min=2)
