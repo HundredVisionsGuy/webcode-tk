@@ -1260,9 +1260,10 @@ def get_declaration_value_by_property(
 def get_families(declaration_block: DeclarationBlock) -> list:
     """returns a list of all font families in a declaration block"""
     families = []
-    for ruleset in declaration_block.declarations:
-        if ruleset.property in ("font", "font-family"):
-            families.append(ruleset.value)
+    if declaration_block:
+        for ruleset in declaration_block.declarations:
+            if ruleset.property in ("font", "font-family"):
+                families.append(ruleset.value)
     return families
 
 
@@ -1279,7 +1280,10 @@ def get_font_families(sheet: Stylesheet) -> list:
     """
     font_families = []
     for ruleset in sheet.rulesets:
-        block = ruleset.declaration_block
+        try:
+            block = ruleset.declaration_block
+        except AttributeError:
+            continue
         families = get_families(block)
         if families:
             # create dict of selector and family
