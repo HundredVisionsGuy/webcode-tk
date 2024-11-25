@@ -18,4 +18,4 @@ Modules exported by this package:
 - `validator_tools`: sends HTML or CSS code to the W3C Validator to check
           for errors.
 """
-__version__ = "1.0.8"
+__version__ = "1.0.9"
