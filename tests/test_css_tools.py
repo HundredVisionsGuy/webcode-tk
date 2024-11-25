@@ -1022,7 +1022,7 @@ def test_fonts_applied_for_NoneType_error():
     fails = 0
     report = css_tools.fonts_applied_report(path, min=2)
     for file in report:
-        if "psss" in file[:4]:
+        if "pass" in file[:4]:
             passes += 1
         else:
             fails += 1
