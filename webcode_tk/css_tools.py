@@ -93,6 +93,7 @@ class Stylesheet:
         self.type = stylesheet_type
         self.href = href
         self.text = text
+        self.__clean_text()
         self.nested_at_rules = []
         self.rulesets = []
         self.comments = []
@@ -107,6 +108,30 @@ class Stylesheet:
         self.__extract_nested_at_rules()
         self.__extract_rulesets()
         self.__set_selectors()
+
+    def __clean_text(self):
+        """cleans up CSS like removing extra line returns
+
+        This is here because if a student has more than 2 blank lines, it
+        could trigger an attribute error (at least it did in the past)
+        """
+        text_to_clean = self.text
+        split_text = text_to_clean.split("\n")
+        cleaned_text = ""
+        consecutive_blanks = 0
+        for line in split_text:
+            if not line:
+                consecutive_blanks += 1
+            if consecutive_blanks > 1:
+                consecutive_blanks = 1
+                continue
+            else:
+                if not line and cleaned_text:
+                    cleaned_text += "\n"
+                cleaned_text += line + "\n"
+        if cleaned_text[-1:] == "\n":
+            cleaned_text = cleaned_text[:-1].strip()
+        self.text = cleaned_text
 
     def __minify(self):
         """Removes all whitespace, line returns, and tabs from text."""
