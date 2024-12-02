@@ -135,3 +135,53 @@ def test_remove_extensions_for_many_symbols():
     expected += "Borealis 15 copy) by Kristian Pikner [CC BY-SA 4]."
     results = ux_tools.remove_extensions(sample)
     assert results == expected
+
+
+def test_get_usability_report_for_css_basics_default_everything(
+    css_basics_path,
+):
+    report = ux_tools.get_usability_report(css_basics_path, ("p",))
+    results = []
+    for item in report:
+        if "1 more sentence than the maximum number of 4" in item:
+            results.append(item)
+        if "not have enough paragraphs with a single sentence" in item:
+            results.append(item)
+        if "pass" in item and "words per sentence" in item:
+            results.append(item)
+        if "does not have enough words" in item and "fail" in item:
+            results.append(item)
+    results_length = len(results)
+    assert results_length == 4
+
+
+def test_get_usability_report_for_warnings(large_project_path):
+    goals = {
+        "avg_words_sentence_range": (10, 25),
+        "max_sentences_per_paragraph": 4,
+        "min_num_single_sentence_paragraphs": 2,
+        "min_word_count": 200,
+    }
+    exceeds = {
+        "max_avg_words_sentence": 20,
+        "max_li_per_list": 9,
+        "max_words_per_li": 45,
+        "max_words_per_paragraph": 80,
+        "min_word_count": 500,
+    }
+    report = ux_tools.get_usability_report(
+        large_project_path, ("p",), goals, exceeds
+    )
+    failures = 0
+    passing = 0
+    warnings = 0
+    for item in report:
+        if "warning: for best results" in item:
+            if "words in your project" in item:
+                warnings += 1
+        if "fail:" in item:
+            failures += 1
+        if "pass:" in item:
+            passing += 1
+    expected = warnings == 1 and failures == 11 and passing == 1
+    assert expected
