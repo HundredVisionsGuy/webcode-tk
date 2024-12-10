@@ -14,6 +14,9 @@ hsl_string_1_as_rgb = (230, 5, 23)
 hsl_string_1_as_hex = "#E60517"
 hsla_string_1 = "hsla(355, 96%, 46%, 1.0)"
 hsla_string_1_as_rgba = "rgba(230, 5, 23, 1.0)"
+white_3_digits = "#fff"
+black_3_digits = "#000"
+favorite_hex_3_digits = "#369"
 
 favorite_test_color_contrast_report = {
     "Normal AA": "Pass",
@@ -129,6 +132,10 @@ def test_is_hex_for_valid_hex():
     assert color.is_hex("#336699")
 
 
+def test_is_hex_for_3_digit_white():
+    assert color.is_hex(white_3_digits)
+
+
 def test_is_hex_for_invalid_not_hex_digit():
     assert not color.is_hex("#3366lh")
 
@@ -143,6 +150,12 @@ def test_is_hex_for_3_codes():
 
 def test_is_hex_for_invalid_number_digits():
     assert not color.is_hex("#4469")
+
+
+def test_contrast_ratio_for_3_digit_favorite_and_white():
+    expected = 5.99
+    results = color.contrast_ratio(favorite_hex_3_digits, white_3_digits)
+    assert results == expected
 
 
 def test_contrast_ratio_for_inverted_indigo_white(indigo_rgb):

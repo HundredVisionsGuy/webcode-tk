@@ -244,6 +244,11 @@ def hex_to_rgb(hex_code: str) -> tuple:
     """
     hex_code = hex_code.lower()
     if "#" in hex_code[0]:
+        if len(hex_code) == 4:
+            r = hex_code[1] * 2
+            g = hex_code[2] * 2
+            b = hex_code[3] * 2
+            hex_code = f"#{r}{g}{b}"
         hex_code = hex_code[1:]
     r = hex_code[:2]
     g = hex_code[2:4]
