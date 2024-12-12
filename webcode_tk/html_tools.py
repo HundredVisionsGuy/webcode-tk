@@ -434,6 +434,16 @@ def get_number_of_elements_per_file(
     return elements_per_file
 
 
+def has_text_content(el: Tag) -> bool:
+    """returns whether an element contains text content
+
+    The test is to see if there is raw text inside the element as its
+    content. It must be text that is not inside of a nested tag but
+    is the direct text outside of any other HTML elements"""
+    has_text_content = False
+    return has_text_content
+
+
 if __name__ == "__main__":
     file_with_inline_styles = "tests/test_files/sample_with_inline_styles.html"
     markup = clerk.file_to_string(file_with_inline_styles)
