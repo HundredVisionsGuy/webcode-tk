@@ -726,6 +726,8 @@ class CSSAppliedTree:
 
     def __get_filename(self):
         """Extracts filename from path"""
+        if isinstance(self.file_path, dict):
+            self.file_path = self.file_path.get("file")
         self.filename = clerk.get_file_name(self.file_path)
 
     def __get_font_rules(self):

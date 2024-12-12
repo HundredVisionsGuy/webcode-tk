@@ -578,6 +578,36 @@ def test_color_contrast_on_nested_links():
     assert expected
 
 
+# Test Amharic Script Page for color contrast
+
+amharic_project_dir = "tests/test_files/amharic_script"
+amharic_contrast_report = cascade.get_color_contrast_report(
+    amharic_project_dir
+)
+amharic_styles_by_html_files = css.get_styles_by_html_files(
+    amharic_project_dir
+)
+
+
+def test_nested_color_combos_for_proper_contrast_report():
+    passing = []
+    failing = []
+    for item in amharic_contrast_report:
+        if "pass" in item:
+            passing.append(item)
+    assert passing and not failing
+
+
+def test_amharic_project_for_proper_application_of_nav_link():
+    css_tree = None
+    file = amharic_styles_by_html_files[0]
+    filepath = file.get("file")
+    sheets = file.get("stylesheets")
+    css_tree = cascade.CSSAppliedTree(filepath, sheets)
+    results = cascade.get_color_contrast_details(css_tree)
+    assert results
+
+
 if __name__ == "__main__":
     """
     Test update_contrast_report on single_file_project/wiliwonka.html
