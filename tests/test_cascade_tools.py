@@ -580,32 +580,70 @@ def test_color_contrast_on_nested_links():
 
 # Test Amharic Script Page for color contrast
 
-amharic_project_dir = "tests/test_files/amharic_script"
-amharic_contrast_report = cascade.get_color_contrast_report(
-    amharic_project_dir
+cascade_complexities_dir = "tests/test_files/cascade_complexities"
+cascade_complexities_report = cascade.get_color_contrast_report(
+    cascade_complexities_dir
 )
-amharic_styles_by_html_files = css.get_styles_by_html_files(
-    amharic_project_dir
-)
+
+
+@pytest.fixture
+def cascade_complexities():
+    cascade_styles = css.get_styles_by_html_files(cascade_complexities_dir)
+    return cascade_styles
+
+
+@pytest.fixture
+def amharic_tree(cascade_complexities):
+    css_tree = None
+    file = cascade_complexities[0]
+    filepath = file.get("file")
+    sheets = file.get("stylesheets")
+    css_tree = cascade.CSSAppliedTree(filepath, sheets)
+    return css_tree
+
+
+@pytest.fixture
+def gallery_tree(cascade_complexities):
+    css_tree = None
+    file = cascade_complexities[1]
+    filepath = file.get("file")
+    sheets = file.get("stylesheets")
+    css_tree = cascade.CSSAppliedTree(filepath, sheets)
+    return css_tree
 
 
 def test_nested_color_combos_for_proper_contrast_report():
     passing = []
     failing = []
-    for item in amharic_contrast_report:
+    for item in cascade_complexities_report:
         if "pass" in item:
             passing.append(item)
     assert passing and not failing
 
 
-def test_amharic_project_for_proper_application_of_nav_link():
-    css_tree = None
-    file = amharic_styles_by_html_files[0]
-    filepath = file.get("file")
-    sheets = file.get("stylesheets")
-    css_tree = cascade.CSSAppliedTree(filepath, sheets)
-    results = cascade.get_color_contrast_details(css_tree)
-    assert results
+def test_gallery_for_applied_colors_to_figcaption(amharic_tree):
+    nav = amharic_tree.children[0].children[0].children[1]
+    link = nav.children[0].children[0].children[0]
+    color = link.color.get("value")
+    bg_color = link.background_color.get("value")
+    contrast_ratio = link.contrast_data.get("ratio")
+    expected = (
+        color == "#ffffff" and bg_color == "#003366" and contrast_ratio == 12.6
+    )
+    assert expected
+
+
+def test_amharic_file_for_proper_application_of_nav_link(amharic_tree):
+    amharic_tree.children[0].children[1]
+    color = ""
+    bg_color = ""
+    contrast_ratio = ""
+    expected = (
+        contrast_ratio == 19.26
+        and color == "#f5f5f5"
+        and bg_color == "#000000"
+    )
+    assert expected
 
 
 if __name__ == "__main__":

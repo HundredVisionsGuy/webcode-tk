@@ -1,0 +1,51 @@
+body {
+    background-color: rgb(30,30,40);
+    color:white;
+}
+h1 {
+    background-color: rgb(30,30,40);
+    color: rgb(166,224,248);
+    text-align: center;
+    font-size: 42px;
+    font-family: 'Poppins', sans-serif;
+}
+p {
+    text-align: center;
+    font-size: 18px;
+    font-family: 'Noto Sans', sans-serif;
+    font-style: normal;
+    padding-top: 1px;
+    padding-left: 20%;
+    padding-right: 20%;
+    padding-bottom: 45px;
+}
+.cars {
+    text-align: center;
+    align-items: stretch;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+figure {
+    vertical-align: baseline;
+    background-color: whitesmoke;
+    border: 1px solid black;
+    border-radius: 25px;
+    margin: 18px;
+    width: 300px;
+    padding: 30px;
+}
+figcaption {
+    background-color: whitesmoke;
+    color:black;
+    font-size: 15px;
+    font-family: 'Noto Sans', sans-serif;
+    font-style: normal;
+    padding: 15px;
+}
+img {
+    border-radius: 15px;
+  }
+a {
+    color: rgb(166,224,248);
+}
