@@ -595,9 +595,10 @@ def cascade_complexities():
 @pytest.fixture
 def amharic_tree(cascade_complexities):
     css_tree = None
-    file = cascade_complexities[0]
-    filepath = file.get("file")
-    sheets = file.get("stylesheets")
+    for page in cascade_complexities:
+        if "amharic.html" in page.get("file"):
+            filepath = page.get("file")
+            sheets = page.get("stylesheets")
     css_tree = cascade.CSSAppliedTree(filepath, sheets)
     return css_tree
 
@@ -605,9 +606,10 @@ def amharic_tree(cascade_complexities):
 @pytest.fixture
 def gallery_tree(cascade_complexities):
     css_tree = None
-    file = cascade_complexities[1]
-    filepath = file.get("file")
-    sheets = file.get("stylesheets")
+    for page in cascade_complexities:
+        if "index.html" in page.get("file"):
+            filepath = page.get("file")
+            sheets = page.get("stylesheets")
     css_tree = cascade.CSSAppliedTree(filepath, sheets)
     return css_tree
 
