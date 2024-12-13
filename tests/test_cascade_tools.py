@@ -621,53 +621,26 @@ def test_nested_color_combos_for_proper_contrast_report():
     assert passing and not failing
 
 
-def test_gallery_for_applied_colors_to_figcaption(amharic_tree):
+def test_gallery_for_applied_colors_to_figcaption(gallery_tree):
+    figcaption = gallery_tree.children[0].children[1].children[0].children[1]
+    color = figcaption.color.get("value")
+    bg_color = figcaption.background_color.get("value")
+    contrast_ratio = figcaption.contrast_data.get("ratio")
+    expected = (
+        color == "black"
+        and bg_color == "whitesmoke"
+        and contrast_ratio == 19.26
+    )
+    assert expected
+
+
+def test_amharic_file_for_proper_application_of_nav_link(amharic_tree):
     nav = amharic_tree.children[0].children[0].children[1]
     link = nav.children[0].children[0].children[0]
     color = link.color.get("value")
     bg_color = link.background_color.get("value")
     contrast_ratio = link.contrast_data.get("ratio")
     expected = (
-        color == "#ffffff" and bg_color == "#003366" and contrast_ratio == 12.6
+        contrast_ratio == 12.6 and color == "#ffffff" and bg_color == "#003366"
     )
     assert expected
-
-
-def test_amharic_file_for_proper_application_of_nav_link(amharic_tree):
-    amharic_tree.children[0].children[1]
-    color = ""
-    bg_color = ""
-    contrast_ratio = ""
-    expected = (
-        contrast_ratio == 19.26
-        and color == "#f5f5f5"
-        and bg_color == "#000000"
-    )
-    assert expected
-
-
-if __name__ == "__main__":
-    """
-    Test update_contrast_report on single_file_project/wiliwonka.html
-    Bell Schedule - link
-    color - #e4eadc
-    bg - #00008B
-    Pass
-
-    hover:
-    color - #008000
-    bg - #00008B
-    Utter failure
-    """
-    path = "tests/test_files/gradients.html"
-    styles = css.get_all_stylesheets_by_file(path)
-    tree = cascade.CSSAppliedTree(path, styles)
-    children = tree.children[0].children
-    test_font_size_for_h1(children)
-    test_font_size_for_p_with_20px_root_size_on_body(children)
-    test_font_size_for_x_small_li(children)
-    test_font_size_for_xxx_large_li(children)
-    test_font_size_for_smaller_large(children)
-    test_font_size_for_1pt2_em_p(children)
-    test_span_within_span_within_span_each_at_120percent(children)
-    test_font_size_for_larger_large(children)

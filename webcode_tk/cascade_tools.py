@@ -1257,9 +1257,19 @@ def does_selector_apply(element: Element, selector: str) -> bool:
 
         # If the tag is an anchor, but the selector is not - doesn't apply
         # link color can only be changed by a link selector
-        if element_name == "a" and not is_link_selector:
-            break
-        elif is_type_selector:
+        if element_name == "a":
+            # NOTE: turns out a descendant selector targetting an anchor won't
+            # show as a link_selector
+            if is_descendant_selector:
+                selector_list = selector.split()
+
+                # Check the descendant to see if it is a link
+                last_item = selector_list[-1]
+                if "a" != last_item[0]:
+                    break
+            elif not is_link_selector:
+                break
+        if is_type_selector:
             applies = element_name == sel
             if applies:
                 break
