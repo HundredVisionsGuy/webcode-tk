@@ -7,6 +7,7 @@ from typing import Union
 
 from file_clerk import clerk
 
+from webcode_tk import cascade_tools
 from webcode_tk import color_keywords as keyword
 from webcode_tk import color_tools
 from webcode_tk import html_tools
@@ -2537,7 +2538,31 @@ def get_project_color_contrast_report(project_dir: str, level="AAA") -> list:
     return report
 
 
+def get_element_rulesets(project_dir: str, element: str) -> list:
+    rulesets = []
+    styles_by_files = get_styles_by_html_files(project_dir)
+    for file in styles_by_files:
+        elements = None
+        filepath = file.get("file")
+        filename = clerk.get_file_name(filepath)
+        sheets = file.get("stylesheets")
+        elements = html_tools.get_elements(element, filepath)
+        for sheet in sheets:
+            for ruleset in sheet.rulesets:
+                sel = ruleset.selector
+                selector_applies = cascade_tools.does_selector_apply(
+                    elements[0], sel
+                )
+                if selector_applies:
+                    rulesets.append((filename, ruleset))
+
+    return rulesets
+
+
 if __name__ == "__main__":
+    rulesets = get_element_rulesets(
+        "tests/test_files/cascade_complexities", "figure"
+    )
     insane_gradient = """
     -moz-radial-gradient(0% 200%, ellipse cover,
     rgba(143, 193, 242, 0.22) 10%,rgba(240, 205, 247,0) 40%),

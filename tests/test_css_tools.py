@@ -1099,3 +1099,10 @@ def test_css_for_color_contrast_report_a_visited_fails(
             fails += 1
     expected = fails == 1
     assert expected
+
+
+def test_get_element_rulesets_for_figure_in_gallery():
+    rulesets = css_tools.get_element_rulesets(
+        "tests/test_files/cascade_complexities", "figure"
+    )
+    assert len(rulesets) == 2
