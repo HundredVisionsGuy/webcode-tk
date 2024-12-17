@@ -1106,3 +1106,16 @@ def test_get_element_rulesets_for_figure_in_gallery():
         "tests/test_files/cascade_complexities", "figure"
     )
     assert len(rulesets) == 2
+
+
+def test_get_properties_applied_report_for_figure_2_fails():
+    project_folder = "tests/test_files/cascade_complexities"
+    goals = {
+        "figure": ("margin", "padding", "border", "float"),
+    }
+    report = css_tools.get_properties_applied_report(project_folder, goals)
+    fails = 0
+    for item in report:
+        if "fail" in item:
+            fails += 1
+    assert fails == 2

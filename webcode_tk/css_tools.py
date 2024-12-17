@@ -2559,7 +2559,49 @@ def get_element_rulesets(project_dir: str, element: str) -> list:
     return rulesets
 
 
+def get_properties_applied_report(project_dir: str, goals: dict) -> list:
+    """returns a report on any elements that fail to have a property applied
+
+    Args:
+        project_dir: the path to the project folder
+        goals: a dictionary of elements and the properties expected to be
+            present
+
+    Returns:
+        report: a list of pass or fail messages that indicates the file, the
+            element, and the missing property.
+    """
+    report = []
+    elements = list(goals.keys())
+    for element in elements:
+        properties = goals.get(element)
+        element_rulesets = get_element_rulesets(project_dir, element)
+        for file, rulesets in element_rulesets:
+            file_passes = True
+            for expected_property in properties:
+                declarations = rulesets.declaration_block.declarations
+                meets = False
+                for declaration in declarations:
+                    element_property = declaration.property
+                    if expected_property == element_property:
+                        meets = True
+                        break
+                if not meets:
+                    file_passes = False
+                    msg = f"fail: {file}'s element: {element} does NOT "
+                    msg += f"have {expected_property} property applied."
+            if file_passes:
+                msg = f"pass: all elements in {file} have the proper "
+                msg += "files applied."
+    return report
+
+
 if __name__ == "__main__":
+    project_folder = "tests/test_files/cascade_complexities"
+    goals = {
+        "figure": ("margin", "padding", "border", "float"),
+    }
+    report = get_properties_applied_report(project_folder, goals)
     rulesets = get_element_rulesets(
         "tests/test_files/cascade_complexities", "figure"
     )
