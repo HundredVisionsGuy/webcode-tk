@@ -2574,25 +2574,42 @@ def get_properties_applied_report(project_dir: str, goals: dict) -> list:
     report = []
     elements = list(goals.keys())
     for element in elements:
+        properties_found = []
         properties = goals.get(element)
         element_rulesets = get_element_rulesets(project_dir, element)
+
+        # check all rulesets for a given file to see which rulesets have
+        # one or more properties we are checking for
         for file, rulesets in element_rulesets:
-            file_passes = True
+            found_properties_remaining = list(properties)
             for expected_property in properties:
                 declarations = rulesets.declaration_block.declarations
-                meets = False
+
+                # check all declarations to see if any properties
+                # are a match and pull it from the list of remaining
+                # properties.
                 for declaration in declarations:
                     element_property = declaration.property
                     if expected_property == element_property:
-                        meets = True
+                        properties_found.append(element_property)
+                        found_properties_remaining.remove(element_property)
                         break
-                if not meets:
-                    file_passes = False
-                    msg = f"fail: {file}'s element: {element} does NOT "
-                    msg += f"have {expected_property} property applied."
-            if file_passes:
-                msg = f"pass: all elements in {file} have the proper "
-                msg += "files applied."
+
+            # If there are any properties left, it's a fail
+            if found_properties_remaining:
+                count = len(found_properties_remaining)
+                msg = f"fail: in {file}, the {element} tag does not apply "
+                if count == 1:
+                    msg += f"1 property: {found_properties_remaining[0]}."
+                else:
+                    msg += f"{count} properties: "
+                    msg += f"{found_properties_remaining}."
+
+            # all properties were accounted for (none remaining)
+            else:
+                msg = f"pass: in {file}, the {element} tag applies all "
+                msg += "required properties."
+            report.append(msg)
     return report
 
 
