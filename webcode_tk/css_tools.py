@@ -2470,6 +2470,8 @@ def get_heading_color_report(project_dir: str) -> list:
         report: a list of files and a pass or fail message for each."""
     report = []
     header_re = regex_patterns.get("header_selector")
+
+    # make sure we have a trailing slash separator
     if project_dir[-1] != "/":
         project_dir += "/"
     all_file_data = get_all_project_stylesheets(project_dir)
@@ -2478,13 +2480,12 @@ def get_heading_color_report(project_dir: str) -> list:
         filepath = project_dir + filename
         all_color_rules = get_all_color_rules(filepath)
         header_selectors = []
-        for key, val in all_color_rules.items():
-            if key == "file":
-                continue
-            is_header_selector = re.findall(header_re, key)
+
+        # Look through all selectors and their values
+        # if selector is a header selector, then check color
+        for sel, val in all_color_rules.items():
+            is_header_selector = re.findall(header_re, sel)
             if is_header_selector:
-                # we have a header selector
-                # we only need to check color
                 color_data = val
                 color_value = color_data.get("color")
                 bg_value = color_data.get("background-color")
