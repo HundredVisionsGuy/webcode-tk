@@ -7,6 +7,7 @@ from typing import Union
 
 from file_clerk import clerk
 
+from webcode_tk import cascade_tools
 from webcode_tk import color_keywords as keyword
 from webcode_tk import color_tools
 from webcode_tk import html_tools
@@ -2469,6 +2470,8 @@ def get_heading_color_report(project_dir: str) -> list:
         report: a list of files and a pass or fail message for each."""
     report = []
     header_re = regex_patterns.get("header_selector")
+
+    # make sure we have a trailing slash separator
     if project_dir[-1] != "/":
         project_dir += "/"
     all_file_data = get_all_project_stylesheets(project_dir)
@@ -2477,13 +2480,12 @@ def get_heading_color_report(project_dir: str) -> list:
         filepath = project_dir + filename
         all_color_rules = get_all_color_rules(filepath)
         header_selectors = []
-        for key, val in all_color_rules.items():
-            if key == "file":
-                continue
-            is_header_selector = re.findall(header_re, key)
+
+        # Look through all selectors and their values
+        # if selector is a header selector, then check color
+        for sel, val in all_color_rules.items():
+            is_header_selector = re.findall(header_re, sel)
             if is_header_selector:
-                # we have a header selector
-                # we only need to check color
                 color_data = val
                 color_value = color_data.get("color")
                 bg_value = color_data.get("background-color")
@@ -2537,7 +2539,90 @@ def get_project_color_contrast_report(project_dir: str, level="AAA") -> list:
     return report
 
 
+def get_element_rulesets(project_dir: str, element: str) -> list:
+    rulesets = []
+    styles_by_files = get_styles_by_html_files(project_dir)
+    for file in styles_by_files:
+        elements = None
+        filepath = file.get("file")
+        filename = clerk.get_file_name(filepath)
+        sheets = file.get("stylesheets")
+        elements = html_tools.get_elements(element, filepath)
+        for sheet in sheets:
+            for ruleset in sheet.rulesets:
+                sel = ruleset.selector
+                selector_applies = cascade_tools.does_selector_apply(
+                    elements[0], sel
+                )
+                if selector_applies:
+                    rulesets.append((filename, ruleset))
+
+    return rulesets
+
+
+def get_properties_applied_report(project_dir: str, goals: dict) -> list:
+    """returns a report on any elements that fail to have a property applied
+
+    Args:
+        project_dir: the path to the project folder
+        goals: a dictionary of elements and the properties expected to be
+            present
+
+    Returns:
+        report: a list of pass or fail messages that indicates the file, the
+            element, and the missing property.
+    """
+    report = []
+    elements = list(goals.keys())
+    for element in elements:
+        properties_found = []
+        properties = goals.get(element)
+        element_rulesets = get_element_rulesets(project_dir, element)
+
+        # check all rulesets for a given file to see which rulesets have
+        # one or more properties we are checking for
+        for file, rulesets in element_rulesets:
+            found_properties_remaining = list(properties)
+            for expected_property in properties:
+                declarations = rulesets.declaration_block.declarations
+
+                # check all declarations to see if any properties
+                # are a match and pull it from the list of remaining
+                # properties.
+                for declaration in declarations:
+                    element_property = declaration.property
+                    if expected_property == element_property:
+                        properties_found.append(element_property)
+                        found_properties_remaining.remove(element_property)
+                        break
+
+            # If there are any properties left, it's a fail
+            if found_properties_remaining:
+                count = len(found_properties_remaining)
+                msg = f"fail: in {file}, the {element} tag does not apply "
+                if count == 1:
+                    msg += f"1 property: {found_properties_remaining[0]}."
+                else:
+                    msg += f"{count} properties: "
+                    msg += f"{found_properties_remaining}."
+
+            # all properties were accounted for (none remaining)
+            else:
+                msg = f"pass: in {file}, the {element} tag applies all "
+                msg += "required properties."
+            report.append(msg)
+    return report
+
+
 if __name__ == "__main__":
+    project_folder = "tests/test_files/cascade_complexities"
+    goals = {
+        "figure": ("margin", "padding", "border", "float"),
+    }
+    report = get_properties_applied_report(project_folder, goals)
+    rulesets = get_element_rulesets(
+        "tests/test_files/cascade_complexities", "figure"
+    )
     insane_gradient = """
     -moz-radial-gradient(0% 200%, ellipse cover,
     rgba(143, 193, 242, 0.22) 10%,rgba(240, 205, 247,0) 40%),

@@ -24,7 +24,7 @@ font-file or some other hidden calculation from the browser.
 import re
 from typing import Union
 
-from webcode_tk.css_tools import Stylesheet
+from webcode_tk import css_tools
 
 absolute_keyword_regex = (
     r"\b(?:xx-small|x-small|small(?!-caps)|medium|large|x-large|"
@@ -76,7 +76,9 @@ FONT_NON_SIZE_NON_FAMILY_KEYWORDS = (
 )
 
 
-def get_absolute_keyword_values(css_code: Union[str, Stylesheet]) -> list:
+def get_absolute_keyword_values(
+    css_code: Union[str, css_tools.Stylesheet]
+) -> list:
     """returns a list of all keyword values in CSS
 
     To be safe, we should remove all selectors using the curly brackets
@@ -85,7 +87,7 @@ def get_absolute_keyword_values(css_code: Union[str, Stylesheet]) -> list:
     Args:
         css_code: the CSS styles in either string or Stylesheet format
     """
-    if isinstance(css_code, Stylesheet):
+    if isinstance(css_code, css_tools.Stylesheet):
         styles = css_code.text
     else:
         styles = css_code
@@ -108,7 +110,9 @@ def get_absolute_keyword_values(css_code: Union[str, Stylesheet]) -> list:
     return values
 
 
-def get_numeric_fontsize_values(css_code: Union[str, Stylesheet]) -> list:
+def get_numeric_fontsize_values(
+    css_code: Union[str, css_tools.Stylesheet]
+) -> list:
     """returns a list of all numeric font size values.
 
     This should work for any standard size value (em, px, %,
@@ -117,7 +121,7 @@ def get_numeric_fontsize_values(css_code: Union[str, Stylesheet]) -> list:
     Args:
         css_code: the CSS styles in either string or Stylesheet format.
     """
-    if isinstance(css_code, Stylesheet):
+    if isinstance(css_code, css_tools.Stylesheet):
         code = css_code.text
     else:
         code = css_code
