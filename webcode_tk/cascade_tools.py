@@ -13,6 +13,7 @@ import re
 from collections import abc
 from typing import Union
 
+from bs4 import NavigableString
 from file_clerk import clerk
 
 from webcode_tk import color_tools as color
@@ -69,6 +70,7 @@ class Element(object):
         parent=None,
         parent_size=root_font_size,
         ancestors=None,
+        tag_contents=None,
     ) -> None:
         self.name = name
         self.attributes = attributes
@@ -104,6 +106,10 @@ class Element(object):
                 value, unit, parent_size, name
             )
             self.is_bold = True
+        self.direct_text = ""
+        if tag_contents:
+            self.__set_direct_text(tag_contents)
+        self.has_direct_text = bool(self.direct_text)
         self.visited_color = {
             "value": "",
             "sheet": "",
@@ -163,6 +169,16 @@ class Element(object):
         self.ancestors = ancestors.copy() if ancestors is not None else []
         if parent:
             self.ancestors.append(self.parent)
+
+    def __set_direct_text(self, contents: list):
+        """get only text not in a tag"""
+        text = ""
+        for i in contents:
+            if isinstance(i, NavigableString):
+                new_text = str(i)
+                if new_text != "\n":
+                    text += new_text.strip()
+        self.direct_text = text
 
     def __set_link_color(self):
         if self.name == "a":
@@ -799,6 +815,7 @@ class CSSAppliedTree:
                 parent=parent,
                 parent_size=element.font_size,
                 ancestors=element.ancestors,
+                tag_contents=tag.contents,
             )
             self.__adjust_font_size(new_element)
             element.children.append(new_element)
@@ -813,6 +830,7 @@ class CSSAppliedTree:
                             parent=(new_element.name, id(new_element)),
                             parent_size=new_element.font_size,
                             ancestors=new_element.ancestors,
+                            tag_contents=tag.contents,
                         )
                     else:
                         kid_element = Element(
@@ -820,6 +838,7 @@ class CSSAppliedTree:
                             parent=(new_element.name, id(new_element)),
                             parent_size=new_element.font_size,
                             ancestors=new_element.ancestors,
+                            tag_contents=tag.contents,
                         )
                     self.__adjust_font_size(kid_element)
                     new_element.children.append(kid_element)
