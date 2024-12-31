@@ -819,9 +819,14 @@ def get_color_contrast_with_gradients(
                 for i in range(len(ancestors) - 1, -1, -1):
                     ancestor = ancestors[i]
                     if len(ancestor) > 2:
-                        base_color = ancestor[2]
-                        composite_color = blend_alpha(base_color, background)
-                        container_bg = ancestor[2]
+                        if ancestor[2]:
+                            base_color = ancestor[2]
+                            composite_color = blend_alpha(
+                                base_color, background
+                            )
+                            container_bg = ancestor[2]
+                        elif "background:" in ancestor[-1]:
+                            input("Get something in here")
                 if not composite_color:
                     composite_color = blend_alpha(container_bg, background)
             # convert each to hex

@@ -689,6 +689,9 @@ class Element(object):
                 self.background_color["value"] = val
                 self.background_color["sheet"] = filename
                 self.background_color["applied_by"] = "context"
+                self.background_color["selector"] = selector
+            else:
+                print("Check selector")
 
 
 class CSSAppliedTree:
@@ -774,7 +777,7 @@ class CSSAppliedTree:
         parent_bg = root.background_color.get("value")
         body = Element(
             "body",
-            parent=("html", root_id, parent_bg),
+            parent=["html", root_id, parent_bg],
             parent_size=root_font_size,
         )
         body.parent_size = body.font_size
@@ -808,7 +811,7 @@ class CSSAppliedTree:
                 continue
             tag_children = tag.contents
             tag_attributes = tag.attrs
-            parent = (element.name, id(element))
+            parent = [element.name, id(element)]
             new_element = Element(
                 tag_name,
                 attributes=tag_attributes,
@@ -819,31 +822,46 @@ class CSSAppliedTree:
             )
             self.__adjust_font_size(new_element)
             element.children.append(new_element)
-            for tag in tag_children:
-                if tag and not isinstance(tag, str):
-                    their_kids = tag.contents
-                    kids_attributes = tag.attrs
+            for item in tag_children:
+                if item and not isinstance(item, str):
+                    their_kids = item.contents
+                    kids_attributes = item.attrs
                     if kids_attributes:
                         kid_element = Element(
-                            tag.name,
+                            item.name,
                             attributes=kids_attributes,
-                            parent=(new_element.name, id(new_element)),
+                            parent=[new_element.name, id(new_element)],
                             parent_size=new_element.font_size,
                             ancestors=new_element.ancestors,
-                            tag_contents=tag.contents,
+                            tag_contents=item.contents,
                         )
                     else:
                         kid_element = Element(
-                            tag.name,
-                            parent=(new_element.name, id(new_element)),
+                            item.name,
+                            parent=[new_element.name, id(new_element)],
                             parent_size=new_element.font_size,
                             ancestors=new_element.ancestors,
-                            tag_contents=tag.contents,
+                            tag_contents=item.contents,
                         )
                     self.__adjust_font_size(kid_element)
                     new_element.children.append(kid_element)
                     self.__get_children(kid_element, their_kids)
         return
+
+    def extract_selectors(self, element):
+        """Get background color and color selectors"""
+        bg_data = ""
+        col_data = ""
+        if isinstance(element, Element):
+            if element.background_color.get("selector"):
+                bg_color = element.background_color.get("value")
+                bg_selector = element.background_color.get("selector")
+                bg_data = f"bg: {bg_color} selector: {bg_selector}"
+            if element.color.get("selector"):
+                color = element.color.get("value")
+                col_selector = element.color.get("selector")
+                col_data = f"color: {color} selector: {col_selector}"
+        return bg_data, col_data
 
     def __adjust_largeness(self) -> None:
         """sets the is_large property based on whether it's bold or not
@@ -955,6 +973,7 @@ class CSSAppliedTree:
         filename: str,
         applied_by="default",
         selector_src="",
+        parent=None,
     ) -> None:
         """recursively adjust color where necessary to all elements that
         apply.
@@ -971,6 +990,22 @@ class CSSAppliedTree:
             element: the element in question.
             ruleset: the ruleset we want to apply.
             filename: the file where the styles came from."""
+        # If there is a parent, it's a good time to adjust the direct ancestor
+        if parent:
+            bg_sel, col_sel = self.extract_selectors(parent)
+            direct_ancestor = element.ancestors[-1]
+            if len(direct_ancestor) == 2:
+                direct_ancestor.append("")
+            if len(direct_ancestor) == 3:
+                direct_ancestor.append(bg_sel)
+                direct_ancestor.append(col_sel)
+            elif len(direct_ancestor) == 4:
+                direct_ancestor[-1] = bg_sel
+                direct_ancestor.append(col_sel)
+            elif len(direct_ancestor) == 5:
+                direct_ancestor[-2] = bg_sel
+                direct_ancestor[-1] = col_sel
+
         # Adjust colors if necessary - if there was a change,
         # adjust colors for children
         selector = list(ruleset.keys())[0]
@@ -1053,7 +1088,7 @@ class CSSAppliedTree:
                 selector, declaration.copy(), new_specificity, filename
             )
         for child in element.children:
-            self.__adjust_colors(child, ruleset, filename)
+            self.__adjust_colors(child, ruleset, filename, parent=element)
 
     def __adjust_child_colors(
         self,
@@ -1079,6 +1114,8 @@ class CSSAppliedTree:
             filename: name of the file where the styles came from
             applied_from: the name of the element that was targetted
         """
+        # First adjust direct ancestor
+
         # Adjust colors if necessary - if there was a change,
         # adjust colors for children
         selector = list(ruleset.keys())[0]
@@ -1626,9 +1663,10 @@ def update_contrast_results(
 def get_color_contrast_details(tree: CSSAppliedTree, rating="AAA") -> list:
     """returns a list of all failures or a pass based on rating
 
-    We'll create a recursive inner nested function to traverse the DOM. We will
-    target only the styles that are applied directly so as to not overwhelm the
-    user and allow fixing the error more easily.
+    We'll create a recursive inner nested function to traverse the DOM. We
+    will target all elements, and then report on number of errors triggered
+    by each selector to help avoid overwhelming the user with too many
+    errors.
 
     Args:
         tree: the cascade tree for a single file.
@@ -1643,68 +1681,77 @@ def get_color_contrast_details(tree: CSSAppliedTree, rating="AAA") -> list:
     elements = tree.children
 
     def check_element(
-        el: Element, rating: str, filename: str
+        el: Element, rating: str, filename: str, parent_sel=None
     ) -> Union[list, None]:
         children = el.children
-        msg = ""
-        applied_directly = (
-            el.background_color.get("applied_by") == "directly"
-            or el.color.get("applied_by") == "directly"
-        )
-        if applied_directly or el.name == "body":
-            is_gradient = el.background_color.get("is_gradient")
-            if is_gradient:
-                # get worst case
-                worst_case = el.background_color.get("worst_contrast")
-                worst_results = worst_case.get("results")
-                fails = "fail" in worst_results[:5]
-                if fails:
-                    selector = el.background_color.get("selector")
-                    if el.is_large:
-                        size = "Large"
-                    else:
-                        size = "Normal"
-                    msg = f"{el.name} tag (selector: {selector}) fails color "
-                    msg += f"contrast at {size} {rating}."
-                    results.append(msg)
-                    return
-            contrast_data = el.contrast_data
-            if el.is_large:
-                if rating == "AAA":
-                    passes = contrast_data.get("large_aaa")
-                else:
-                    passes = contrast_data.get("large_aa")
-            else:
-                if rating == "AAA":
-                    passes = contrast_data.get("normal_aaa")
-                else:
-                    passes = contrast_data.get("normal_aa")
 
-            # only add results if failure
-            if not passes:
+        is_gradient = el.background_color.get("is_gradient")
+        if is_gradient:
+            # get worst case
+            worst_case = el.background_color.get("worst_contrast")
+            worst_results = worst_case.get("results")
+            fails = "fail" in worst_results[:5]
+            if fails:
+                selector = el.background_color.get("selector")
                 if el.is_large:
                     size = "Large"
                 else:
                     size = "Normal"
-                selector = el.background_color.get("selector")
-                if not selector:
-                    selector = el.color.get("selector")
-                msg = f"selector: {selector} fails color contrast {size}"
-                msg += f"{rating}"
-                results.append(msg)
+                if el.has_direct_text:
+                    results.append((filename, selector, size, rating))
+                return
+        contrast_data = el.contrast_data
+        if el.is_large:
+            if rating == "AAA":
+                passes = contrast_data.get("large_aaa")
+            else:
+                passes = contrast_data.get("large_aa")
+        else:
+            if rating == "AAA":
+                passes = contrast_data.get("normal_aaa")
+            else:
+                passes = contrast_data.get("normal_aa")
+
+        # only add results if failure
+        if not passes:
+            if el.is_large:
+                size = "Large"
+            else:
+                size = "Normal"
+            selector = el.background_color.get("selector")
+            if not selector:
+                selector = el.color.get("selector")
+            # if there still isn't a selector, get the parent selector
+            if not selector:
+                selector = parent_sel
+            # and only if the element has direct text (experimental)
+            if el.has_direct_text:
+                results.append((filename, selector, size, rating))
 
         if not children:
             return
         else:
             for kid in children:
-                check_element(kid, rating, filename)
+                if el.background_color.get("selector"):
+                    parent_selector = el.background_color.get("selector")
+                else:
+                    parent_selector = el.color.get("selector")
+                check_element(kid, rating, filename, parent_selector)
 
     for element in elements:
         check_element(element, rating, filename)
     if results:
         adjusted = []
         for result in results:
-            adjusted.append(f"fail: ({filename}) " + result)
+            count = results.count(result)
+            file, selector, size, rating = result
+            msg = f"fail: in {file}, selector: {selector} triggered "
+            if count > 1:
+                msg += f"{count} contrast errors for {size} {rating}."
+            else:
+                msg += f"contrast error for {size} {rating}."
+            if msg not in adjusted:
+                adjusted.append(msg)
         results = adjusted
     else:
         # It's a success! Let's let them know
