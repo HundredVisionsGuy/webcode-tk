@@ -448,6 +448,8 @@ def test_get_color_contrast_details_for_AAA_fail_single_file_style_tag():
     results = cascade.get_color_contrast_details(tree)
     expected = "h1, h2 triggered 4" in results[0]
     assert expected
+    expected = "h1, h2 triggered 4" in results[0]
+    assert expected
 
 
 def test_get_color_contrast_details_for_AA_large(gradients_file_large_tree):
