@@ -255,12 +255,6 @@ class Element(object):
                     self.visited_background["value"] = new_bg
                     self.visited_background["specificity"] = new_specificity
 
-            # Do we have a link selector?
-            is_link_selector = css.is_link_selector(selector)
-            if is_link_selector:
-                print("We have a link selector in ammend_color_styles")
-                print("I suppose we should check specificity")
-
     def ammend_bg_color(
         self,
         bg_color: str,
@@ -351,11 +345,6 @@ class Element(object):
             hexc: the hex code for the color value.
             hexbg: the hex code for the background color.
         """
-        bg_gradient = color.is_gradient(hexbg)
-        c_gradient = color.is_gradient(hexc)
-        if bg_gradient or c_gradient:
-            # worst contrast ratio takes the hit
-            print("let's process this")
         link_contrast = color.get_color_contrast_report(hexc, hexbg)
         link_ratio = color.contrast_ratio(hexc, hexbg)
 
@@ -380,9 +369,6 @@ class Element(object):
             hexc: the hex code for the color value.
             hexbg: the hex code for the background color.
         """
-        has_gradient = color.is_gradient(hexc) or color.is_gradient(hexbg)
-        if has_gradient:
-            print()
         link_contrast = color.get_color_contrast_report(hexc, hexbg)
         link_ratio = color.contrast_ratio(hexc, hexbg)
 
@@ -581,8 +567,13 @@ class Element(object):
                                 targets = True
                                 break
                 if selector_type == "id_selector":
+                    # NOTE: testing has not uncovered this state
+                    # we're keeping it here just in case
                     if "id" in self.attributes.keys():
-                        print("do like we do for classes")
+                        for val in self.attributes.get("id"):
+                            if val == selector[1:]:
+                                targets = True
+                                break
         return targets
 
     def been_applied(self, property: str) -> bool:
@@ -690,8 +681,6 @@ class Element(object):
                 self.background_color["sheet"] = filename
                 self.background_color["applied_by"] = "context"
                 self.background_color["selector"] = selector
-            else:
-                print("Check selector")
 
 
 class CSSAppliedTree:
@@ -1054,32 +1043,6 @@ class CSSAppliedTree:
                 self.__adjust_child_colors(
                     child, ruleset, filename, element_name
                 )
-        elif is_background_prop:
-            # background - if not set directly - apply by context
-            value = declaration.get("background-color")
-            if not value:
-                value = declaration.get("background")
-            if property == "background-image":
-                value = declaration.get("background-image")
-
-            # adjust if value is not the same as current value
-            applied_by = element.background_color.get("applied_by")
-            current_value = element.background_color.get("value")
-            time_to_adjust = (
-                applied_by == "default"
-                or applied_by == "context"
-                and value != current_value
-            )
-            # But only if the value was applied to an ancestor
-            # For example, a th is not a parent of a td
-            applied_to_ancestor = False
-            for ancestor in element.ancestors:
-                ancestor_tag = ancestor[0]
-                if ancestor_tag == selector_src:
-                    applied_to_ancestor = True
-            time_to_adjust = time_to_adjust and applied_to_ancestor
-            if time_to_adjust:
-                print("Wait")
         can_inherit = self.can_inherit_styles(element, selector, ruleset)
         if can_inherit and applies:
             declaration = ruleset.get(selector)
@@ -1686,11 +1649,46 @@ def get_color_contrast_details(tree: CSSAppliedTree, rating="AAA") -> list:
         children = el.children
 
         is_gradient = el.background_color.get("is_gradient")
+
+        # if the gradient was not directly applied, we won't get is_gradient
+        # since it might be applied contextually, we should double check
+        if not is_gradient:
+            bg_value = el.background_color.get("value")
+            is_gradient = "gradient" in bg_value
+
+            # we should recalculate contrast if it didn't register
+            if is_gradient:
+                fg_color = el.color.get("value")
+                bg_color = el.background_color.get("value")
+                contrast_details = color.get_color_contrast_with_gradients(
+                    fg_color, bg_color, el.ancestors
+                )
+                worst_case = {
+                    "has_alpha": False,
+                    "computed_value": "",
+                    "contrast_ratio": 0.0,
+                    "results": "",
+                }
+                contrast, fg_color = contrast_details[0][:2]
+                composite_bg, bg_has_alpha = contrast_details[0][3:]
+                worst_case["has_alpha"] = bg_has_alpha
+                worst_case["computed_value"] = composite_bg
+                worst_case["contrast_ratio"] = contrast
+                hex1 = color.get_hex(fg_color)
+                hex2 = color.get_hex(composite_bg)
+                passes_contrast = color.get_contrast_results_from_ratio(
+                    contrast, el.font_size, el.is_bold
+                )
+                worst_case["results"] = passes_contrast
+                el.background_color["worst_contrast"] = worst_case
         if is_gradient:
             # get worst case
             worst_case = el.background_color.get("worst_contrast")
             worst_results = worst_case.get("results")
             fails = "fail" in worst_results[:5]
+            if "conditional pass" in worst_results:
+                if rating not in worst_results:
+                    fails = True
             if fails:
                 selector = el.background_color.get("selector")
                 if el.is_large:
@@ -1698,7 +1696,68 @@ def get_color_contrast_details(tree: CSSAppliedTree, rating="AAA") -> list:
                 else:
                     size = "Normal"
                 if el.has_direct_text:
-                    results.append((filename, selector, size, rating))
+                    if not selector and parent_sel:
+                        selector = parent_sel
+                        results.append((filename, selector, size, rating))
+
+                    # NOTE: it's possible we won't be able to get a selector
+                    # in the future. If so, add an else block and deal with it
+
+                else:
+                    # We have a failure, but without direct text
+                    # We need to verify whether the failure is passed
+                    # on to the children or not
+                    parent_bg = el.background_color
+                    parent_bg_selector = parent_bg.get("selector")
+                    parent_col = el.color
+                    parent_col_selector = parent_col.get("selector")
+                    for child in children:
+                        child_bg_val = child.background_color.get("value")
+                        child_col_val = child.color.get("value")
+
+                        # Check to see if the values in the child are the
+                        # same as with the parent, in which case, if parent
+                        # fails, then child should too
+                        if child_bg_val == parent_bg.get(
+                            "value"
+                        ) and child_col_val == parent_col.get("value"):
+                            selector = parent_bg_selector
+                            if not selector:
+                                selector = parent_col_selector
+
+                            # double check to make sure child is same size or
+                            # smaller than parent (size is parent's size)
+                            if size == "Normal" and child.is_large:
+                                hex1 = color.get_hex(child_bg_val)
+
+                                # In case the bg color is a gradient, we
+                                # need to pull from parent's bg_data
+                                if not hex1:
+                                    css_color = parent_bg.get("computed_value")
+                                    if css_color:
+                                        hex1 = color.get_hex(css_color)
+                                    else:
+                                        parent_bg_val = worst_case.get("value")
+                                        hex1 = color.get_hex(parent_bg_val)
+                                hex2 = color.get_hex(child_col_val)
+                                child_contrast = (
+                                    color.get_color_contrast_report(hex1, hex2)
+                                )
+                                child_sizing = f"Large {rating}"
+                                passes = "Fail" != child_contrast.get(
+                                    child_sizing
+                                )
+                                if not passes:
+                                    results.append(
+                                        (filename, selector, size, rating)
+                                    )
+                            else:
+                                results.append(
+                                    (filename, selector, size, rating)
+                                )
+
+                        # TODO: add tests to look for a parent with normal
+                        # size and a child that's large - make an else block
                 return
         contrast_data = el.contrast_data
         if el.is_large:
@@ -1721,9 +1780,11 @@ def get_color_contrast_details(tree: CSSAppliedTree, rating="AAA") -> list:
             selector = el.background_color.get("selector")
             if not selector:
                 selector = el.color.get("selector")
+
             # if there still isn't a selector, get the parent selector
             if not selector:
                 selector = parent_sel
+
             # and only if the element has direct text (experimental)
             if el.has_direct_text:
                 results.append((filename, selector, size, rating))
@@ -1736,6 +1797,14 @@ def get_color_contrast_details(tree: CSSAppliedTree, rating="AAA") -> list:
                     parent_selector = el.background_color.get("selector")
                 else:
                     parent_selector = el.color.get("selector")
+                if not parent_selector:
+                    parent_selector = kid.ancestors[-1][3]
+                    if not parent_selector:
+                        parent_selector = kid.ancestors[-1][-1]
+                    if parent_selector:
+                        parent_selector = parent_selector.split("selector:")[
+                            -1
+                        ]
                 check_element(kid, rating, filename, parent_selector)
 
     for element in elements:
@@ -1782,8 +1851,6 @@ def get_color_contrast_report(dir_path: str, rating="AAA") -> list:
         for item in report:
             if item not in results:
                 results.append(item)
-        # Do one more pass on hyperlinks and double check contrast
-        print(results)
     return results
 
 
