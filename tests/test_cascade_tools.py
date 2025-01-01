@@ -446,8 +446,8 @@ def test_get_color_contrast_details_for_AAA_fail_single_file_style_tag():
     sheets = styles[0].get("stylesheets")
     tree = cascade.CSSAppliedTree(file, sheets)
     results = cascade.get_color_contrast_details(tree)
-    expected = 4
-    assert len(results) == expected
+    expected = "h1, h2 triggered 4" in results[0]
+    assert expected
 
 
 def test_get_color_contrast_details_for_AA_large(gradients_file_large_tree):
@@ -455,8 +455,12 @@ def test_get_color_contrast_details_for_AA_large(gradients_file_large_tree):
         gradients_file_large_tree, "AA"
     )
     # Should fail: horizontal
-    expected = 1
-    assert len(results) == expected
+    expected = (
+        len(results) == 2
+        and ".horizontal-gradient triggered 2" in results[0]
+        and ".simple-linear triggered 2" in results[1]
+    )
+    assert expected
 
 
 def test_get_color_contrast_for_AAA_normal(gradients_file_normal_tree):
