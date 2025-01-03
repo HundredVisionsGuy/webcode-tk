@@ -9,6 +9,7 @@ Modules exported by this package:
           properties and hex and rgb values.
 - `color_tools`: processes CSS color related properties and values.
 - `css_tools`: creates Stylesheet objects that store CSS information.
+- `font_tools`: A collection of functions used to process font-related styles.
 - `html_tools`: gets html files from a project folder, gets the HTML code
           from files, gets number of a particular element in a file
           or folder, gets elements as tags, and much more.
@@ -18,4 +19,4 @@ Modules exported by this package:
 - `validator_tools`: sends HTML or CSS code to the W3C Validator to check
           for errors.
 """
-__version__ = "1.1.4"
+__version__ = "1.1.5"
