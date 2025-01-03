@@ -22,6 +22,7 @@ dependent upon the font-family itself and require information from the
 font-file or some other hidden calculation from the browser.
 """
 import re
+from typing import Any
 from typing import Union
 
 from webcode_tk import css_tools
@@ -76,9 +77,7 @@ FONT_NON_SIZE_NON_FAMILY_KEYWORDS = (
 )
 
 
-def get_absolute_keyword_values(
-    css_code: Union[str, css_tools.Stylesheet]
-) -> list:
+def get_absolute_keyword_values(css_code: any) -> list:
     """returns a list of all keyword values in CSS
 
     To be safe, we should remove all selectors using the curly brackets
@@ -110,9 +109,7 @@ def get_absolute_keyword_values(
     return values
 
 
-def get_numeric_fontsize_values(
-    css_code: Union[str, css_tools.Stylesheet]
-) -> list:
+def get_numeric_fontsize_values(css_code: Any) -> list:
     """returns a list of all numeric font size values.
 
     This should work for any standard size value (em, px, %,
@@ -121,10 +118,10 @@ def get_numeric_fontsize_values(
     Args:
         css_code: the CSS styles in either string or Stylesheet format.
     """
-    if isinstance(css_code, css_tools.Stylesheet):
-        code = css_code.text
-    else:
+    if isinstance(css_code, str):
         code = css_code
+    else:
+        code = css_code.text
     matches = re.findall(numeric_value_regex, code)
     full_matches = []
     for match in matches:
