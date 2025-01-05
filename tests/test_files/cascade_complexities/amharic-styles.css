@@ -39,6 +39,12 @@ header nav ul li a {
 }
 
 /* Main Content Styling */
+main#prime {
+    background-color: #003366;
+}
+main.three.multiple.classes {
+    border-radius: 2em;
+}
 main {
     max-width: 800px;
     margin: 2rem auto;

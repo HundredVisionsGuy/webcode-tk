@@ -1273,6 +1273,7 @@ def does_selector_apply(element: Element, selector: str) -> bool:
         is_descendant_selector = bool(
             re.match(regex_patterns.get("descendant_selector"), sel)
         )
+        is_at_rule = "@" in sel
 
         # If the tag is an anchor, but the selector is not - doesn't apply
         # link color can only be changed by a link selector
@@ -1348,6 +1349,10 @@ def does_selector_apply(element: Element, selector: str) -> bool:
             applies = descendant_selector_applies(element, sel)
             if applies:
                 break
+        elif is_at_rule:
+            # We should return false as it is an @rule and shouldn't
+            # apply
+            return False
         else:
             raise ValueError(f"Selector not recognized: Got {selector}")
     return applies

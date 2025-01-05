@@ -1105,17 +1105,75 @@ def test_get_element_rulesets_for_figure_in_gallery():
     rulesets = css_tools.get_element_rulesets(
         "tests/test_files/cascade_complexities", "figure"
     )
-    assert len(rulesets) == 2
+    assert len(rulesets) == 4
 
 
 def test_get_properties_applied_report_for_figure_2_fails():
     project_folder = "tests/test_files/cascade_complexities"
     goals = {
-        "figure": ("margin", "padding", "border", "float"),
+        "figure": {
+            "properties": ("margin", "padding", "border", "float"),
+        }
     }
     report = css_tools.get_properties_applied_report(project_folder, goals)
     fails = 0
     for item in report:
         if "fail" in item:
             fails += 1
-    assert fails == 2
+    assert fails == 3
+
+
+# Test variations on get_properties_applied function
+project_folder = "tests/test_files/cascade_complexities"
+properties_applied_simple = {
+    "figure": {
+        "properties": ("box-shadow", "border-radius", "animation"),
+    }
+}
+properties_applied_min_2 = {
+    "main": {
+        "properties": ("box-shadow", "border-radius", "animation"),
+        "min_required": 2,
+    }
+}
+targets_main_tag_by_advanced = {
+    "main": {
+        "properties": ("box-shadow", "animation"),
+        "min_required": 1,
+        "check_advanced_selectors": True,
+    }
+}
+simple_properties_applied_report = css_tools.get_properties_applied_report(
+    project_folder, properties_applied_simple
+)
+properties_with_2_min_required = css_tools.get_properties_applied_report(
+    project_folder, properties_applied_min_2
+)
+main_targets_animation_with_id = css_tools.get_properties_applied_report(
+    project_folder, targets_main_tag_by_advanced
+)
+
+
+@pytest.mark.parametrize("results", simple_properties_applied_report)
+def test_for_properties_applied_simple(results):
+    if "amharic.html" in results:
+        assert "fail:" in results[:5] and "3" in results
+    elif "index.html" in results:
+        assert "fail:" in results[:5] and "2" in results
+    else:
+        assert "pass:" in results[:5]
+
+
+def test_get_properties_for_min2_properties_1_pass_2_fail():
+    passed = 0
+    failed = 0
+    for result in properties_with_2_min_required:
+        if "pass:" in result[:5]:
+            passed += 1
+        if "fail:" in result[:5]:
+            failed += 1
+    assert passed == 1 and failed == 2
+
+
+def test_get_properties_for_solely_id_targetted():
+    assert "pass:" in main_targets_animation_with_id[0][:5]

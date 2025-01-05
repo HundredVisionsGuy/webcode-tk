@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birds of Prey Image Gallery</title>
+    <style>
+        body {
+            color: rgb(228, 216, 203);
+            background-color: rgb(29, 29, 29);
+            font-family: 'Playfair Display', 'Source Sans Pro';
+            text-align: center;
+        }
+        a {
+            color: white;
+        }
+        h1 {
+            font-family: 'Quattrocento', 'Quattrocento Sans';
+            color: yellow;
+        }
+        figure {
+            border: 2px solid;
+            border-radius: 5px;
+            background-color: rgb(9, 49, 14);
+            padding: 0.5em 1em;
+            width: 300px;
+            height: 320px;
+            margin: 0;
+            box-shadow: 1px 1px 1px black;
+            animation: expand 1.5s ease-in-out 0s 1;
+        }
+        @keyframes expand {
+            0% {
+                width: 300px;
+            }
+            50% {
+                width: 320px;
+            }
+            100% {
+                width: 300px;
+            }
+        }
+        figure:hover {
+            animation: expand 1.5s ease-in-out 0s 1;
+        }
+        div {
+            display:flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        @keyframes bg-color-cycle {
+            0% {
+                background-color: rgb(35, 40, 36);
+            }
+            50% {
+                background-color: rgb(29, 29, 29);
+            }
+            100% {
+                background-color: rgb(35, 40, 36);
+            }
+        }
+        #bg-cycle {
+            animation: bg-color-cycle 45s linear 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Birds of Prey Image Gallery</h1>
+    </header>
+    <main id="bg-cycle" class="gallery">
+        <figure>
+            <a href="images/golden_eagle_right.jpg">
+            <img src="images/golden_eagle_right_small.jpg" alt="Golden Eagle Looking to the Right">
+            </a>
+            <figcaption>
+                <b>Golden Eagle</b>
+                <br>
+                Image by
+                <a href="https://commons.wikimedia.org/wiki/File:Steinadler_Aquila_chrysaetos_closeup2_Richard_Bartz.jpg">Richard Bartz, Munich aka Makro Freak</a>, <a href="https://creativecommons.org/licenses/by-sa/2.5">CC BY-SA 2.5</a>, via Wikimedia Commons
+            </figcaption>
+        </figure>
+        <figure>
+            <a href="images/augur_buzzard.jpg">
+            <img src="images/augur_buzzard_small.jpg" alt="Augur Buzzard Perched on a Tree.">
+            </a>
+            <figcaption>
+                <b>Augur Buzzard</b>
+                <br>
+                Image by
+                <a href="https://commons.wikimedia.org/wiki/File:Augurbussard-Serengeti.jpg">Tobi 87</a>, <a href="https://creativecommons.org/licenses/by-sa/3.0">CC BY-SA 3.0</a>, via Wikimedia Commons
+            </figcaption>
+        </figure>
+    </main>
+    <footer>
+        <p>This is a footer test.</p>
+    </footer>
+</body>
+</html>

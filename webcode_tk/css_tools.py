@@ -19,7 +19,7 @@ regex_patterns: dict = {
     "advanced_link_selector": r"(a[:.#\[]\w+)",
     "attribute_selectors": r"[a-zA-Z]*\[(.*?)\]",
     "child_combinator": r"\w+\s*>\s*\w+",
-    "class_selector": r"\.\w+",
+    "class_selector": r"\w*\.\w+",
     "descendant_selector": r"\w+\s\w+",
     "general_sibling_combinator": r"\w+\s*~\s*\w+",
     "grouped_selector": r"\w+\s*,\s*\w+",
@@ -175,44 +175,51 @@ class Stylesheet:
         self.text = code_without_comments
 
     def __extract_nested_at_rules(self):
-        """Pulls out any nested at-rule and stores them in a list."""
+        """Pulls out any nested at-rule and stores them in a list.
+
+        Algorithm: get # of @ signs"""
         at_rules = []
         non_at_rules_css = []
 
-        # split at the double }} (end of a nested at rule)
-        css_split = self.text.split("}}")
-        css_split = restore_braces(css_split)
+        css_code = self.text
 
-        if len(css_split) == 1:
+        # no @ sign, no at_rules - we're done
+        num_at_rules = css_code.count("@")
+        if num_at_rules == 0:
             return
-        for code in css_split:
-            # continue if empty
-            if not code.strip():
-                continue
-            for rule in nested_at_rules:
-                # if there is a nested @rule
-                # split code from @rule
-                if rule in code:
-                    split_code = code.split(rule)
-                    if len(split_code) == 2:
-                        if split_code[0]:
-                            # an @rule was NOT at the beginning or else,
-                            # there would be an empty string
-                            # that means there is CSS to add (non-at-rules)
-                            non_at_rules_css.append(split_code[0])
 
-                        # create a nested at-rule object
-                        text = split_code[1]
-                        pos = text.find("{")
-                        at_rule = rule + text[:pos]
-                        ruleset_string = text[pos + 1 : -1]
-                        nested = NestedAtRule(at_rule, ruleset_string)
-                        if nested.has_repeat_selectors:
-                            self.has_repeat_selectors = True
-                        at_rules.append(nested)
-                    else:
-                        # it's only an @rule
-                        print("skipping non-nested @rule.")
+        # add a marker symbols !! to indicate @ sign after split
+        css_code = css_code.replace("@", "@!!")
+
+        # everything between @ sign and }} is a nested at rule
+        css_split_at_at = css_code.split("@")
+
+        # Loop through code, each string beginning with ! is an at-rule
+        for code in css_split_at_at:
+            if code[:2] == "!!":
+                code = code.replace("!!", "@")
+
+                # get a slice up to }} (end of @rule)
+                code_split = code.split("}}")
+
+                # first element is the @rule
+                at_rule = code_split[0] + "}}"
+
+                # create a nested at-rule object
+                pos = at_rule.find("{")
+                rule = at_rule[:pos]
+                ruleset_string = at_rule[pos + 1 : -1]
+                nested = NestedAtRule(rule, ruleset_string)
+                if nested.has_repeat_selectors:
+                    self.has_repeat_selectors = True
+                at_rules.append(nested)
+
+                # second element is any other CSS code
+                non_at_rule = code_split[1]
+                if non_at_rule:
+                    non_at_rules_css.append(non_at_rule)
+            else:
+                non_at_rules_css.append(code)
 
         self.text = "".join(non_at_rules_css)
         self.nested_at_rules = at_rules
@@ -2548,6 +2555,8 @@ def get_element_rulesets(project_dir: str, element: str) -> list:
         filename = clerk.get_file_name(filepath)
         sheets = file.get("stylesheets")
         elements = html_tools.get_elements(element, filepath)
+        if not elements:
+            return []
         for sheet in sheets:
             for ruleset in sheet.rulesets:
                 sel = ruleset.selector
@@ -2563,6 +2572,25 @@ def get_element_rulesets(project_dir: str, element: str) -> list:
 def get_properties_applied_report(project_dir: str, goals: dict) -> list:
     """returns a report on any elements that fail to have a property applied
 
+    goals should be a dictionary with a key for each element we are checking.
+    Each key has as it's value a dictionary with 1 to 3 possible keys...
+      1. (required) properties (the properties that should be applied)
+      2. (optional) min_required: If min_required is specified, then to pass
+         it only requires the minimum number of properties to be present.
+
+    Sample goals might look like the following:
+    goals_simple = {
+        "figure": {
+            "properties": ("box-shadow", "border-radius", "animation"),
+        }
+    }
+    goals_complex = {
+        "figure": {
+            "properties": ("box-shadow", "border-radius", "animation"),
+            "min_required": 2,
+        }
+    }
+
     Args:
         project_dir: the path to the project folder
         goals: a dictionary of elements and the properties expected to be
@@ -2576,48 +2604,172 @@ def get_properties_applied_report(project_dir: str, goals: dict) -> list:
     elements = list(goals.keys())
     for element in elements:
         properties_found = []
-        properties = goals.get(element)
-        element_rulesets = get_element_rulesets(project_dir, element)
+        details = goals.get(element)
+        min_required = 0
+        # details might be a tuple or a dictionary
+        if isinstance(details, tuple):
+            properties = details
+            min_required = len(properties)
+        else:
+            properties = details.get("properties")
+            min_required = details.get("min_required")
 
-        # check all rulesets for a given file to see which rulesets have
-        # one or more properties we are checking for
-        for file, rulesets in element_rulesets:
+        html_files = get_styles_by_html_files(project_dir)
+        for file in html_files:
             found_properties_remaining = list(properties)
-            for expected_property in properties:
-                declarations = rulesets.declaration_block.declarations
+            file_path = file.get("file")
+            targetted_elements_in_file = html_tools.get_elements(
+                element, file_path
+            )
+            # check all selectors in all stylesheet objects
+            for sheet in file.get("stylesheets"):
+                for rule in sheet.rulesets:
+                    selector = rule.selector
+                    selector_type = get_selector_type(selector)
+                    if selector_type == "type_selector":
+                        if selector == element:
+                            # loop through all properties and take what we can
+                            take_targetted_properties(
+                                properties_found,
+                                properties,
+                                found_properties_remaining,
+                                rule,
+                            )
+                    if selector_type == "descendant_selector":
+                        sel_split = selector.split()
+                        target = sel_split[-1]
+                        if element == target:
+                            take_targetted_properties(
+                                properties_found,
+                                properties,
+                                found_properties_remaining,
+                                rule,
+                            )
+                    if selector_type == "grouped_selector":
+                        sel_split = selector.split(",")
+                        if element in sel_split:
+                            take_targetted_properties(
+                                properties_found,
+                                properties,
+                                found_properties_remaining,
+                                rule,
+                            )
+                    if selector_type == "pseudo_selector":
+                        sel_split = selector.split(":")
+                        target = sel_split[0]
+                        if target == element:
+                            take_targetted_properties(
+                                properties_found,
+                                properties,
+                                found_properties_remaining,
+                                rule,
+                            )
+                    if selector_type == "id_selector":
+                        # could be starting with # or have tag, then hash
+                        # tag, then ID
+                        the_tag, its_id = selector.split("#")
+                        for target in targetted_elements_in_file:
+                            # our target must have an id attribute or no match
+                            if target.attrs:
+                                target_id = target.attrs.get("id")
+                                if target_id:
+                                    a_match = ""
+                                    if the_tag:
+                                        a_match = element + "#" + target_id
+                                    else:
+                                        a_match = "#" + target_id
+                                    if selector == a_match:
+                                        take_targetted_properties(
+                                            properties_found,
+                                            properties,
+                                            found_properties_remaining,
+                                            rule,
+                                        )
+                    if selector_type == "class_selector":
+                        # is the first part the tag?
 
-                # check all declarations to see if any properties
-                # are a match and pull it from the list of remaining
-                # properties.
-                for declaration in declarations:
-                    element_property = declaration.property
-                    if expected_property == element_property:
-                        properties_found.append(element_property)
-                        found_properties_remaining.remove(element_property)
-                        break
+                        selector_split = selector.split(".")
+                        selector_tag = ""
+                        if selector[0] != ".":
+                            selector_tag = selector_split[0]
+                        its_classes = selector_split[1:]
+                        for target in targetted_elements_in_file:
+                            # our target must have attributes
+                            if target.attrs:
+                                target_classes = target.attrs.get("class")
+                                if target_classes:
+                                    # We need to sort both and compare
+                                    its_classes.sort()
+                                    target_classes.sort()
+                                    if its_classes == target_classes:
+                                        # could be a match
+                                        if selector_tag:
+                                            # but not if the selector
+                                            # doesn't match
+                                            if selector_tag != element:
+                                                continue
+                                        # It's a match
+                                        take_targetted_properties(
+                                            properties_found,
+                                            properties,
+                                            found_properties_remaining,
+                                            rule,
+                                        )
 
             # If there are any properties left, it's a fail
+            filename = clerk.get_file_name(file.get("file"))
             if found_properties_remaining:
                 count = len(found_properties_remaining)
-                msg = f"fail: in {file}, the {element} tag does not apply "
-                if count == 1:
-                    msg += f"1 property: {found_properties_remaining[0]}."
+                if min_required:
+                    applied = len(properties) - count
+                    if applied >= min_required:
+                        msg = f"pass: in {filename} the {element} tag applies"
+                        msg += " minimum required properties ("
+                        msg += f"{min_required})."
+                    else:
+                        msg = f"fail: in {filename}, the {element} tag only "
+                        msg += f" applied {applied} properties out of "
+                        msg += f" {min_required} required properties."
                 else:
-                    msg += f"{count} properties: "
-                    msg += f"{found_properties_remaining}."
+                    msg = f"fail: in {filename}, the {element} tag does not "
+                    msg += "apply "
+                    if count == 1:
+                        msg += f"1 property: {found_properties_remaining[0]}."
+                    else:
+                        msg += f"{count} properties: "
+                        msg += f"{found_properties_remaining}."
 
             # all properties were accounted for (none remaining)
             else:
-                msg = f"pass: in {file}, the {element} tag applies all "
+                msg = f"pass: in {filename}, the {element} tag applies all "
                 msg += "required properties."
             report.append(msg)
+    if not report:
+        msg = f"fail: no file directly targetted the {element} tag's "
+        msg += f"properties: {properties}."
+        report.append(msg)
     return report
+
+
+def take_targetted_properties(
+    properties_found, properties, found_properties_remaining, rule
+):
+    declarations = rule.declaration_block.declarations
+    for dec in declarations:
+        prop = dec.property
+        if prop in properties:
+            if found_properties_remaining:
+                if prop in found_properties_remaining:
+                    properties_found.append(prop)
+                    found_properties_remaining.remove(prop)
 
 
 if __name__ == "__main__":
     project_folder = "tests/test_files/cascade_complexities"
     goals = {
-        "figure": ("margin", "padding", "border", "float"),
+        "figure": {
+            "properties": ("box-shadow", "border-radius", "animation"),
+        }
     }
     report = get_properties_applied_report(project_folder, goals)
     rulesets = get_element_rulesets(
