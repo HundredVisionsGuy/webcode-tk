@@ -1137,11 +1137,7 @@ properties_applied_min_2 = {
     }
 }
 targets_main_tag_by_advanced = {
-    "main": {
-        "properties": ("box-shadow", "animation"),
-        "min_required": 1,
-        "check_advanced_selectors": True,
-    }
+    "main": {"properties": ("box-shadow", "animation"), "min_required": 1}
 }
 simple_properties_applied_report = css_tools.get_properties_applied_report(
     project_folder, properties_applied_simple
@@ -1177,3 +1173,12 @@ def test_get_properties_for_min2_properties_1_pass_2_fail():
 
 def test_get_properties_for_solely_id_targetted():
     assert "pass:" in main_targets_animation_with_id[0][:5]
+
+
+# A figure tag without direct text should not fail test_global_colors
+def test_global_colors_for_figure_without_direct_text():
+    cascade_dir = "tests/test_files/cascade_complexities"
+    report = css_tools.get_project_color_contrast_report(cascade_dir)
+    for item in report:
+        if "index.html" in item and "figure" in item:
+            assert "pass:" in item[:5]
