@@ -1,6 +1,7 @@
 import pytest
 from file_clerk import clerk
 
+from webcode_tk import cascade_tools as cascade
 from webcode_tk import css_tools
 
 css_code_1_with_comments = """
@@ -1177,3 +1178,19 @@ def test_get_properties_for_min2_properties_1_pass_2_fail():
 
 def test_get_properties_for_solely_id_targetted():
     assert "pass:" in main_targets_animation_with_id[0][:5]
+
+
+# Adding some color styles that are not just color or bg color
+# could trigger errors, so we'll test it through the cascade
+# tool, where I first discovered the error
+# TODO: move the test to just test the stylesheet (not urgent)
+non_text_color_colors_path = "tests/test_files/non_text_color_colors"
+non_text_color_colors_results = []
+non_text_color_colors_results = cascade.get_color_contrast_report(
+    non_text_color_colors_path
+)
+
+
+@pytest.mark.parametrize("results", non_text_color_colors_results)
+def test_for_nonetype_error_in_image_gallery(results):
+    assert "fail:" in results[:5]
