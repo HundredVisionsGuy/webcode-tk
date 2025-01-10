@@ -322,7 +322,11 @@ class Element(object):
                     color_details = anc[4]
                     col = color_details.split(":")[1]
                     col = col.strip()
-                    col = col.split()[0]
+                    if "#" == col[0]:
+                        col = col.split()[0]
+                    elif "rgb" in col or "hsl" in col:
+                        col = col.split(")")[0]
+                        col += ")"
                     if color.is_color_value(col):
                         break
         bg = self.background_color.get("value")
