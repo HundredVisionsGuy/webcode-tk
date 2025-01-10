@@ -1194,3 +1194,10 @@ non_text_color_colors_results = cascade.get_color_contrast_report(
 @pytest.mark.parametrize("results", non_text_color_colors_results)
 def test_for_nonetype_error_in_image_gallery(results):
     assert "fail:" in results[:5]
+
+
+def test_get_animation_report_for_values_targetted():
+    report = css_tools.get_animation_report(project_folder)
+
+    # let's change this assertion when we get the chance
+    assert len(report) == 4

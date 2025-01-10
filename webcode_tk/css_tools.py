@@ -2787,22 +2787,33 @@ def get_animation_report(project_dir: str) -> list:
 
     for file in files_by_styles:
         for sheet in file.get("stylesheets"):
+            filename = clerk.get_file_name(file.get("file"))
             nested_at_rules = sheet.nested_at_rules
             for at_rule in nested_at_rules:
                 if "@keyframes" in at_rule.at_rule:
                     keyframe_animations.append(
-                        (at_rule.at_rule, at_rule.rulesets)
+                        (filename, at_rule.at_rule, at_rule.rulesets)
                     )
 
-    keyframes_by_animation = []
-    animation_values_targetted = []
+    report = []
+    animation_values_targetted = set()
     print(animation_values_targetted)
     for animation in keyframe_animations:
-        animation_dict = {"animation": animation[0], "keyframes": []}
+        animation_dict = {
+            "file": animation[0],
+            "animation": animation[1],
+            "keyframes": [],
+            "values_targetted": [],
+        }
         percentage_keyframes = []
         from_keyframes = []
         to_keyframes = []
-        for rule in animation[1]:
+        for rule in animation[2]:
+            declarations = rule.declaration_block.declarations
+            for declaration in declarations:
+                animation_values_targetted.add(
+                    (filename, declaration.property)
+                )
             if "%" in rule.selector:
                 percentage_keyframes.append(rule.selector)
             elif "from" in rule.selector:
@@ -2814,7 +2825,10 @@ def get_animation_report(project_dir: str) -> list:
         )
         animation_dict["keyframes"].append(("from", from_keyframes))
         animation_dict["keyframes"].append(("to", to_keyframes))
-        keyframes_by_animation.append(animation_dict)
+        for value_targetted in animation_values_targetted:
+            value = value_targetted[1]
+            animation_dict["values_targetted"].append(value)
+        report.append(animation_dict)
     return report
 
 
