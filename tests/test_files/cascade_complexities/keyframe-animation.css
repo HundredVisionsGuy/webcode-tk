@@ -1,0 +1,39 @@
+body {
+    background-color: #08223c;
+    color: whitesmoke;
+    margin:0;
+}
+main {
+    width: 100%;
+    height: 100%;
+    background-color: darkgreen;
+    position: relative;
+}
+h1 {
+    margin-top: 0;
+    padding: 0.5em 1em;
+    animation: pulse 4s ease-in-out infinite;
+}
+img {
+    animation: fly-around 20s linear 1s infinite;
+}
+@keyframes fly-around {
+    10% {
+        transform: translate(400px, 70em);
+        transform: rotate(-90deg);
+    }
+    17% {
+        transform: rotate(90deg);
+    }
+    35% {
+        transform: translate(-85em, 35em);
+    }
+}
+@keyframes pulse {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}

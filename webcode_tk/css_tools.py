@@ -2776,6 +2776,67 @@ def take_targetted_properties(
                     found_properties_remaining.remove(prop)
 
 
+def get_animation_report(project_dir: str) -> list:
+    """gets a report on the implementation of animation in a project."""
+    report = []
+    # Animation Tests (test for # of keyframes and types of transitions)
+    files_by_styles = get_styles_by_html_files(project_dir)
+
+    # loop through each file's stylesheet objects
+    keyframe_animations = []
+
+    for file in files_by_styles:
+        for sheet in file.get("stylesheets"):
+            nested_at_rules = sheet.nested_at_rules
+            for at_rule in nested_at_rules:
+                if "@keyframes" in at_rule.at_rule:
+                    keyframe_animations.append(
+                        (at_rule.at_rule, at_rule.rulesets)
+                    )
+
+    keyframes_by_animation = []
+    animation_values_targetted = []
+    print(animation_values_targetted)
+    for animation in keyframe_animations:
+        animation_dict = {"animation": animation[0], "keyframes": []}
+        percentage_keyframes = []
+        from_keyframes = []
+        to_keyframes = []
+        for rule in animation[1]:
+            if "%" in rule.selector:
+                percentage_keyframes.append(rule.selector)
+            elif "from" in rule.selector:
+                from_keyframes.append(rule.selector)
+            elif "to" in rule.selector:
+                to_keyframes.append(rule.selector)
+        animation_dict["keyframes"].append(
+            ("percentage", percentage_keyframes)
+        )
+        animation_dict["keyframes"].append(("from", from_keyframes))
+        animation_dict["keyframes"].append(("to", to_keyframes))
+        keyframes_by_animation.append(animation_dict)
+    return report
+
+
+def test_for_number_of_keyframes(keyframes_by_animation):
+    froms_and_tos = 0
+    num_keyframes = 0
+    passing = False
+    for animation in keyframes_by_animation:
+        keyframes = animation.get("keyframes")
+        for keyframe_data in keyframes:
+            keyframe_type = keyframe_data[0]
+            num_keyframes += len(keyframe_data[1])
+            if keyframe_type == "percentage":
+                if num_keyframes >= 4:
+                    passing = True
+            elif keyframe_type in ("from", "to"):
+                froms_and_tos += num_keyframes
+    if froms_and_tos + num_keyframes >= 6:
+        passing = True
+    assert passing
+
+
 if __name__ == "__main__":
     project_folder = "tests/test_files/cascade_complexities"
     goals = {
