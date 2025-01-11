@@ -2568,7 +2568,7 @@ def get_element_rulesets(project_dir: str, element: str) -> list:
         sheets = file.get("stylesheets")
         elements = html_tools.get_elements(element, filepath)
         if not elements:
-            return []
+            continue
         for sheet in sheets:
             for ruleset in sheet.rulesets:
                 sel = ruleset.selector
@@ -2638,8 +2638,17 @@ def get_properties_applied_report(project_dir: str, goals: dict) -> list:
                 for rule in sheet.rulesets:
                     selector = rule.selector
                     selector_type = get_selector_type(selector)
+
+                    # Check here for each iteration of
+                    # shorthand properties such as...
+                    # background, border, font, margin, padding
+                    # https://developer.mozilla.org/en-US/docs/Web/CSS/
+                    # Shorthand_properties#shorthand_properties
                     if selector_type == "type_selector":
-                        if selector == element:
+                        # FIX this - it should be for properties not selectors
+                        shorthand = get_shorthand(selector)
+
+                        if selector == element or shorthand == element:
                             # loop through all properties and take what we can
                             take_targetted_properties(
                                 properties_found,
@@ -2763,6 +2772,17 @@ def get_properties_applied_report(project_dir: str, goals: dict) -> list:
     return report
 
 
+def get_shorthand(sel: str) -> str:
+    shorthand = ""
+    # check if property has a dash
+
+    # if so, check if the part before the first dash is a shorthand
+
+    # if so, return the shorthand variant
+
+    return shorthand
+
+
 def take_targetted_properties(
     properties_found, properties, found_properties_remaining, rule
 ):
@@ -2862,44 +2882,3 @@ if __name__ == "__main__":
     rulesets = get_element_rulesets(
         "tests/test_files/cascade_complexities", "figure"
     )
-    insane_gradient = """
-    -moz-radial-gradient(0% 200%, ellipse cover,
-    rgba(143, 193, 242, 0.22) 10%,rgba(240, 205, 247,0) 40%),
-    -webkit-radial-gradient(0% 200%, ellipse cover,
-    rgba(143, 193, 242, 0.22) 10%,rgba(240, 205, 247,0) 40%),
-    -o-radial-gradient(0% 200%, ellipse cover,
-    rgba(143, 193, 242, 0.22) 10%,rgba(240, 205, 247,0) 40%),
-    -ms-radial-gradient(0% 200%, ellipse cover,
-    rgba(143, 193, 242, 0.22) 10%,rgba(240, 205, 247,0) 40%),
-    radial-gradient(0% 200%, ellipse cover, antiquewhite 10%,
-    rgba(240, 205, 247,0) 40%),
-    -moz-linear-gradient(top, rgba(169, 235, 206,.25) 0%,
-    rgba(42,60,87,.4) 200%),
-    -ms-linear-gradient(-45deg, #46ABA6 0%, #092756 200%),
-    linear-gradient(-45deg, maroon 0%, #092756 200%)
-    """
-
-    insane_gradient = """
--moz-radial-gradient(0% 200%, ellipse cover,
-rgba(143, 193, 242, 0.22) 10%,rgba(240, 205, 247,0) 40%),
--webkit-radial-gradient(0% 200%, ellipse cover,
-rgba(143, 193, 242, 0.22) 10%,rgba(240, 205, 247,0) 40%),
--o-radial-gradient(0% 200%, ellipse cover,
-rgba(143, 193, 242, 0.22) 10%,rgba(240, 205, 247,0) 40%),
--ms-radial-gradient(0% 200%, ellipse cover,
-rgba(143, 193, 242, 0.22) 10%,rgba(240, 205, 247,0) 40%),
-radial-gradient(0% 200%, ellipse cover,
-rgba(143, 193, 242, 0.22) 10%,rgba(240, 205, 247,0) 40%),
--moz-linear-gradient(top, rgba(169, 235, 206,.25) 0%,
-rgba(42,60,87,.4) 200%),
--ms-linear-gradient(-45deg, #46ABA6 0%, #092756 200%)',
-linear-gradient(-45deg, #46ABA6 0%, #092756 200%)'
-"""
-    results = process_gradient(insane_gradient)
-    print(results)
-    project_path = "tests/test_files/large_project/"
-    css_path = project_path + "css/general.css"
-    html_path = project_path + "index.html"
-    wonka = "tests/test_files/wiliwonka.html"
-    test_stuff = get_all_color_rules(wonka)
-    tests = get_project_color_contrast(project_path)

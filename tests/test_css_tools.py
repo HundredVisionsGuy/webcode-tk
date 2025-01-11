@@ -1102,7 +1102,7 @@ def test_css_for_color_contrast_report_a_visited_fails(
     assert expected
 
 
-def test_get_element_rulesets_for_figure_in_gallery():
+def test_get_element_rulesets_for_figure_in_cascade_complexities():
     rulesets = css_tools.get_element_rulesets(
         "tests/test_files/cascade_complexities", "figure"
     )
@@ -1161,6 +1161,9 @@ def test_for_properties_applied_simple(results):
         assert "fail:" in results[:5] and "3" in results
     elif "index.html" in results:
         assert "fail:" in results[:5] and "2" in results
+    elif "keyframe-animation.html" in results:
+        # this should fail because it does NOT target figure at all
+        assert "fail:" in results[:5] and "3" in results
     else:
         assert "pass:" in results[:5]
 
