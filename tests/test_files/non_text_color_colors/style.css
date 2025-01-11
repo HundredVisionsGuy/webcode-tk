@@ -1,0 +1,43 @@
+body {
+    font-family: "Montserrat", sans-serif;
+    margin: 0;
+    color: #3C3D59;
+    background-color: #F2F2F2;
+}
+h1, h2 {
+    font-family: "Libre Baskerville", serif;
+}
+a {
+    text-decoration-color: #1d1330;
+}
+em {
+    text-emphasis-color: #336699;
+    text-emphasis-style: "~";
+}
+header {
+    background-color: #1d1330;
+    height: 300px;
+    padding: 2em;
+}
+header div {
+    background-color: #f2f2f2;
+    padding: 1em;
+    max-width: 98%;
+    width: 30em;
+}
+figure {
+    margin: 0.5em;
+    border-color: #454F8C;
+    border-width: 4px;
+    border-style: solid;
+    padding: 0.5em;
+    width: 300px;
+    background-color: #F2C4C4;
+    float: left;
+}
+figure img {
+    width: 100%;
+}
+footer {
+    clear: both;
+}

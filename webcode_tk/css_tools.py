@@ -280,10 +280,22 @@ class Stylesheet:
         ):
             selector = ruleset.selector
             for declaration in ruleset.declaration_block.declarations:
-                if (
+                color_counts = (
                     "color" in declaration.property
                     or "background" in declaration.property
-                ):
+                    and declaration.property
+                    not in [
+                        "border-color",
+                        "outline-color",
+                        "text-declaration-color",
+                        "text-emphasis-color",
+                        "text-shadow",
+                        "caret-color",
+                        "column-rule-color",
+                        "print-color-adjust",
+                    ]
+                )
+                if color_counts:
                     property = declaration.property
                     value = declaration.value
 

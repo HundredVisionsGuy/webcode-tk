@@ -315,6 +315,16 @@ class Element(object):
             type: the type of color contrast.
         """
         col = self.color.get("value")
+        if not col:
+            for i in range(len(self.ancestors) - 1, -1, -1):
+                anc = self.ancestors[i]
+                if len(anc) > 2:
+                    color_details = anc[4]
+                    col = color_details.split(":")[1]
+                    col = col.strip()
+                    col = col.split()[0]
+                    if color.is_color_value(col):
+                        break
         bg = self.background_color.get("value")
         if color.is_gradient(bg):
             results = color.get_color_contrast_with_gradients(
