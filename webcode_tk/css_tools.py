@@ -2850,8 +2850,10 @@ def take_targetted_properties(
                             properties_found.append(prop)
                             found_properties_remaining.remove(prop)
                         else:
-                            properties_found.append(shorthand)
-                            found_properties_remaining.remove(shorthand)
+                            if shorthand not in properties_found:
+                                properties_found.append(shorthand)
+                            if shorthand in found_properties_remaining:
+                                found_properties_remaining.remove(shorthand)
 
 
 def border_checks_out(declaration: Declaration) -> bool:

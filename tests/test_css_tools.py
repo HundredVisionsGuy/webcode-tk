@@ -1176,7 +1176,7 @@ def test_get_properties_for_min2_properties_1_pass_2_fail():
             passed += 1
         if "fail:" in result[:5]:
             failed += 1
-    assert passed == 1 and failed == 2
+    assert passed == 1 and failed == 3
 
 
 def test_get_properties_for_solely_id_targetted():
