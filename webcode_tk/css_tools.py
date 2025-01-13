@@ -49,6 +49,30 @@ nested_at_rules: tuple = (
     "@property",
 )
 
+# Shorthand properties - a dictionary of shorthand properties and their
+# common sub-properties
+# https://developer.mozilla.org/en-US/docs/Web/CSS/Shorthand_properties
+shorthand_properties: dict = {
+    "background": ("color", "image", "position", "repeat"),
+    "border": ("color", "width", "style"),
+    "font": ("style", "weight", "size", "family"),
+    "inset": ("top", "right", "bottom", "left"),
+    "margin": ("top", "right", "bottom", "left"),
+    "padding": ("top", "right", "bottom", "left"),
+}
+
+# if a border is set, it must target a border-style, or it won't be visible.
+visible_border_styles: tuple = (
+    "dotted",
+    "dashed",
+    "solid",
+    "double",
+    "groove",
+    "ridge",
+    "inset",
+    "outset",
+)
+
 
 class Stylesheet:
     """A Stylesheet object with details about the sheet and its
@@ -2615,7 +2639,6 @@ def get_properties_applied_report(project_dir: str, goals: dict) -> list:
     report = []
     elements = list(goals.keys())
     for element in elements:
-        properties_found = []
         details = goals.get(element)
         min_required = 0
         # details might be a tuple or a dictionary
@@ -2628,6 +2651,7 @@ def get_properties_applied_report(project_dir: str, goals: dict) -> list:
 
         html_files = get_styles_by_html_files(project_dir)
         for file in html_files:
+            properties_found = []
             found_properties_remaining = list(properties)
             file_path = file.get("file")
             targetted_elements_in_file = html_tools.get_elements(
@@ -2638,17 +2662,8 @@ def get_properties_applied_report(project_dir: str, goals: dict) -> list:
                 for rule in sheet.rulesets:
                     selector = rule.selector
                     selector_type = get_selector_type(selector)
-
-                    # Check here for each iteration of
-                    # shorthand properties such as...
-                    # background, border, font, margin, padding
-                    # https://developer.mozilla.org/en-US/docs/Web/CSS/
-                    # Shorthand_properties#shorthand_properties
                     if selector_type == "type_selector":
-                        # FIX this - it should be for properties not selectors
-                        shorthand = get_shorthand(selector)
-
-                        if selector == element or shorthand == element:
+                        if selector == element:
                             # loop through all properties and take what we can
                             take_targetted_properties(
                                 properties_found,
@@ -2773,10 +2788,25 @@ def get_properties_applied_report(project_dir: str, goals: dict) -> list:
 
 
 def get_shorthand(sel: str) -> str:
+    """returns a shorthand version of a property if it could be a portion
+    of a shorthand property
+
+    It's more efficient if you check for a dash before passing it as an
+    argument.
+
+    Arguments:
+        sel: a CSS selector (should be one with a dash)
+
+    Returns:
+        shorthand: the shorthand version of a property if it is or an empty
+            string if not.
+    """
     shorthand = ""
-    # check if property has a dash
 
     # if so, check if the part before the first dash is a shorthand
+    prefix = sel.split("-")[0]
+    if prefix in shorthand_properties:
+        shorthand = prefix
 
     # if so, return the shorthand variant
 
@@ -2787,13 +2817,60 @@ def take_targetted_properties(
     properties_found, properties, found_properties_remaining, rule
 ):
     declarations = rule.declaration_block.declarations
+    border_properties = {}
+    if "border" in found_properties_remaining:
+        border_properties = {"width": 0, "style": "", "color": "#000000"}
     for dec in declarations:
         prop = dec.property
-        if prop in properties:
+        shorthand = ""
+        if prop == "border":
+            # We must check to see if would display a value
+            checks_out = border_checks_out(dec)
+        if "-" in prop:
+            shorthand = get_shorthand(prop)
+            if shorthand == "border":
+                sub_property = prop.split("-")[1]
+                border_properties[sub_property] = dec.value
+        if prop in properties or (shorthand and shorthand in properties):
             if found_properties_remaining:
-                if prop in found_properties_remaining:
+                # If just 'border' is a property, it must target border-
+                # style or else it won't show, so before declaring
+                # "victory" check to make sure it was set either as
+                # border-style or through a regex or something.
+                if prop in properties and prop == "border" and checks_out:
                     properties_found.append(prop)
                     found_properties_remaining.remove(prop)
+                elif prop in found_properties_remaining:
+                    properties_found.append(prop)
+                    found_properties_remaining.remove(prop)
+                elif shorthand == "border":
+                    border_style = border_properties.get("style")
+                    if border_style and border_style in visible_border_styles:
+                        if prop in found_properties_remaining:
+                            properties_found.append(prop)
+                            found_properties_remaining.remove(prop)
+                        else:
+                            properties_found.append(shorthand)
+                            found_properties_remaining.remove(shorthand)
+
+
+def border_checks_out(declaration: Declaration) -> bool:
+    """returns whether the border would display or not.
+
+    In order for the border shorthand to display, the border style must be
+    a valid border style.
+
+    Args:
+        declaration: the declaration with a border shorthand property.
+
+    Returns:
+        checks_out: whether the border would be visible or not"""
+    checks_out = False
+    values = declaration.value.split()
+    for val in values:
+        if val in visible_border_styles:
+            checks_out = True
+    return checks_out
 
 
 def get_animation_report(project_dir: str) -> list:
