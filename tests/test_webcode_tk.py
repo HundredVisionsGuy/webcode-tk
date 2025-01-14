@@ -2,4 +2,4 @@ from webcode_tk import __version__
 
 
 def test_version():
-    assert __version__ == "1.1.7"
+    assert __version__ == "1.1.8"
