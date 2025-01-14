@@ -1138,11 +1138,7 @@ properties_applied_min_2 = {
     }
 }
 targets_main_tag_by_advanced = {
-    "main": {
-        "properties": ("box-shadow", "animation"),
-        "min_required": 1,
-        "check_advanced_selectors": True,
-    }
+    "main": {"properties": ("box-shadow", "animation"), "min_required": 1}
 }
 simple_properties_applied_report = css_tools.get_properties_applied_report(
     project_folder, properties_applied_simple
