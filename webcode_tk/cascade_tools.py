@@ -1717,7 +1717,9 @@ def get_color_contrast_details(tree: CSSAppliedTree, rating="AAA") -> list:
                 if el.has_direct_text:
                     if not selector and parent_sel:
                         selector = parent_sel
-                        results.append((filename, selector, size, rating))
+                        results.append(
+                            (filename, selector, el.name, size, rating)
+                        )
 
                     # NOTE: it's possible we won't be able to get a selector
                     # in the future. If so, add an else block and deal with it
@@ -1768,11 +1770,17 @@ def get_color_contrast_details(tree: CSSAppliedTree, rating="AAA") -> list:
                                 )
                                 if not passes:
                                     results.append(
-                                        (filename, selector, size, rating)
+                                        (
+                                            filename,
+                                            selector,
+                                            el.name,
+                                            size,
+                                            rating,
+                                        )
                                     )
                             else:
                                 results.append(
-                                    (filename, selector, size, rating)
+                                    (filename, selector, el.name, size, rating)
                                 )
 
                         # TODO: add tests to look for a parent with normal
@@ -1806,7 +1814,7 @@ def get_color_contrast_details(tree: CSSAppliedTree, rating="AAA") -> list:
 
             # and only if the element has direct text (experimental)
             if el.has_direct_text:
-                results.append((filename, selector, size, rating))
+                results.append((filename, selector, el.name, size, rating))
 
         if not children:
             return
@@ -1832,12 +1840,12 @@ def get_color_contrast_details(tree: CSSAppliedTree, rating="AAA") -> list:
         adjusted = []
         for result in results:
             count = results.count(result)
-            file, selector, size, rating = result
-            msg = f"fail: in {file}, selector: {selector} triggered "
+            file, selector, element, size, rating = result
+            msg = f"fail: in {file}, selector: {selector} triggered {count} "
             if count > 1:
-                msg += f"{count} contrast errors for {size} {rating}."
+                msg += f"contrast errors on <{element}> for {size} {rating}."
             else:
-                msg += f"contrast error for {size} {rating}."
+                msg += f"contrast error on <{element}> for {size} {rating}."
             if msg not in adjusted:
                 adjusted.append(msg)
         results = adjusted

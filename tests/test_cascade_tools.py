@@ -446,9 +446,12 @@ def test_get_color_contrast_details_for_AAA_fail_single_file_style_tag():
     sheets = styles[0].get("stylesheets")
     tree = cascade.CSSAppliedTree(file, sheets)
     results = cascade.get_color_contrast_details(tree)
-    expected = "h1, h2 triggered 4" in results[0]
-    assert expected
-    expected = "h1, h2 triggered 4" in results[0]
+    expected = True
+    for result in results:
+        if "<h1>" in result:
+            expected = expected and "triggered 1 contrast error" in result
+        if "<h2>" in result:
+            expected = expected and "triggered 3 contrast errors" in result
     assert expected
 
 
@@ -651,4 +654,14 @@ def test_amharic_file_for_proper_application_of_nav_link(amharic_tree):
     expected = (
         contrast_ratio == 12.6 and color == "#ffffff" and bg_color == "#003366"
     )
+    assert expected
+
+
+figure_test_path = "tests/test_files/figure_color_contrast_test"
+figure_color_contrast = cascade.get_color_contrast_report(figure_test_path)
+
+
+def test_color_contrast_for_figure_with_only_bg_no_direct_text():
+    report = figure_color_contrast[0]
+    expected = "fail" in report and "<cite>" in report
     assert expected
