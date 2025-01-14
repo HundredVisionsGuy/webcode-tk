@@ -1176,7 +1176,9 @@ def test_get_properties_for_min2_properties_1_pass_2_fail():
 
 
 def test_get_properties_for_solely_id_targetted():
-    assert "pass:" in main_targets_animation_with_id[0][:5]
+    for result in main_targets_animation_with_id:
+        if "amharic.html" in result:
+            assert "pass:" == result[:5]
 
 
 # Adding some color styles that are not just color or bg color
