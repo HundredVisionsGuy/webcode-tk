@@ -449,9 +449,9 @@ def test_get_color_contrast_details_for_AAA_fail_single_file_style_tag():
     expected = True
     for result in results:
         if "<h1>" in result:
-            expected = expected and "triggered 1 contrast error" in result
+            expected = expected and "<h1> had 1 contrast error" in result
         if "<h2>" in result:
-            expected = expected and "triggered 3 contrast errors" in result
+            expected = expected and "<h2> had 3 contrast errors" in result
     assert expected
 
 
@@ -460,11 +460,12 @@ def test_get_color_contrast_details_for_AA_large(gradients_file_large_tree):
         gradients_file_large_tree, "AA"
     )
     # Should fail: horizontal and simple linear - 2 errors each
-    expected = (
-        len(results) == 2
-        and "triggered 2" in results[0]
-        and "triggered 2" in results[1]
-    )
+    expected = len(results) == 2
+    for result in results:
+        if "<section>" in result:
+            expected = expected and "<section> had 2" in result
+        else:
+            expected = expected and "<a> had 2" in result
     assert expected
 
 

@@ -1841,11 +1841,12 @@ def get_color_contrast_details(tree: CSSAppliedTree, rating="AAA") -> list:
         for result in results:
             count = results.count(result)
             file, selector, element, size, rating = result
-            msg = f"fail: in {file}, selector: {selector} triggered {count} "
+            msg = f"fail: in {file}, element: <{element}> had {count} "
             if count > 1:
-                msg += f"contrast errors on <{element}> for {size} {rating}."
+                msg += f"contrast errors for {size} {rating} "
             else:
-                msg += f"contrast error on <{element}> for {size} {rating}."
+                msg += f"contrast error for {size} {rating} "
+            msg += f"triggered by selector {selector}."
             if msg not in adjusted:
                 adjusted.append(msg)
         results = adjusted
