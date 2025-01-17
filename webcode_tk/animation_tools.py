@@ -68,25 +68,6 @@ def get_animation_report(project_dir: str) -> list:
     return report
 
 
-def test_for_number_of_keyframes(keyframes_by_animation):
-    froms_and_tos = 0
-    num_keyframes = 0
-    passing = False
-    for animation in keyframes_by_animation:
-        keyframes = animation.get("keyframes")
-        for keyframe_data in keyframes:
-            keyframe_type = keyframe_data[0]
-            num_keyframes += len(keyframe_data[1])
-            if keyframe_type == "percentage":
-                if num_keyframes >= 4:
-                    passing = True
-            elif keyframe_type in ("from", "to"):
-                froms_and_tos += num_keyframes
-    if froms_and_tos + num_keyframes >= 6:
-        passing = True
-    assert passing
-
-
 def get_keyframe_results(report: list) -> dict:
     keyframe_results = {}
     for animation in report:
