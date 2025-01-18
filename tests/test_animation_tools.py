@@ -12,8 +12,8 @@ def animation_report():
 
 
 @pytest.fixture
-def keyframe_report(animation_report):
-    report = animations.get_keyframe_results(animation_report)
+def keyframe_data(animation_report):
+    report = animations.get_keyframe_data(animation_report)
     return report
 
 
@@ -21,6 +21,38 @@ def test_get_animation_report_for_values_targetted(animation_report):
     assert len(animation_report) == 2
 
 
-def test_keyframe_report_for_something(keyframe_report):
-    meets = False
-    assert meets
+def test_keyframe_report_for_num_keyframes_in_animations(keyframe_data):
+    # passes until proven failed
+    files = keyframe_data.keys()
+    num_names = 0
+    for file in files:
+        if file == "animations.html":
+            # Animations should have 2 keyframe names and 6 % keyframes
+            data = keyframe_data.get(file)
+            keyframe_names = data["keyframe_names"]
+            num_names = len(keyframe_names)
+    assert num_names == 2
+
+
+def test_keyframe_report_for_num_pct_keyframes_in_animations(keyframe_data):
+    # passes until proven failed
+    files = keyframe_data.keys()
+    pct_keyframes = 0
+    for file in files:
+        if file == "animations.html":
+            # Animations should have 2 keyframe names and 6 % keyframes
+            data = keyframe_data.get(file)
+            pct_keyframes = data["pct_keyframes"]
+    assert pct_keyframes == 6
+
+
+def test_keyframe_report_for_num_from_to_keyframes(keyframe_data):
+    # passes until proven failed
+    files = keyframe_data.keys()
+    froms_tos = 0
+    for file in files:
+        if file == "keyframe-animation.html":
+            # Animations should have 2 keyframe names and 6 % keyframes
+            data = keyframe_data.get(file)
+            froms_tos = data["froms_tos"]
+    assert froms_tos == 2

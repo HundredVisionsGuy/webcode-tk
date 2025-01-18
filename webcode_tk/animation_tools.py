@@ -46,9 +46,7 @@ def get_animation_report(project_dir: str) -> list:
         if filename not in animation_dict:
             animation_dict = {
                 filename: {
-                    "keyframes": [
-                        keyframe,
-                    ],
+                    "keyframes": [],
                     "pct_keyframes": [],
                     "from_keyframes": [],
                     "to_keyframes": [],
@@ -56,6 +54,7 @@ def get_animation_report(project_dir: str) -> list:
                 }
             }
             report.append(animation_dict)
+        animation_dict[filename]["keyframes"].append(keyframe)
         current_dict = animation_dict.get(filename)
         for rule in rulesets:
             declarations = rule.declaration_block.declarations
@@ -76,28 +75,52 @@ def get_animation_report(project_dir: str) -> list:
     return report
 
 
-def get_keyframe_results(report: list) -> dict:
-    keyframe_results = {}
-    for animation in report:
-        filename = animation.get("file")
-        if filename not in keyframe_results:
-            keyframe_results[filename] = {}
-            keyframe_results[filename]["froms_tos"] = 0
-            keyframe_results[filename]["pct_keyframes"] = 0
-        keyframes = animation.get("keyframes")
-        for keyframe_data in keyframes:
-            keyframe_type = keyframe_data[0]
-            num_keyframes = len(keyframe_data[1])
-            if keyframe_type == "percentage":
-                keyframe_results[filename]["pct_keyframes"] += num_keyframes
-            elif keyframe_type in ("from", "to"):
-                keyframe_results[filename]["froms_tos"] += num_keyframes
-    results = []
-    for file, frames in keyframe_results.items():
-        results.append(
-            (file, frames.get("pct_keyframes"), frames.get("froms_tos"))
-        )
-    return results
+def get_keyframe_data(report: list) -> dict:
+    """return a list of keyframe types and numbers from an animation report
+
+    The goal is to track all data related to animation keyframes per file.
+    The data is a dictionary of filenames. The filenames will be the key, and
+    each filename's values will be a dictionary of keyframe names, number of
+    percentage keyframes, and the number of from {} and to {} keyframes.
+
+    Args:
+        report: an animation report, which is a list of project files with a
+            dictionary of details
+
+    Returns:
+        data: a dictionary of filenames as primary keys with a dictionary of
+            keyframe data as the key's value.
+    """
+    data = {}
+    for animation_data in report:
+        filename = get_first_dict_key(animation_data)
+        if filename not in data:
+            data[filename] = {}
+            names = animation_data[filename].get("keyframes")
+            data[filename]["keyframe_names"] = names
+            data[filename]["froms_tos"] = 0
+            data[filename]["pct_keyframes"] = 0
+        else:
+            names = animation_data[filename].get("keyframes")
+            if names:
+                data[filename]["keyframe_names"] += names
+        pct_keyframes = animation_data[filename].get("pct_keyframes")
+        froms = animation_data[filename].get("from_keyframes")
+        if froms:
+            data[filename]["froms_tos"] += len(froms)
+        tos = animation_data[filename].get("to_keyframes")
+        if tos:
+            data[filename]["froms_tos"] += len(tos)
+        if pct_keyframes:
+            data[filename]["pct_keyframes"] += len(pct_keyframes)
+    return data
+
+
+def get_first_dict_key(animation_data):
+    filename = animation_data.keys()
+    filename = list(filename)
+    filename = filename[0]
+    return filename
 
 
 def get_keyframe_report(
