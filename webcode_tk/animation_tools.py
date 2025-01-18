@@ -10,6 +10,13 @@ from webcode_tk import css_tools
 def get_animation_report(project_dir: str) -> list:
     """gets a report on the implementation of animation in a project.
 
+    The animation report should contain a single entry for each HTML
+    file. Each HTML file will have a list of animations: the name of the
+    keyframe, a list of each keyframe type (percentage, from, or two),
+    and a list of properties included and if it is transform, it will
+    treat each type of transform as a unique property: eg. skew(), rotate(),
+    translate(), etc.
+
     Args:
         project_dir: the path to the project folder.
 
@@ -33,38 +40,39 @@ def get_animation_report(project_dir: str) -> list:
                     )
 
     report = []
-    animation_values_targetted = set()
+    animation_dict = {}
     for animation in keyframe_animations:
-        animation_dict = {
-            "file": animation[0],
-            "animation": animation[1],
-            "keyframes": [],
-            "values_targetted": [],
-        }
-        percentage_keyframes = []
-        from_keyframes = []
-        to_keyframes = []
-        for rule in animation[2]:
+        filename, keyframe, rulesets = animation
+        if filename not in animation_dict:
+            animation_dict = {
+                filename: {
+                    "keyframes": [
+                        keyframe,
+                    ],
+                    "pct_keyframes": [],
+                    "from_keyframes": [],
+                    "to_keyframes": [],
+                    "properties": set(),
+                }
+            }
+            report.append(animation_dict)
+        current_dict = animation_dict.get(filename)
+        for rule in rulesets:
             declarations = rule.declaration_block.declarations
             for declaration in declarations:
-                animation_values_targetted.add(
-                    (filename, declaration.property)
-                )
+                if declaration.property == "transform":
+                    value_type = declaration.value
+                    value_split = value_type.split("(")
+                    transform_value = value_split[0] + "()"
+                    current_dict["properties"].add(transform_value)
+                else:
+                    current_dict["properties"].add(declaration.property)
             if "%" in rule.selector:
-                percentage_keyframes.append(rule.selector)
+                current_dict["pct_keyframes"].append(rule.selector)
             elif "from" in rule.selector:
-                from_keyframes.append(rule.selector)
+                current_dict["from_keyframes"].append(rule.selector)
             elif "to" in rule.selector:
-                to_keyframes.append(rule.selector)
-        animation_dict["keyframes"].append(
-            ("percentage", percentage_keyframes)
-        )
-        animation_dict["keyframes"].append(("from", from_keyframes))
-        animation_dict["keyframes"].append(("to", to_keyframes))
-        for value_targetted in animation_values_targetted:
-            value = value_targetted[1]
-            animation_dict["values_targetted"].append(value)
-        report.append(animation_dict)
+                current_dict["to_keyframes"].append(rule.selector)
     return report
 
 
@@ -228,4 +236,5 @@ def get_targetted_properties_msg(
 
 
 if __name__ == "__main__":
-    print()
+    project_folder = "tests/test_files/cascade_complexities"
+    report = get_animation_report(project_folder)

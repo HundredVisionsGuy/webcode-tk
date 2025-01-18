@@ -18,15 +18,9 @@ def keyframe_report(animation_report):
 
 
 def test_get_animation_report_for_values_targetted(animation_report):
-    assert len(animation_report) == 4
+    assert len(animation_report) == 2
 
 
 def test_keyframe_report_for_something(keyframe_report):
-    meets = True
-    for item in keyframe_report:
-        filename, keyframes, values = item
-        if filename == "animations.html":
-            meets = meets and keyframes == 6 and values == 2
-        if filename == "keyframe-animation.html":
-            meets = meets and keyframes == 5 and values == 2
+    meets = False
     assert meets
