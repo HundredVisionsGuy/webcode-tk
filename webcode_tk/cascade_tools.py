@@ -1399,10 +1399,13 @@ def descendant_selector_applies(element: Element, sel: str) -> None:
     for ancestor in ancestor_list:
         id = ancestor[1]
         ancestor_element = __get_element_by_id(id)
-        selector = selector_list[current_pos]
-        cur_selector_applies = does_selector_apply(ancestor_element, selector)
-        if cur_selector_applies:
-            selector_list = selector_list[1:]
+        if selector_list:
+            selector = selector_list[current_pos]
+            cur_selector_applies = does_selector_apply(
+                ancestor_element, selector
+            )
+            if cur_selector_applies:
+                selector_list = selector_list[1:]
     applies = not selector_list
     return applies
 
