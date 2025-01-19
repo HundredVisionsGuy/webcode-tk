@@ -41,17 +41,17 @@ Below are a few examples of how I use webcode-tk in a class project. If you look
 
 I use `webcode-tk` to inspect all files in the `project` folder, and `pytest` looks at the reports and other tools to determine whether students' projects have met all the goals:
 
-* [One Pager Project](https://github.com/CenturyHSTech/one-pager-project)
+* [One Pager Project](https://github.com/CenturyHSTech/one-pager-project):
 
-  - [test_html.py](https://github.com/CenturyHSTech/one-pager-project/blob/main/tests/test_html.py)
-  - [test_css.py](https://github.com/CenturyHSTech/one-pager-project/blob/main/tests/test_css.py)
+  + [test_html.py](https://github.com/CenturyHSTech/one-pager-project/blob/main/tests/test_html.py)
+  + [test_css.py](https://github.com/CenturyHSTech/one-pager-project/blob/main/tests/test_css.py)
 
-* [Image Gallery Project](https://github.com/CenturyHSTech/Image-Gallery-Project)
+* [Image Gallery Project](https://github.com/CenturyHSTech/Image-Gallery-Project):
 
-  - [test_html.py](https://github.com/CenturyHSTech/Image-Gallery-Project/blob/main/tests/test_html.py)
-  - [test_html_exceeds.py](https://github.com/CenturyHSTech/Image-Gallery-Project/blob/main/tests/test_html_exceeds.py)
-  - [test_css.py](https://github.com/CenturyHSTech/Image-Gallery-Project/blob/main/tests/test_css.py)
-  - [test_css_exceeds.py](https://github.com/CenturyHSTech/Image-Gallery-Project/blob/main/tests/test_css_exceeds.py)
+  + [test_html.py](https://github.com/CenturyHSTech/Image-Gallery-Project/blob/main/tests/test_html.py)
+  + [test_html_exceeds.py](https://github.com/CenturyHSTech/Image-Gallery-Project/blob/main/tests/test_html_exceeds.py)
+  + [test_css.py](https://github.com/CenturyHSTech/Image-Gallery-Project/blob/main/tests/test_css.py)
+  + [test_css_exceeds.py](https://github.com/CenturyHSTech/Image-Gallery-Project/blob/main/tests/test_css_exceeds.py)
 
 ## Acknowledgements
 I'd like to thank Guido van Rossum for his love of Monty Python and creating the Python programming language (pseudo-code that works) as well as the Python community and PyCon for running Development Sprints and giving rookies like me the chance to learn how to contribute to open-source projects.
