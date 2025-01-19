@@ -41,12 +41,12 @@ Below are a few examples of how I use webcode-tk in a class project. If you look
 
 I use `webcode-tk` to inspect all files in the `project` folder, and `pytest` looks at the reports and other tools to determine whether students' projects have met all the goals:
 
-* [One Pager Project](https://github.com/CenturyHSTech/one-pager-project):
+* **[One Pager Project](https://github.com/CenturyHSTech/one-pager-project)** contains two `pytest` files:
 
   + [test_html.py](https://github.com/CenturyHSTech/one-pager-project/blob/main/tests/test_html.py)
   + [test_css.py](https://github.com/CenturyHSTech/one-pager-project/blob/main/tests/test_css.py)
 
-* [Image Gallery Project](https://github.com/CenturyHSTech/Image-Gallery-Project):
+* **[Image Gallery Project](https://github.com/CenturyHSTech/Image-Gallery-Project)** contains four `pytest` files (I use the exceeds tests to determine the difference between a B or an A):
 
   + [test_html.py](https://github.com/CenturyHSTech/Image-Gallery-Project/blob/main/tests/test_html.py)
   + [test_html_exceeds.py](https://github.com/CenturyHSTech/Image-Gallery-Project/blob/main/tests/test_html_exceeds.py)
