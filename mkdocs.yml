@@ -23,7 +23,9 @@ nav:
   - cascade_tools.py: reference/cascade_tools.md
   - color_keywords.py: reference/color_keywords.md
   - color_tools.py: reference/color_tools.md
+  - animation_tools.py: reference/animation_tools.md
   - ux_tools.py: reference/ux_tools.md
+  - utils.py: reference/utils.md
   - validator_tools.py: reference/validator_tools.md
   - explanation.md
 
