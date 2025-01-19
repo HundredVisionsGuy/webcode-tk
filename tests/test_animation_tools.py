@@ -21,6 +21,24 @@ def test_get_animation_report_for_values_targetted(animation_report):
     assert len(animation_report) == 2
 
 
+def test_get_animation_report_for_number_properties(animation_report):
+    # passes until proven failed
+    passes = True
+    for file in animation_report:
+        # animations.html targets width and background-color
+        if "animations.html" in file.keys():
+            properties = file["animations.html"].get("properties")
+            passes = passes and "background-color" in properties
+            passes = passes and "width" in properties
+        else:
+            # keyframe-animations.html targets transform-translate,
+            # transform-rotate, and opacity
+            properties = file["keyframe-animation.html"].get("properties")
+            passes = passes and "transform-rotate()" in properties
+            passes = passes and "opacity" in properties
+    assert passes
+
+
 def test_keyframe_report_for_num_keyframes_in_animations(keyframe_data):
     # passes until proven failed
     files = keyframe_data.keys()

@@ -5,6 +5,7 @@ reports on CSS animations.
 from file_clerk import clerk
 
 from webcode_tk import css_tools
+from webcode_tk import utils
 
 
 def get_animation_report(project_dir: str) -> list:
@@ -62,7 +63,7 @@ def get_animation_report(project_dir: str) -> list:
                 if declaration.property == "transform":
                     value_type = declaration.value
                     value_split = value_type.split("(")
-                    transform_value = value_split[0] + "()"
+                    transform_value = "transform-" + value_split[0] + "()"
                     current_dict["properties"].add(transform_value)
                 else:
                     current_dict["properties"].add(declaration.property)
@@ -93,7 +94,7 @@ def get_keyframe_data(report: list) -> dict:
     """
     data = {}
     for animation_data in report:
-        filename = get_first_dict_key(animation_data)
+        filename = utils.get_first_dict_key(animation_data)
         if filename not in data:
             data[filename] = {}
             names = animation_data[filename].get("keyframes")
@@ -114,13 +115,6 @@ def get_keyframe_data(report: list) -> dict:
         if pct_keyframes:
             data[filename]["pct_keyframes"] += len(pct_keyframes)
     return data
-
-
-def get_first_dict_key(animation_data):
-    filename = animation_data.keys()
-    filename = list(filename)
-    filename = filename[0]
-    return filename
 
 
 def get_keyframe_report(
