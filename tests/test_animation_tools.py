@@ -17,6 +17,41 @@ def keyframe_data(animation_report):
     return report
 
 
+# Keyframe report tests
+# animations.html has 6 % keyframes in all
+# keyframe-animations.html has 3 % keyframes, 1 from, and 1 to
+
+
+def test_keyframe_report_for_overall_goal_of_8():
+    report = animations.get_keyframe_report(project_folder, 8)
+    animations_passes = False
+    for file in report:
+        if "animations.html" in file:
+            if "pass:" in file:
+                animations_passes = True
+    assert animations_passes
+
+
+def test_keyframe_report_for_failed_pct():
+    report = animations.get_keyframe_report(project_folder, 5, 5)
+    keyframes_fail = False
+    for file in report:
+        if "keyframe-animation.html" in file:
+            if "does not have enough percentage" in file:
+                keyframes_fail = True
+    assert keyframes_fail
+
+
+def test_keyframe_report_for_two_from_tos_pass():
+    report = animations.get_keyframe_report(project_folder, 2, from_to_goals=2)
+    keyframes_passes = False
+    for file in report:
+        if "keyframe-animation.html" in file:
+            if "pass:" in file and "from and to" in file:
+                keyframes_passes = True
+    assert keyframes_passes
+
+
 def test_get_animation_report_for_values_targetted(animation_report):
     assert len(animation_report) == 2
 
@@ -39,38 +74,80 @@ def test_get_animation_report_for_number_properties(animation_report):
     assert passes
 
 
-def test_keyframe_report_for_num_keyframes_in_animations(keyframe_data):
-    # passes until proven failed
-    files = keyframe_data.keys()
-    num_names = 0
-    for file in files:
-        if file == "animations.html":
-            # Animations should have 2 keyframe names and 6 % keyframes
-            data = keyframe_data.get(file)
-            keyframe_names = data["keyframe_names"]
-            num_names = len(keyframe_names)
-    assert num_names == 2
+# keyframe properties report
+# keyframe-animation.html has opacity,
+# transform-rotate(), and transform-translate()
 
 
-def test_keyframe_report_for_num_pct_keyframes_in_animations(keyframe_data):
-    # passes until proven failed
-    files = keyframe_data.keys()
-    pct_keyframes = 0
-    for file in files:
-        if file == "animations.html":
-            # Animations should have 2 keyframe names and 6 % keyframes
-            data = keyframe_data.get(file)
-            pct_keyframes = data["pct_keyframes"]
-    assert pct_keyframes == 6
+def test_get_animation_properties_report_for_keyframe_animation_meets():
+    properties_report = animations.get_animation_properties_report(
+        project_folder, 3, ("transform-rotate()", "transform-translate()")
+    )
+    keyframe_animations_passes = False
+    for file in properties_report:
+        if "keyframe-animation.html" in file:
+            if "pass:" in file:
+                keyframe_animations_passes = True
+    assert keyframe_animations_passes
 
 
-def test_keyframe_report_for_num_from_to_keyframes(keyframe_data):
-    # passes until proven failed
-    files = keyframe_data.keys()
-    froms_tos = 0
-    for file in files:
-        if file == "keyframe-animation.html":
-            # Animations should have 2 keyframe names and 6 % keyframes
-            data = keyframe_data.get(file)
-            froms_tos = data["froms_tos"]
-    assert froms_tos == 2
+def test_get_animation_properties_report_for_keyframe_fails_missing_prop():
+    properties_report = animations.get_animation_properties_report(
+        project_folder, 3, ("transform-skew()", "transform-translate()")
+    )
+    keyframe_animations_fails = False
+    for file in properties_report:
+        if "keyframe-animation.html" in file:
+            if "fail:" in file:
+                keyframe_animations_fails = True
+    assert keyframe_animations_fails
+
+
+def test_get_animation_properties_report_for_only_number_keyframes_fail():
+    properties_report = animations.get_animation_properties_report(
+        project_folder, 5
+    )
+    keyframe_animations_fails = False
+    for file in properties_report:
+        if "keyframe-animation.html" in file:
+            if "fail:" in file:
+                keyframe_animations_fails = True
+    assert keyframe_animations_fails
+
+
+def test_get_animation_properties_report_for_only_number_keyframes_pass():
+    properties_report = animations.get_animation_properties_report(
+        project_folder, 3
+    )
+    keyframe_animations_passes = False
+    for file in properties_report:
+        if "keyframe-animation.html" in file:
+            if "pass:" in file:
+                keyframe_animations_passes = True
+    assert keyframe_animations_passes
+
+
+# animations.html has width and
+# background-color
+
+
+def test_animation_properties_report_for_animations_fail_with_enough_props():
+    properties_report = animations.get_animation_properties_report(
+        project_folder, 3, ("width", "background-color")
+    )
+    animations_failed = False
+    for file in properties_report:
+        if "animations.html" in file:
+            animations_failed = "fail:" in file
+    assert animations_failed
+
+
+def test_animation_properties_report_for_animations_pass_with_enough_props():
+    properties_report = animations.get_animation_properties_report(
+        project_folder, 2, ("width", "background-color")
+    )
+    animations_passed = False
+    for file in properties_report:
+        if "animations.html" in file:
+            animations_passed = "pass:" in file
+    assert animations_passed

@@ -2,6 +2,8 @@
 A group of functions that work with css_tools and cascade_tools to provide
 reports on CSS animations.
 """
+from typing import Union
+
 from file_clerk import clerk
 
 from webcode_tk import css_tools
@@ -118,46 +120,84 @@ def get_keyframe_data(report: list) -> dict:
 
 
 def get_keyframe_report(
-    keyframe_results: list, pct_goal: int, overall_goal: int
+    project_folder: str, num_goal: int, pct_goal=None, from_to_goals=None
 ) -> list:
-    """returns a list of pass/fail messages (1 for each file)
+    """returns a list of pass/fail messages (1 for each goal in each file).
+
+    A report that allows you to set the minimum number of keyframes for each
+    file. By setting num_goal, you are stating how many keyframes in all you
+    expect to see in a project.
+
+    You can also set a minimum number of percentage keyframes, and the minimum
+    number of from {} and to {} keyframes.
+
+    NOTE: for every goal, there will be a report on that goal (one for each
+    file). If your project has two files, and you set all three goals (
+    num_goal, pct_goal, and from_to_goals), the report will create a list of
+    6 messages.
 
     Args:
-        keyframe_results: a list of filenames with number of percentage
-            keyframes and from and to keyframes.
+        project_folder: the folder that houses the project.
+        num_goal: the minimum number of keyframes per file (overall)
         pct_goal: the minimum number of percentage keyframes we would want
             to see.
-        overall_goal: the total number of keyframes in case there are not
-            the minimum number of percentage keyframes.
+        from_to_goals: the minimum number of from and to keyframes.
 
     Returns:
         results: a list of messages (one for each file in the project) with
             a pass or fail with number present of each type.
     """
-    results = []
-    for item in keyframe_results:
-        file, pct_keyframes, from_to_keyframes = item
+    report = []
+    animation_report = get_animation_report(project_folder)
+    keyframe_results = get_keyframe_data(animation_report)
+    for file, results in keyframe_results.items():
+        pct_keyframes, froms, tos = results.values()
         msg = ""
 
-        # first check the percentage goal
-        if pct_keyframes > pct_goal:
-            msg = f"pass: {file} has {pct_keyframes} percentage keyframes."
+        num_pct = len(pct_keyframes)
+        num_froms_tos = froms + tos
+        overall_num = num_pct + num_froms_tos
+        if overall_num >= num_goal:
+            msg = f"pass: {file} has {overall_num} keyframes (enough "
+            msg += "overall to meet)."
         else:
-            # if that fails, check overall
-            num_overall = pct_keyframes + from_to_keyframes
-            if num_overall >= overall_goal:
-                msg = f"pass: {file} has {num_overall} keyframes (enough "
-                msg += "overall to meet)."
+            remaining = num_goal - overall_num
+            msg = f"fail: {file} has only {overall_num} keyframes (needs "
+            msg += f"{remaining} more to pass)."
+        report.append(msg)
+        if pct_goal:
+            if num_pct >= pct_goal:
+                msg = f"pass: {file} has {pct_keyframes} percentage "
+                msg += "keyframes."
             else:
-                msg = f"fail: {file} does not have enough keyframes to pass."
-        results.append(msg)
-    return results
+                msg = f"fail: {file} does not have enough percentage "
+                msg += "keyframes to pass."
+            report.append(msg)
+        if from_to_goals:
+            if num_froms_tos >= from_to_goals:
+                msg = f"pass: {file} has {num_froms_tos} from and to "
+                msg += "keyframes."
+            else:
+                msg = f"fail: {file} does not have enough from and to "
+                msg += "keyframes to pass."
+            report.append(msg)
+    return report
 
 
 def get_animation_properties_report(
-    animation_values: list, num_goal: int, specific_properties=None
-):
-    """returns a list of pass/fail messages (1 for each file)
+    project_folder: str, num_goal: int, specific_properties=None
+) -> list:
+    """returns a list of pass/fail messages based on number and type of
+    unique animation keyframe properties.
+
+    You can specify just the number of unique properties or you can specify
+    both the number as well as check for specific targetted properties. If you
+    specify both, both must be met for a pass.
+
+    NOTE: In the case of the transform properties, you can just specify
+    transform, or you can include the type of transform in the form of
+    transform- + the transform value (eg. transform-rotate(),
+    transform-translate(), transfrom-skew(), etc.)
 
     Since animation_values might have multiple entries for the same file,
     we need to track a per file record to see if it meets or not.
@@ -174,54 +214,46 @@ def get_animation_properties_report(
         results: a list of messages (one for each file in the project) with
             a pass or fail with number present of each type.
     """
-    results = []
-    properties_targetted = set()
-    current_file = animation_values[0].get("file")
-    for item in animation_values:
-        filename = item.get("file")
-        if filename != current_file:
-            # we are on to a new file, it's time to create a message
+    report = []
+    animation_report = get_animation_report(project_folder)
+    for item in animation_report:
+        filename = utils.get_first_dict_key(item)
+        properties_targetted = item[filename].get("properties")
+        num_properties = len(properties_targetted)
+        num_remaining = num_goal - num_properties
+        if num_remaining > 0:
+            msg = f"fail: {filename} did not target enough properties; should"
+            msg += f"target {num_remaining} properties more."
+            report.append(msg)
+        else:
             if specific_properties:
                 # make sure it's a list
                 msg = get_targetted_properties_msg(
-                    specific_properties, properties_targetted, current_file
+                    specific_properties, properties_targetted, filename
                 )
-                results.append(msg)
+                report.append(msg)
             else:
                 # Now lets check for num of unique properties
                 msg = get_num_properties_msg(
-                    num_goal, properties_targetted, current_file
+                    num_goal, properties_targetted, filename
                 )
-                results.append(msg)
+                report.append(msg)
 
-            # now is the time to restart our list of properties
-            properties_targetted = set()
-            current_file = filename
-
-        # will need to change the key on the animations_values list
-        properties = item.get("values_targetted")
-        for property in properties:
-            # add only unique properties
-            properties_targetted.add(property)
-
-    # process the current file (now that we're done looping)
-    # check to see if there are any required properties
-    if specific_properties:
-        # make sure it's a list
-        msg = get_targetted_properties_msg(
-            specific_properties, properties_targetted, current_file
-        )
-        results.append(msg)
-    else:
-        # Now lets check for num of unique properties
-        msg = get_num_properties_msg(
-            num_goal, properties_targetted, current_file
-        )
-        results.append(msg)
-    return results
+        # now is the time to restart our list of properties
+        properties_targetted = set()
+    return report
 
 
-def get_num_properties_msg(num_goal, properties_targetted, current_file):
+def get_num_properties_msg(
+    num_goal: int,
+    properties_targetted: Union[list, tuple, set],
+    current_file: str,
+) -> str:
+    """Returns a pass/fail message based on whether a file targets the min
+    number of properties found.
+
+    Args:
+        num_goal: the number of unique properties that should be targetted"""
     num_unique_props = len(properties_targetted)
     if num_unique_props >= num_goal:
         msg = f"pass: {current_file}'s animations targetted the minimum "
@@ -235,8 +267,27 @@ def get_num_properties_msg(num_goal, properties_targetted, current_file):
 
 
 def get_targetted_properties_msg(
-    properties, properties_targetted, current_file
-):
+    properties: Union[list, tuple],
+    properties_targetted: Union[list, tuple],
+    current_file: str,
+) -> str:
+    """returns whether the file addresses all targetted keyframe properties or
+    not.
+
+    Receives the keyframe properties found in a file's styles and returns a
+    message that states whether the file has targetted all required properties
+    in the form of "pass" or "fail".
+
+    Args:
+        properties: a list or tuple of the keyframe properties targetted in a
+            file's stylesheets or not.
+        properties_targetted: a list or tuple of the properties that the file
+            should contain.
+        current_file: the name of the HTML document we are checking.
+
+    Returns:
+        msg: a string that begins with 'pass:' or 'fail:', and details on what
+            was missing if a fail."""
     properties = list(properties)
     for property in properties_targetted:
         if property in properties:
