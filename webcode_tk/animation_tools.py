@@ -2,6 +2,7 @@
 A group of functions that work with css_tools and cascade_tools to provide
 reports on CSS animations.
 """
+from collections.abc import Iterable
 from typing import Union
 
 from file_clerk import clerk
@@ -151,12 +152,13 @@ def get_keyframe_report(
     animation_report = get_animation_report(project_folder)
     keyframe_results = get_keyframe_data(animation_report)
     for file, results in keyframe_results.items():
-        pct_keyframes, froms, tos = results.values()
-        msg = ""
-
-        num_pct = len(pct_keyframes)
-        num_froms_tos = froms + tos
-        overall_num = num_pct + num_froms_tos
+        pct_keyframes = results["pct_keyframes"]
+        if isinstance(pct_keyframes, Iterable):
+            pct_keyframes = len(pct_keyframes)
+        num_froms_tos = results["froms_tos"]
+        if isinstance(num_froms_tos, Iterable):
+            num_froms_tos = len(num_froms_tos)
+        overall_num = pct_keyframes + num_froms_tos
         if overall_num >= num_goal:
             msg = f"pass: {file} has {overall_num} keyframes (enough "
             msg += "overall to meet)."
@@ -166,7 +168,7 @@ def get_keyframe_report(
             msg += f"{remaining} more to pass)."
         report.append(msg)
         if pct_goal:
-            if num_pct >= pct_goal:
+            if pct_keyframes >= pct_goal:
                 msg = f"pass: {file} has {pct_keyframes} percentage "
                 msg += "keyframes."
             else:

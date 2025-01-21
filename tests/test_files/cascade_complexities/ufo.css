@@ -1,0 +1,74 @@
+body {
+    background-color: #08223c;
+    color: whitesmoke;
+    margin:0;
+}
+main {
+    width: 100%;
+    height: 1272px;
+    background-color: darkgreen;
+    background: url("pexels-andrey-niqi-19566-254178.jpg") no-repeat;
+    position: relative;
+}
+h1 {
+    margin-top: 0;
+    padding: 0.5em 1em;
+    animation: slideDown 4s ease-in-out infinite;
+}
+img#baby-ship {
+    animation: fly-around 10s linear 1s infinite;
+}
+img#mother-ship {
+    transform: translateX(-200px);
+    animation: hover-about 10s ease-in-out 0s infinite;
+}
+img#cow {
+    position: absolute;
+    top: 800px;
+    animation: abduction 10s ease-in-out 0s infinite;
+}
+@keyframes fly-around {
+    10% {
+        transform: translate(400px, 70em);
+        transform: rotate(-90deg);
+    }
+    47% {
+        transform: rotate(90deg);
+    }
+    85% {
+        transform: translate(-15em, 35em);
+    }
+}
+@keyframes hover-about {
+    30% {
+        transform: translate(400px, -4em);
+    }
+    47% {
+        transform: translate(200em, 0) rotate(10deg) scale(1.8);
+    }
+    65% {
+        transform: translate(15em, 15em);
+    }
+    85% {
+        transform: translate(15em, 15em);
+    }
+}
+@keyframes abduction {
+    65% {
+        transform: translate(0, 0);
+    }
+    85% {
+        transform: translate(0, -30em);
+    }
+    100% {
+        transform: translate(-28em, -45em);
+    }
+}
+@keyframes pulse {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}

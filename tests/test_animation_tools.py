@@ -22,8 +22,8 @@ def keyframe_data(animation_report):
 # keyframe-animations.html has 3 % keyframes, 1 from, and 1 to
 
 
-def test_keyframe_report_for_overall_goal_of_8():
-    report = animations.get_keyframe_report(project_folder, 8)
+def test_keyframe_report_for_overall_goal_of_6():
+    report = animations.get_keyframe_report(project_folder, 6)
     animations_passes = False
     for file in report:
         if "animations.html" in file:
@@ -53,7 +53,7 @@ def test_keyframe_report_for_two_from_tos_pass():
 
 
 def test_get_animation_report_for_values_targetted(animation_report):
-    assert len(animation_report) == 2
+    assert len(animation_report) == 3
 
 
 def test_get_animation_report_for_number_properties(animation_report):
@@ -65,12 +65,19 @@ def test_get_animation_report_for_number_properties(animation_report):
             properties = file["animations.html"].get("properties")
             passes = passes and "background-color" in properties
             passes = passes and "width" in properties
-        else:
+        elif "keyframe-animation.html" in file.keys():
             # keyframe-animations.html targets transform-translate,
             # transform-rotate, and opacity
             properties = file["keyframe-animation.html"].get("properties")
             passes = passes and "transform-rotate()" in properties
             passes = passes and "opacity" in properties
+        else:
+            # ufo.html has so 4 animations, 10 % keyframes, one from and a to
+            animations = file["ufo.html"].get("keyframes")
+            num_animations = len(animations)
+            pct_keyframes = file["ufo.html"].get("pct_keyframes")
+            num_pct = len(pct_keyframes)
+            passes = passes and num_pct == 10 and num_animations == 4
     assert passes
 
 

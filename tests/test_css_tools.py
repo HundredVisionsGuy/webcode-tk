@@ -1121,7 +1121,7 @@ def test_get_properties_applied_report_for_figure_2_fails():
     for item in report:
         if "fail" in item:
             fails += 1
-    assert fails == 3
+    assert fails == 4
 
 
 # Test variations on get_properties_applied function
@@ -1160,6 +1160,8 @@ def test_for_properties_applied_simple(results):
     elif "keyframe-animation.html" in results:
         # this should fail because it does NOT target figure at all
         assert "fail:" in results[:5] and "3" in results
+    elif "ufo.html" in results:
+        assert "fail:" in results[:5] and "3" in results
     else:
         assert "pass:" in results[:5]
 
@@ -1172,7 +1174,7 @@ def test_get_properties_for_min2_properties_1_pass_2_fail():
             passed += 1
         if "fail:" in result[:5]:
             failed += 1
-    assert passed == 1 and failed == 3
+    assert passed == 1 and failed == 4
 
 
 def test_get_properties_for_solely_id_targetted():
