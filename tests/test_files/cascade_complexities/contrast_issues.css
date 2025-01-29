@@ -1,0 +1,48 @@
+body {
+    font-family: "Gowun Batang", serif;
+    background-color: #fffafa;
+    color: #F2F2F2;
+
+}
+h1,h2 {
+    font-family: "Lora", serif;
+    color: #F2F2F2;
+
+}
+header div {
+    background-color: #45455F;
+    border: 1px solid #394a5b;
+    padding: 1em;
+    color:#F2F2F2;
+
+}
+header div p {
+    background-color: #45455F;
+    color:#F2F2F2;
+
+}
+
+main {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+figure {
+    width: 400px;
+    background-color: #45455F;
+    padding: 1em;
+    border: 1px solid #394a5b;
+    margin: 18px;
+  }
+
+
+a:link {
+    color: #E5E1E1 ;
+  }
+
+a:hover {
+    color: #7189a1;
+}
+a:visited {
+    color: #DCE3EA;
+}

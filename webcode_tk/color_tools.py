@@ -86,6 +86,7 @@ def get_contrast_results_from_ratio(
     Args:
         ratio: the contrast ratio.
         size: calculated font size.
+        is_bold: if the text is bold or not.
 
     Returns:
         str: whether it passes or not with details.
