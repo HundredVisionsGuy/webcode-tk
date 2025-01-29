@@ -1,0 +1,49 @@
+body {
+    font-family: 'roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #cad1db;
+    color: black;
+}
+header {
+    text-align: center;
+    background-color: #8da8ce;
+    color: black;
+    padding: 1rem 0;
+}
+footer {
+    text-align: center;
+    padding: 1rem 0;
+    background-color: #8da8ce;
+    color: black;
+}
+.gallery {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 1rem;
+    gap: 1.5rem;
+}
+figure {
+    background-color: white;
+    color: #3a9a5f;
+    border: 2px solid #dddddd;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+}
+figure:hover {
+    transform: scale(1.05);
+}
+figure img {
+    max-width: 50%;
+    border-radius: 4px;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+figcaption a {
+    color: #3a9a5f;
+}
+figcaption:hover {
+    text-decoration: underline;
+}

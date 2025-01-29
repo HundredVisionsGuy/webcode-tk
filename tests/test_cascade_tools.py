@@ -506,6 +506,15 @@ def test_get_color_contrast_for_AA_success(font_sizes_tree):
     assert results[0] == expected
 
 
+def test_get_color_contrast_for_AAA_on_broken_gallery():
+    project_dir = "tests/test_files/broken_gallery"
+    color_contrast_results = cascade.get_color_contrast_report(project_dir)
+    fails = True
+    for result in color_contrast_results:
+        fails = fails and "fail" in result
+    assert fails
+
+
 @pytest.fixture
 def radial_gradient_children(gradients_file_large_tree):
     body = gradients_file_large_tree.children[0]
