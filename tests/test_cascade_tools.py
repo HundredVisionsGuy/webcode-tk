@@ -670,6 +670,13 @@ def test_amharic_file_for_proper_application_of_nav_link(amharic_tree):
 figure_test_path = "tests/test_files/figure_color_contrast_test"
 figure_color_contrast = cascade.get_color_contrast_report(figure_test_path)
 
+# New color contrast issue with a descendant selector - should pass
+color_contrast_issue_path = "tests/test_files/cascade_complexities"
+contrast_issue_report = cascade.get_color_contrast_report(
+    color_contrast_issue_path
+)
+print(contrast_issue_report)
+
 
 def test_color_contrast_for_figure_with_only_bg_no_direct_text():
     report = figure_color_contrast[0]

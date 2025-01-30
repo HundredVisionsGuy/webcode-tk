@@ -1121,7 +1121,7 @@ def test_get_properties_applied_report_for_figure_2_fails():
     for item in report:
         if "fail" in item:
             fails += 1
-    assert fails == 4
+    assert fails == 5
 
 
 # Test variations on get_properties_applied function
@@ -1162,6 +1162,8 @@ def test_for_properties_applied_simple(results):
         assert "fail:" in results[:5] and "3" in results
     elif "ufo.html" in results:
         assert "fail:" in results[:5] and "3" in results
+    elif "new_color_contrast_issue.html" in results:
+        assert "fail:" in results[:5] and "3" in results
     else:
         assert "pass:" in results[:5]
 
@@ -1174,7 +1176,7 @@ def test_get_properties_for_min2_properties_1_pass_2_fail():
             passed += 1
         if "fail:" in result[:5]:
             failed += 1
-    assert passed == 1 and failed == 4
+    assert passed == 1 and failed == 5
 
 
 def test_get_properties_for_solely_id_targetted():
