@@ -26,3 +26,67 @@ def test_get_parsed_documents(tmp_path):
             assert entry["soup"].h1.text == "Home"
         if entry["filename"] == "about.html":
             assert entry["soup"].p.text == "About"
+
+
+def test_css_source_order_mixed():
+    html = """
+    <html>
+      <head>
+        <link rel="stylesheet" href="a.css">
+        <style>body { color: red; }</style>
+        <link rel="stylesheet" href="b.css">
+      </head>
+      <body></body>
+    </html>
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    sources = contrast_tools.get_css_source_order(soup)
+    assert sources == [
+        {"type": "external", "href": "a.css"},
+        {"type": "internal", "content": "body { color: red; }"},
+        {"type": "external", "href": "b.css"},
+    ]
+
+
+def test_css_source_order_only_external():
+    html = """
+    <html>
+      <head>
+        <link rel="stylesheet" href="main.css">
+      </head>
+      <body></body>
+    </html>
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    sources = contrast_tools.get_css_source_order(soup)
+    assert sources == [
+        {"type": "external", "href": "main.css"},
+    ]
+
+
+def test_css_source_order_only_internal():
+    html = """
+    <html>
+      <head>
+        <style>h1 { color: blue; }</style>
+      </head>
+      <body></body>
+    </html>
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    sources = contrast_tools.get_css_source_order(soup)
+    assert sources == [
+        {"type": "internal", "content": "h1 { color: blue; }"},
+    ]
+
+
+def test_css_source_order_empty_head():
+    html = """
+    <html>
+      <head></head>
+      <body></body>
+    </html>
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    sources = contrast_tools.get_css_source_order(soup)
+    assert sources == []

@@ -24,7 +24,12 @@ def analyze_contrast(project_folder: str) -> list[dict]:
     """
 
     project_contrast_results = []
+    parsed_html_docs = get_parsed_documents(project_folder)
+    css_files = load_css_files(parsed_html_docs)
 
+    # TODO: Analyze CSS Files
+    for file in css_files:
+        print(file)
     return project_contrast_results
 
 
@@ -58,6 +63,51 @@ def get_parsed_documents(project_folder: str) -> list[dict]:
         parsed_documents.append(file_dict)
 
     return parsed_documents
+
+
+def load_css_files(html_docs: list[dict]) -> list[dict]:
+    """"""
+    css_files = []
+    for file in html_docs:
+        soup = file.get("soup")
+        source_order = get_css_source_order(soup)
+
+        # TODO - next step in algorithm
+        print(source_order)
+    return css_files
+
+
+def get_css_source_order(soup: "BeautifulSoup") -> list[dict]:
+    """
+    Returns the ordered list of CSS sources (external stylesheets and internal
+    style tags) as they appear in the <head> of the HTML document.
+
+    Args:
+        soup (BeautifulSoup): Parsed BeautifulSoup object of the HTML document.
+
+    Returns:
+        list[dict]: A list of dictionaries, each representing a CSS source in
+        order.
+            For external stylesheets:
+                {"type": "external", "href": "<stylesheet href>"}
+            For internal style tags:
+                {"type": "internal", "content": "<style tag content>"}
+    """
+    source_order = []
+    head = soup.find("head")
+    for child in head.children:
+        if child.name == "link":
+            source = child.attrs.get("href")
+
+            # just in case the rel attribute is still missing
+            if source[-4:] == ".css":
+                styles = {"type": "external", "href": source}
+                source_order.append(styles)
+        elif child.name == "style":
+            contents = child.string
+            styles = {"type": "internal", "content": contents}
+            source_order.append(styles)
+    return source_order
 
 
 if __name__ == "__main__":
