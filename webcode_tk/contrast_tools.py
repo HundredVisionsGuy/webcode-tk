@@ -6,6 +6,7 @@ styles applied to every element on a page. It scans each stylesheet and
 applies each style, one at a time, to all applicable elements and their
 children.
 """
+import tinycss2
 from bs4 import BeautifulSoup
 from file_clerk import clerk
 
@@ -25,7 +26,7 @@ def analyze_contrast(project_folder: str) -> list[dict]:
 
     project_contrast_results = []
     parsed_html_docs = get_parsed_documents(project_folder)
-    css_files = load_css_files(parsed_html_docs)
+    css_files = load_css_files(parsed_html_docs, project_folder)
 
     # TODO: Analyze CSS Files
     for file in css_files:
@@ -65,16 +66,53 @@ def get_parsed_documents(project_folder: str) -> list[dict]:
     return parsed_documents
 
 
-def load_css_files(html_docs: list[dict]) -> list[dict]:
+def load_css_files(html_docs: list[dict], project_folder: str) -> list[dict]:
     """"""
     css_files = []
+    stylesheet_cache = {}
     for file in html_docs:
         soup = file.get("soup")
         source_order = get_css_source_order(soup)
+        html_file = file.get("filename")
 
-        # TODO - next step in algorithm
-        print(source_order)
+        # get css and parse it
+        for sheet in source_order:
+            href = "style_tag"
+            if sheet.get("type") == "external":
+                href = sheet.get("href")
+
+                # Check to see if the css file has already been parsed
+                if not stylesheet_cache.get(href):
+                    stylesheet_cache[href] = {}
+                    css_path = project_folder + href
+                    with open(css_path, "rb") as fd:
+                        css = fd.read()
+                    parsed = tinycss2.parse_stylesheet_bytes(css)
+                    stylesheet_cache[href] = parsed
+                else:
+                    parsed = stylesheet_cache.get(href)
+            else:
+                css = sheet.get("content")
+                css = css.strip()
+                if isinstance(css, bytes):
+                    parsed = tinycss2.parse_stylesheet_bytes(css)
+                else:
+                    parsed = tinycss2.parse_stylesheet(css)
+            css_source = {}
+            if not css_source.get(html_file):
+                css_source[html_file] = []
+            append_style_data(html_file, sheet, href, parsed, css_source)
+            css_files.append(css_source)
+
     return css_files
+
+
+def append_style_data(html_file, sheet, href, parsed, css_source):
+    data = {}
+    data["source_type"] = sheet.get("type")
+    data["css_name"] = href
+    data["stylesheet"] = parsed
+    css_source[html_file].append(data)
 
 
 def get_css_source_order(soup: "BeautifulSoup") -> list[dict]:
