@@ -67,7 +67,19 @@ def get_parsed_documents(project_folder: str) -> list[dict]:
 
 
 def load_css_files(html_docs: list[dict], project_folder: str) -> list[dict]:
-    """"""
+    """
+    Parses and collects all CSS sources (external and internal) for each HTML
+    document.
+
+    Args:
+        html_docs (list[dict]): List of dictionaries, each with 'filename' and
+            'soup' for an HTML document.
+        project_folder (str): Path to the root folder of the website project.
+
+    Returns:
+        list[dict]: List of dictionaries, each containing parsed CSS sources
+            for each HTML file.
+    """
     css_files = []
     stylesheet_cache = {}
     for file in html_docs:
@@ -75,36 +87,62 @@ def load_css_files(html_docs: list[dict], project_folder: str) -> list[dict]:
         source_order = get_css_source_order(soup)
         html_file = file.get("filename")
 
-        # get css and parse it
         for sheet in source_order:
-            href = "style_tag"
             if sheet.get("type") == "external":
                 href = sheet.get("href")
-
-                # Check to see if the css file has already been parsed
-                if not stylesheet_cache.get(href):
-                    stylesheet_cache[href] = {}
-                    css_path = project_folder + href
-                    with open(css_path, "rb") as fd:
-                        css = fd.read()
-                    parsed = tinycss2.parse_stylesheet_bytes(css)
-                    stylesheet_cache[href] = parsed
-                else:
-                    parsed = stylesheet_cache.get(href)
+                parsed = get_or_parse_external_stylesheet(
+                    href, project_folder, stylesheet_cache
+                )
             else:
-                css = sheet.get("content")
-                css = css.strip()
-                if isinstance(css, bytes):
-                    parsed = tinycss2.parse_stylesheet_bytes(css)
-                else:
-                    parsed = tinycss2.parse_stylesheet(css)
+                parsed = parse_internal_style_tag(sheet.get("content"))
+                href = "style_tag"
             css_source = {}
             if not css_source.get(html_file):
                 css_source[html_file] = []
             append_style_data(html_file, sheet, href, parsed, css_source)
             css_files.append(css_source)
-
     return css_files
+
+
+def get_or_parse_external_stylesheet(
+    href: str, project_folder: str, cache: dict
+):
+    """
+    Retrieves a parsed external stylesheet from cache, or parses and caches it
+    if not already done.
+
+    Args:
+        href (str): The href (path) to the external CSS file.
+        project_folder (str): Path to the root folder of the website project.
+        cache (dict): Dictionary used to cache parsed stylesheets.
+
+    Returns:
+        list: Parsed CSS rules from tinycss2 for the given stylesheet.
+    """
+    if href not in cache:
+        css_path = project_folder + href
+        with open(css_path, "rb") as fd:
+            css = fd.read()
+        parsed = tinycss2.parse_stylesheet_bytes(css)
+        cache[href] = parsed
+    return cache[href]
+
+
+def parse_internal_style_tag(css: str):
+    """
+    Parses the contents of an internal <style> tag using tinycss2.
+
+    Args:
+        css (str): The CSS string from a <style> tag.
+
+    Returns:
+        list: Parsed CSS rules from tinycss2.
+    """
+    css = css.strip()
+    if isinstance(css, bytes):
+        return tinycss2.parse_stylesheet_bytes(css)
+    else:
+        return tinycss2.parse_stylesheet(css)
 
 
 def append_style_data(html_file, sheet, href, parsed, css_source):
