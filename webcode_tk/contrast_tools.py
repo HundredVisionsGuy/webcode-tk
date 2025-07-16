@@ -123,7 +123,9 @@ def get_or_parse_external_stylesheet(
         css_path = project_folder + href
         with open(css_path, "rb") as fd:
             css = fd.read()
-        parsed = tinycss2.parse_stylesheet_bytes(css)
+        if isinstance(css, bytes):
+            css = css.decode("utf-8")
+        parsed = tinycss2.parse_stylesheet(css)
         cache[href] = parsed
     return cache[href]
 
