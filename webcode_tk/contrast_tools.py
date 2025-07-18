@@ -28,9 +28,10 @@ def analyze_contrast(project_folder: str) -> list[dict]:
     parsed_html_docs = get_parsed_documents(project_folder)
     css_files = load_css_files(parsed_html_docs, project_folder)
 
-    # TODO: Analyze CSS Files
-    for file in css_files:
-        print(file)
+    # Analyze CSS Files
+    for html_doc in parsed_html_docs:
+        doc_results = analyze_css(html_doc, css_files)
+        project_contrast_results.extend(doc_results)
     return project_contrast_results
 
 
@@ -104,6 +105,39 @@ def load_css_files(html_docs: list[dict], project_folder: str) -> list[dict]:
     return css_files
 
 
+def get_css_source_order(soup: "BeautifulSoup") -> list[dict]:
+    """
+    Returns the ordered list of CSS sources (external stylesheets and internal
+    style tags) as they appear in the <head> of the HTML document.
+
+    Args:
+        soup (BeautifulSoup): Parsed BeautifulSoup object of the HTML document.
+
+    Returns:
+        list[dict]: A list of dictionaries, each representing a CSS source in
+        order.
+            For external stylesheets:
+                {"type": "external", "href": "<stylesheet href>"}
+            For internal style tags:
+                {"type": "internal", "content": "<style tag content>"}
+    """
+    source_order = []
+    head = soup.find("head")
+    for child in head.children:
+        if child.name == "link":
+            source = child.attrs.get("href")
+
+            # just in case the rel attribute is still missing
+            if source[-4:] == ".css":
+                styles = {"type": "external", "href": source}
+                source_order.append(styles)
+        elif child.name == "style":
+            contents = child.string
+            styles = {"type": "internal", "content": contents}
+            source_order.append(styles)
+    return source_order
+
+
 def get_or_parse_external_stylesheet(
     href: str, project_folder: str, cache: dict
 ):
@@ -155,37 +189,98 @@ def append_style_data(html_file, sheet, href, parsed, css_source):
     css_source[html_file].append(data)
 
 
-def get_css_source_order(soup: "BeautifulSoup") -> list[dict]:
+def analyze_css(html_doc: dict, css_files: list[dict]) -> list[dict]:
     """
-    Returns the ordered list of CSS sources (external stylesheets and internal
-    style tags) as they appear in the <head> of the HTML document.
+    Analyzes CSS application and color contrast for a single HTML document.
 
     Args:
-        soup (BeautifulSoup): Parsed BeautifulSoup object of the HTML document.
+        html_doc (dict): Dictionary containing 'filename' and 'soup' for an
+            HTML document.
+        css_files (list[dict]): List of dictionaries containing parsed CSS
+            sources for all HTML files, with each dict mapping filename to
+            CSS sources in cascade order.
 
     Returns:
-        list[dict]: A list of dictionaries, each representing a CSS source in
-        order.
-            For external stylesheets:
-                {"type": "external", "href": "<stylesheet href>"}
-            For internal style tags:
-                {"type": "internal", "content": "<style tag content>"}
+        list[dict]: List of dictionaries with contrast analysis results for
+            each element in this HTML document. Each result contains element
+            info, computed styles, colors, contrast ratio, and WCAG
+            compliance.
     """
-    source_order = []
-    head = soup.find("head")
-    for child in head.children:
-        if child.name == "link":
-            source = child.attrs.get("href")
+    doc_results = []
+    filename = html_doc["filename"]
+    soup = html_doc["soup"]
 
-            # just in case the rel attribute is still missing
-            if source[-4:] == ".css":
-                styles = {"type": "external", "href": source}
-                source_order.append(styles)
-        elif child.name == "style":
-            contents = child.string
-            styles = {"type": "internal", "content": contents}
-            source_order.append(styles)
-    return source_order
+    print(soup)
+    contents = []
+    print(contents)
+
+    # Find CSS rules specific to this HTML document
+    doc_css_rules = get_css_rules_for_document(filename, css_files)
+    print(doc_css_rules)
+
+    # TODO: Apply CSS rules to elements and compute styles
+    # computed_styles = compute_element_styles(soup, doc_css_rules)
+
+    # TODO: Traverse DOM and analyze contrast for elements with text
+    # doc_results = traverse_elements_for_contrast(soup,
+    # computed_styles, filename)
+
+    return doc_results
+
+
+def get_css_rules_for_document(
+    filename: str, css_files: list[dict]
+) -> list[dict]:
+    """
+    Extracts CSS rules specific to a given HTML document from the CSS files
+    list.
+
+    Args:
+        filename (str): The HTML filename to find CSS rules for.
+        css_files (list[dict]): List of dictionaries containing parsed CSS
+            sources for all HTML files, with each dict mapping filename to
+            CSS sources in cascade order.
+
+    Returns:
+        list[dict]: List of CSS rule dictionaries for the specified HTML
+            document, maintaining the cascade order.
+    """
+    css_rules = []
+    for sheet in css_files:
+        if sheet.get(filename):
+            source = sheet.get(filename)[0]
+            parsed_styles = source.get("stylesheet")
+            rules = parse_css_rules_from_tinycss2(parsed_styles)
+            css_rules.append(rules)
+    return css_rules
+
+
+def parse_css_rules_from_tinycss2(parsed_stylesheet):
+    """
+    Converts tinycss2 parsed rules into a more usable format.
+    """
+    css_rules = []
+
+    for rule in parsed_stylesheet:
+        if rule.type == "qualified-rule":
+            # Extract selector
+            selector = tinycss2.serialize(rule.prelude).strip()
+
+            # Extract declarations
+            declarations = {}
+            declaration_list = tinycss2.parse_declaration_list(rule.content)
+
+            for decl in declaration_list:
+                if decl.type == "declaration":
+                    prop_name = decl.name
+                    prop_value = tinycss2.serialize(decl.value).strip()
+                    declarations[prop_name] = prop_value
+
+            css_rules.append(
+                {"selector": selector, "declarations": declarations}
+            )
+
+    return css_rules
 
 
 if __name__ == "__main__":
