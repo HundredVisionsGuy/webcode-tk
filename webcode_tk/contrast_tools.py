@@ -5,10 +5,36 @@ This module analyzes the DOM, inheritance, and the cascade to determine all
 styles applied to every element on a page. It scans each stylesheet and
 applies each style, one at a time, to all applicable elements and their
 children.
+
+Constants:
+    DEFAULT_GLOBAL_COLOR (str): Default text color for all elements (#000000).
+    DEFAULT_GLOBAL_BACKGROUND (str): Default background color (#ffffff).
+    DEFAULT_LINK_COLOR (str): Default color for unvisited links (#0000EE).
+    DEFAULT_LINK_VISITED (str): Default color for visited links (#551A8B).
+    ROOT_FONT_SIZE (int): Base font size in pixels for root element (16).
+    IS_BOLD (list[str]): HTML elements that are bold by default.
+    HEADING_FONT_SIZES (dict[str, int]): Default font sizes for heading
+        elements in pixels (h1-h6).
 """
 import tinycss2
 from bs4 import BeautifulSoup
 from file_clerk import clerk
+
+# Browser default styling constants
+DEFAULT_GLOBAL_COLOR = "#000000"
+DEFAULT_GLOBAL_BACKGROUND = "#ffffff"
+DEFAULT_LINK_COLOR = "#0000EE"
+DEFAULT_LINK_VISITED = "#551A8B"
+ROOT_FONT_SIZE = 16
+IS_BOLD = ["strong", "b", "h1", "h2", "h3", "h4", "h5", "h6"]
+HEADING_FONT_SIZES = {
+    "h1": 32,  # 2em
+    "h2": 24,  # 1.5em
+    "h3": 20,  # 1.25em
+    "h4": 16,  # 1em
+    "h5": 13,  # 0.83em
+    "h6": 11,  # 0.67em
+}
 
 
 def analyze_contrast(project_folder: str) -> list[dict]:
@@ -214,6 +240,10 @@ def analyze_css(html_doc: dict, css_files: list[dict]) -> list[dict]:
     contents = []
     print(contents)
 
+    # Step 1: Apply default styles to all elements
+    default_styles = apply_browser_defaults(soup)
+    print(default_styles)
+
     # Find CSS rules specific to this HTML document
     doc_css_rules = get_css_rules_for_document(filename, css_files)
     print(doc_css_rules)
@@ -226,6 +256,41 @@ def analyze_css(html_doc: dict, css_files: list[dict]) -> list[dict]:
     # computed_styles, filename)
 
     return doc_results
+
+
+def apply_browser_defaults(soup: BeautifulSoup) -> dict:
+    """
+    Apply browser default styles to all elements with text content.
+
+    Returns:
+        dict: Mapping of elements to their default computed styles
+    """
+    element_styles = {}
+
+    for element in soup.find_all():
+        if not element.is_empty_element and element.get_text(strip=True):
+            # The element object itself becomes the key
+            element_styles[element] = {
+                "color": DEFAULT_GLOBAL_COLOR,
+                "background-color": DEFAULT_GLOBAL_BACKGROUND,
+                "font-size": f"{ROOT_FONT_SIZE}px",
+            }
+
+            # Apply element-specific defaults
+            # Apply link colors
+            if element.name == "a":
+                element_styles[element]["color"] = DEFAULT_LINK_COLOR
+                element_styles[element]["visited-color"] = DEFAULT_LINK_VISITED
+
+            if element.name in IS_BOLD:
+                element_styles[element]["font-weight"] = "bold"
+
+            if element.name in HEADING_FONT_SIZES:
+                element_styles[element][
+                    "font-size"
+                ] = f"{HEADING_FONT_SIZES[element.name]}px"
+
+    return element_styles
 
 
 def get_css_rules_for_document(
