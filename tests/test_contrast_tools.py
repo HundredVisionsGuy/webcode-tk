@@ -8,6 +8,7 @@ from webcode_tk.contrast_tools import DEFAULT_GLOBAL_BACKGROUND
 from webcode_tk.contrast_tools import DEFAULT_GLOBAL_COLOR
 from webcode_tk.contrast_tools import DEFAULT_LINK_COLOR
 from webcode_tk.contrast_tools import DEFAULT_LINK_VISITED
+from webcode_tk.contrast_tools import find_matching_elements
 from webcode_tk.contrast_tools import get_css_source_order
 from webcode_tk.contrast_tools import get_or_parse_external_stylesheet
 from webcode_tk.contrast_tools import get_parsed_documents
@@ -540,3 +541,100 @@ class TestIsSelectorSupportedByBs4:
         assert is_selector_supported_by_bs4("  p  ") is True
         assert is_selector_supported_by_bs4("  a:hover  ") is False
         assert is_selector_supported_by_bs4("\t.class\n") is True
+
+
+def test_find_matching_elements_empty_selector():
+    """Test that empty/whitespace selectors return empty list."""
+    html = "<html><body><p>Test</p><div>Content</div></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+
+    # Test empty string
+    result = find_matching_elements(soup, "")
+    assert result == []
+
+    # Test whitespace only
+    result = find_matching_elements(soup, "   ")
+    assert result == []
+
+
+def test_find_matching_elements_whitespace_trimming():
+    """Test that leading/trailing whitespace is handled for supported
+    selectors."""
+    html = "<html><body><p>Test paragraph</p><div class='content'>Div</div>"
+    html += "</body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+
+    # Test with leading/trailing spaces
+    result = find_matching_elements(soup, "  p  ")
+    assert len(result) == 1
+    assert result[0].name == "p"
+
+    # Test with tabs and newlines
+    result = find_matching_elements(soup, "\t.content\n")
+    assert len(result) == 1
+    assert result[0].get("class") == ["content"]
+
+
+def test_find_matching_elements_unsupported_selector():
+    """Test that unsupported selectors return empty list with warning."""
+    html = "<html><body><a href='#'>Link</a><p>Paragraph</p></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+
+    # Test pseudo-class selector (should be caught)
+    result = find_matching_elements(soup, "a:hover")
+    assert result == []
+
+    # Test pseudo-element selector
+    result = find_matching_elements(soup, "p::before")
+    assert result == []
+
+
+def test_find_matching_elements_exception_handling(monkeypatch):
+    """Test that exceptions from soup.select() are handled gracefully."""
+    html = "<html><body><p>Test</p></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+
+    # Mock soup.select to raise an exception
+    def mock_select(selector):
+        raise ValueError("Simulated parsing error")
+
+    monkeypatch.setattr(soup, "select", mock_select)
+
+    # Should return empty list and not crash
+    result = find_matching_elements(soup, "p")
+    assert result == []
+
+
+def test_find_matching_elements_successful_matching():
+    """Test successful selector matching for various supported selectors."""
+    html = """
+    <html>
+        <body>
+            <div id="main" class="container">
+                <p class="text">Paragraph 1</p>
+                <p>Paragraph 2</p>
+                <span class="text">Span text</span>
+            </div>
+        </body>
+    </html>
+    """
+    soup = BeautifulSoup(html, "html.parser")
+
+    # Test element selector
+    result = find_matching_elements(soup, "p")
+    assert len(result) == 2
+    assert all(elem.name == "p" for elem in result)
+
+    # Test class selector
+    result = find_matching_elements(soup, ".text")
+    assert len(result) == 2
+
+    # Test ID selector
+    result = find_matching_elements(soup, "#main")
+    assert len(result) == 1
+    assert result[0].get("id") == "main"
+
+    # Test descendant selector
+    result = find_matching_elements(soup, "div p")
+    assert len(result) == 2
+    assert all(elem.name == "p" for elem in result)
