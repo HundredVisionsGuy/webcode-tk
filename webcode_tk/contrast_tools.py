@@ -29,6 +29,7 @@ Constants:
         text (18.66).
 """
 import copy
+import re
 
 import tinycss2
 from bs4 import BeautifulSoup
@@ -418,7 +419,86 @@ def find_matching_elements(soup: BeautifulSoup, selector: str) -> list:
     Returns:
         list: List of BeautifulSoup Tag objects that match the selector.
     """
-    return []
+
+    # Clean and validate
+    selector = selector.strip()
+
+    # Handle empty selectors
+    if not selector:
+        return []
+
+    # Check for valid, but not supported by bs4 selectors
+    if not is_selector_supported_by_bs4(selector):
+        warning = f"Warning: Selector '{selector}' contains features not "
+        warning += "supported by BS4"
+        print(warning)
+        return []
+
+    # Try BeautifulSoup's select method
+    try:
+        return soup.select(selector)
+    except Exception as e:
+        print(f"Error parsing selector '{selector}': {e}")
+        return []
+
+
+def is_selector_supported_by_bs4(selector: str) -> bool:
+    """
+    Determines if a CSS selector can be handled by BeautifulSoup's .select()
+    method.
+
+    Args:
+        selector (str): CSS selector string to check.
+
+    Returns:
+        bool: True if the selector is supported by BS4, False if it contains
+            unsupported features like pseudo-classes or pseudo-elements.
+    """
+    # Clean the selector
+    selector = selector.strip()
+
+    if not selector:
+        return False
+
+    # Patterns that BS4 does NOT support
+    unsupported_patterns = [
+        r"::",  # Pseudo-elements (::before, ::after, etc.)
+        r":(?!not\()",  # Pseudo-classes except :not() (BS4 supports)
+        r"~",  # General sibling combinator
+        r"\[.*?\s+i\]",  # Case-insensitive attribute matching
+    ]
+
+    # Check for unsupported patterns
+    for pattern in unsupported_patterns:
+        if re.search(pattern, selector):
+            return False
+
+    # Additional checks for specific pseudo-classes BS4 doesn't support
+    problematic_pseudos = [
+        "hover",
+        "focus",
+        "active",
+        "visited",
+        "link",
+        "first-child",
+        "last-child",
+        "nth-child",
+        "nth-of-type",
+        "checked",
+        "disabled",
+        "enabled",
+        "empty",
+        "target",
+        "root",
+        "first-letter",
+        "first-line",
+    ]
+
+    for pseudo in problematic_pseudos:
+        if f":{pseudo}" in selector:
+            return False
+
+    return True
 
 
 def apply_rule_to_element(element, rule: dict, computed_styles: dict) -> None:

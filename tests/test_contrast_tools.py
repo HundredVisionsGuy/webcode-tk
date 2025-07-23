@@ -12,6 +12,7 @@ from webcode_tk.contrast_tools import get_css_source_order
 from webcode_tk.contrast_tools import get_or_parse_external_stylesheet
 from webcode_tk.contrast_tools import get_parsed_documents
 from webcode_tk.contrast_tools import HEADING_FONT_SIZES
+from webcode_tk.contrast_tools import is_selector_supported_by_bs4
 from webcode_tk.contrast_tools import load_css_files
 from webcode_tk.contrast_tools import parse_internal_style_tag
 from webcode_tk.contrast_tools import ROOT_FONT_SIZE
@@ -391,3 +392,151 @@ def test_apply_browser_defaults_return_type():
         assert "color" in style_dict
         assert "background-color" in style_dict
         assert "font-size" in style_dict
+
+
+class TestIsSelectorSupportedByBs4:
+    """Test suite for is_selector_supported_by_bs4 function."""
+
+    def test_empty_selector(self):
+        """Test that empty selectors return False."""
+        assert is_selector_supported_by_bs4("") is False
+        assert is_selector_supported_by_bs4("   ") is False
+
+    def test_basic_supported_selectors(self):
+        """Test basic selectors that BS4 supports."""
+        supported_selectors = [
+            "p",
+            "div",
+            ".class",
+            "#id",
+            "div.class",
+            "p#id",
+            "div p",
+            "div > p",
+            "h1 + p",
+            "*",
+            "[href]",
+            "[class='value']",
+            "p, div, span",
+            "ul li",
+            "nav ul li a",
+        ]
+
+        for selector in supported_selectors:
+            assert (
+                is_selector_supported_by_bs4(selector) is True
+            ), f"Should support: {selector}"
+
+    def test_pseudo_elements_not_supported(self):
+        """Test that pseudo-elements return False."""
+        pseudo_elements = [
+            "p::before",
+            "div::after",
+            "h1::first-line",
+            "p::first-letter",
+            "input::placeholder",
+            ".class::before",
+        ]
+
+        for selector in pseudo_elements:
+            assert (
+                is_selector_supported_by_bs4(selector) is False
+            ), f"Should not support: {selector}"
+
+    def test_pseudo_classes_not_supported(self):
+        """Test that most pseudo-classes return False."""
+        pseudo_classes = [
+            "a:hover",
+            "input:focus",
+            "button:active",
+            "a:visited",
+            "a:link",
+            "p:first-child",
+            "div:last-child",
+            "li:nth-child(2)",
+            "span:nth-of-type(odd)",
+            "input:checked",
+            "input:disabled",
+            "input:enabled",
+            "div:empty",
+            "a:target",
+            ":root",
+            "p:first-letter",
+            "div:first-line",
+        ]
+
+        for selector in pseudo_classes:
+            assert (
+                is_selector_supported_by_bs4(selector) is False
+            ), f"Should not support: {selector}"
+
+    def test_not_pseudo_class_supported(self):
+        """Test that :not() pseudo-class is supported (BS4 exception)."""
+        supported_not_selectors = [
+            "div:not(.class)",
+            "p:not(#id)",
+            ":not(span)",
+        ]
+
+        for selector in supported_not_selectors:
+            assert (
+                is_selector_supported_by_bs4(selector) is True
+            ), f"Should support: {selector}"
+
+    def test_general_sibling_combinator_not_supported(self):
+        """Test that general sibling combinator (~) is not supported."""
+        sibling_selectors = ["h1 ~ p", "div ~ span", ".class ~ #id"]
+
+        for selector in sibling_selectors:
+            assert (
+                is_selector_supported_by_bs4(selector) is False
+            ), f"Should not support: {selector}"
+
+    def test_case_insensitive_attributes_not_supported(self):
+        """Test that case-insensitive attribute selectors are not supported."""
+        case_insensitive_selectors = [
+            "[class='value' i]",
+            "[href='link' i]",
+            "[data-attr='test' i]",
+        ]
+
+        for selector in case_insensitive_selectors:
+            assert (
+                is_selector_supported_by_bs4(selector) is False
+            ), f"Should not support: {selector}"
+
+    def test_complex_supported_selectors(self):
+        """Test complex but supported selectors."""
+        complex_supported = [
+            "nav > ul > li > a",
+            "div.container p.text",
+            "#main .sidebar ul li",
+            "table tr:not(.hidden)",
+            "[data-role='button']",
+            "input[type='text']",
+        ]
+
+        for selector in complex_supported:
+            assert (
+                is_selector_supported_by_bs4(selector) is True
+            ), f"Should support: {selector}"
+
+    def test_mixed_unsupported_features(self):
+        """Test selectors with multiple unsupported features."""
+        mixed_unsupported = [
+            "a:hover::before",
+            "div:first-child ~ p",
+            "input:focus:checked",
+            ".class:hover [attr='val' i]",
+        ]
+
+        for selector in mixed_unsupported:
+            assert (
+                is_selector_supported_by_bs4(selector) is False
+            ), f"Should not support: {selector}"
+
+    def test_whitespace_handling(self):
+        """Test that whitespace is properly handled."""
+        assert is_selector_supported_by_bs4("  p  ") is True
+        assert is_selector_supported_by_bs4("  a:hover  ") is False
+        assert is_selector_supported_by_bs4("\t.class\n") is True
