@@ -15,7 +15,21 @@ Constants:
     IS_BOLD (list[str]): HTML elements that are bold by default.
     HEADING_FONT_SIZES (dict[str, int]): Default font sizes for heading
         elements in pixels (h1-h6).
+    WCAG_AA_NORMAL (float): WCAG AA contrast ratio threshold for normal
+        text (4.5).
+    WCAG_AA_LARGE (float): WCAG AA contrast ratio threshold for large
+        text (3.0).
+    WCAG_AAA_NORMAL (float): WCAG AAA contrast ratio threshold for normal
+        text (7.0).
+    WCAG_AAA_LARGE (float): WCAG AAA contrast ratio threshold for large
+        text (4.5).
+    LARGE_TEXT_SIZE_PX (float): Minimum font size in pixels for large
+        text (24.0).
+    LARGE_TEXT_BOLD_SIZE_PX (float): Minimum font size in pixels for large bold
+        text (18.66).
 """
+import copy
+
 import tinycss2
 from bs4 import BeautifulSoup
 from file_clerk import clerk
@@ -35,6 +49,14 @@ HEADING_FONT_SIZES = {
     "h5": 13,  # 0.83em
     "h6": 11,  # 0.67em
 }
+
+# WCAG Contrast threshold constants
+WCAG_AA_NORMAL = 4.5
+WCAG_AA_LARGE = 3.0
+WCAG_AAA_NORMAL = 7.0
+WCAG_AAA_LARGE = 4.5
+LARGE_TEXT_SIZE_PX = 24.0
+LARGE_TEXT_BOLD_SIZE_PX = 18.66
 
 
 def analyze_contrast(project_folder: str) -> list[dict]:
@@ -248,8 +270,11 @@ def analyze_css(html_doc: dict, css_files: list[dict]) -> list[dict]:
     doc_css_rules = get_css_rules_for_document(filename, css_files)
     print(doc_css_rules)
 
-    # TODO: Apply CSS rules to elements and compute styles
-    # computed_styles = compute_element_styles(soup, doc_css_rules)
+    # Apply CSS rules to elements and compute styles
+    computed_styles = compute_element_styles(
+        soup, doc_css_rules, default_styles
+    )
+    print(computed_styles)
 
     # TODO: Traverse DOM and analyze contrast for elements with text
     # doc_results = traverse_elements_for_contrast(soup,
@@ -346,6 +371,117 @@ def parse_css_rules_from_tinycss2(parsed_stylesheet):
             )
 
     return css_rules
+
+
+def compute_element_styles(
+    soup: BeautifulSoup, css_rules: list[dict], default_styles: dict
+) -> dict:
+    """
+    Computes final styles for all elements by applying CSS rules and
+    inheritance.
+
+    Args:
+        soup (BeautifulSoup): Parsed HTML document.
+        css_rules (list[dict]): List of CSS rule dictionaries with selectors
+            and declarations.
+        default_styles (dict): Dictionary mapping elements to their default
+            browser styles.
+
+    Returns:
+        dict: Dictionary mapping elements to their final computed styles
+            after applying CSS cascade and inheritance.
+    """
+    # Step 1: Start with default styles
+    computed_styles = copy.deepcopy(default_styles)
+
+    # Step 2: Apply all CSS rules (cascade resolution)
+    for rules in css_rules:
+        for rule in rules:
+            matching_elements = find_matching_elements(soup, rule["selector"])
+            for element in matching_elements:
+                apply_rule_to_element(element, rule, computed_styles)
+
+    # Step 3: Apply inheritance (after all rules processed)
+    apply_inheritance(soup, computed_styles)
+
+    return computed_styles
+
+
+def find_matching_elements(soup: BeautifulSoup, selector: str) -> list:
+    """
+    Finds all elements in the DOM that match a given CSS selector.
+
+    Args:
+        soup (BeautifulSoup): Parsed HTML document.
+        selector (str): CSS selector string (e.g., "p", ".class", "#id").
+
+    Returns:
+        list: List of BeautifulSoup Tag objects that match the selector.
+    """
+    return []
+
+
+def apply_rule_to_element(element, rule: dict, computed_styles: dict) -> None:
+    """
+    Applies CSS declarations from a rule to a specific element, handling
+    specificity conflicts.
+
+    Args:
+        element: BeautifulSoup Tag object representing the target element.
+        rule (dict): CSS rule dictionary containing 'selector' and
+            'declarations'.
+        computed_styles (dict): Dictionary mapping elements to their current
+            computed styles (modified in place).
+
+    Returns:
+        None: Modifies computed_styles dictionary in place.
+    """
+    pass
+
+
+def apply_inheritance(soup: BeautifulSoup, computed_styles: dict) -> None:
+    """
+    Applies CSS inheritance rules, copying inheritable property values from
+    parent elements to child elements.
+
+    Args:
+        soup (BeautifulSoup): Parsed HTML document for DOM traversal.
+        computed_styles (dict): Dictionary mapping elements to their computed
+            styles (modified in place).
+
+    Returns:
+        None: Modifies computed_styles dictionary in place.
+    """
+    pass
+
+
+def calculate_css_specificity(selector: str) -> tuple[int, int, int, int]:
+    """
+    Calculates CSS specificity for a given selector.
+
+    Args:
+        selector (str): CSS selector string.
+
+    Returns:
+        tuple[int, int, int, int]: Specificity tuple in format
+            (inline, IDs, classes, elements) where higher values indicate
+            higher specificity.
+    """
+    return (0, 0, 0, 0)
+
+
+def is_inheritable_property(property_name: str) -> bool:
+    """
+    Determines if a CSS property is inheritable by default.
+
+    Args:
+        property_name (str): Name of the CSS property (e.g., 'color',
+            'margin').
+
+    Returns:
+        bool: True if the property is inheritable, False otherwise.
+    """
+    return False
 
 
 if __name__ == "__main__":
