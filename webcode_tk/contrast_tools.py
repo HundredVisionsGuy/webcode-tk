@@ -27,6 +27,9 @@ Constants:
         text (24.0).
     LARGE_TEXT_BOLD_SIZE_PX (float): Minimum font size in pixels for large bold
         text (18.66).
+    CONTRAST_RELEVANT_PROPERTIES (tuple): properties that directly impact the
+        mathematical contrast ratios and size thresholds that determine WCAG
+        compliance.
 """
 import copy
 import re
@@ -34,6 +37,8 @@ import re
 import tinycss2
 from bs4 import BeautifulSoup
 from file_clerk import clerk
+
+from webcode_tk import css_tools
 
 # Browser default styling constants
 DEFAULT_GLOBAL_COLOR = "#000000"
@@ -58,6 +63,18 @@ WCAG_AAA_NORMAL = 7.0
 WCAG_AAA_LARGE = 4.5
 LARGE_TEXT_SIZE_PX = 24.0
 LARGE_TEXT_BOLD_SIZE_PX = 18.66
+
+# CSS properties relevant to contrast analysis
+CONTRAST_RELEVANT_PROPERTIES = {
+    "color",
+    "background-color",
+    "background",
+    "font-size",
+    "font-weight",
+    "opacity",
+    "visibility",
+    "display",
+}
 
 
 def analyze_contrast(project_folder: str) -> list[dict]:
@@ -292,29 +309,51 @@ def apply_browser_defaults(soup: BeautifulSoup) -> dict:
         dict: Mapping of elements to their default computed styles
     """
     element_styles = {}
+    default_specificity = css_tools.get_specificity("")
 
     for element in soup.find_all():
         if not element.is_empty_element and element.get_text(strip=True):
             # The element object itself becomes the key
             element_styles[element] = {
-                "color": DEFAULT_GLOBAL_COLOR,
-                "background-color": DEFAULT_GLOBAL_BACKGROUND,
-                "font-size": f"{ROOT_FONT_SIZE}px",
+                "color": {
+                    "value": DEFAULT_GLOBAL_COLOR,
+                    "specificity": default_specificity,
+                },
+                "background-color": {
+                    "value": DEFAULT_GLOBAL_BACKGROUND,
+                    "specificity": default_specificity,
+                },
+                "font-size": {
+                    "value": f"{ROOT_FONT_SIZE}px",
+                    "specificity": default_specificity,
+                },
             }
 
             # Apply element-specific defaults
             # Apply link colors
             if element.name == "a":
-                element_styles[element]["color"] = DEFAULT_LINK_COLOR
-                element_styles[element]["visited-color"] = DEFAULT_LINK_VISITED
+                element_styles[element]["color"] = {
+                    "value": DEFAULT_LINK_COLOR,
+                    "specificity": default_specificity,
+                }
+                element_styles[element]["visited-color"] = {
+                    "value": DEFAULT_LINK_VISITED,
+                    "specificity": default_specificity,
+                }
 
             if element.name in IS_BOLD:
-                element_styles[element]["font-weight"] = "bold"
+                element_styles[element]["font-weight"] = {
+                    "value": "bold",
+                    "specificity": default_specificity,
+                }
 
             if element.name in HEADING_FONT_SIZES:
-                element_styles[element][
-                    "font-size"
-                ] = f"{HEADING_FONT_SIZES[element.name]}px"
+                element_styles[element]["font-size"] = element_styles[element][
+                    "color"
+                ] = {
+                    "value": f"{HEADING_FONT_SIZES[element.name]}px",
+                    "specificity": default_specificity,
+                }
 
     return element_styles
 
@@ -516,7 +555,47 @@ def apply_rule_to_element(element, rule: dict, computed_styles: dict) -> None:
     Returns:
         None: Modifies computed_styles dictionary in place.
     """
-    pass
+    # Check if element of key exists
+    element_styles = computed_styles.get(element)
+    if element_styles:
+        selector = rule.get("selector")
+        rule_specificity = css_tools.get_specificity(selector)
+        declarations = rule.get("declarations", {})
+
+        for property_name, property_value in declarations.items():
+            if property_name not in CONTRAST_RELEVANT_PROPERTIES:
+                continue
+            current_prop = computed_styles[element].get(property_name)
+
+            should_apply = False
+
+            if current_prop is None:
+                # property doesn't exist, apply it
+                should_apply = True
+            elif (
+                isinstance(current_prop, dict)
+                and "specificity" in current_prop
+            ):
+                # property exists with specificiy info
+                current_specificity = current_prop["specificity"]
+                if isinstance(current_specificity, tuple):
+                    current_specificity = "".join(
+                        map(str, current_specificity)
+                    )
+                if rule_specificity > current_specificity:
+                    should_apply = True
+                elif rule_specificity == current_specificity:
+                    should_apply = True
+            else:
+                # property exits but no specificity (default)
+                should_apply = True
+            if should_apply:
+                computed_styles[element][property_name] = {
+                    "value": property_value,
+                    "specificity": rule_specificity,
+                }
+
+    return
 
 
 def apply_inheritance(soup: BeautifulSoup, computed_styles: dict) -> None:

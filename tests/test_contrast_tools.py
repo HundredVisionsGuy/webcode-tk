@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 
 from webcode_tk.contrast_tools import append_style_data
 from webcode_tk.contrast_tools import apply_browser_defaults
+from webcode_tk.contrast_tools import apply_rule_to_element
 from webcode_tk.contrast_tools import DEFAULT_GLOBAL_BACKGROUND
 from webcode_tk.contrast_tools import DEFAULT_GLOBAL_COLOR
 from webcode_tk.contrast_tools import DEFAULT_LINK_COLOR
@@ -219,9 +220,12 @@ def test_apply_browser_defaults_basic_elements():
     assert div_element in styles
 
     # Check default values
-    assert styles[p_element]["color"] == DEFAULT_GLOBAL_COLOR
-    assert styles[p_element]["background-color"] == DEFAULT_GLOBAL_BACKGROUND
-    assert styles[p_element]["font-size"] == f"{ROOT_FONT_SIZE}px"
+    assert styles[p_element]["color"]["value"] == DEFAULT_GLOBAL_COLOR
+    assert (
+        styles[p_element]["background-color"]["value"]
+        == DEFAULT_GLOBAL_BACKGROUND
+    )
+    assert styles[p_element]["font-size"]["value"] == f"{ROOT_FONT_SIZE}px"
 
 
 def test_apply_browser_defaults_links():
@@ -233,8 +237,10 @@ def test_apply_browser_defaults_links():
     link_element = soup.find("a")
 
     assert link_element in styles
-    assert styles[link_element]["color"] == DEFAULT_LINK_COLOR
-    assert styles[link_element]["visited-color"] == DEFAULT_LINK_VISITED
+    assert styles[link_element]["color"]["value"] == DEFAULT_LINK_COLOR
+    assert (
+        styles[link_element]["visited-color"]["value"] == DEFAULT_LINK_VISITED
+    )
 
 
 def test_apply_browser_defaults_bold_elements():
@@ -248,8 +254,8 @@ def test_apply_browser_defaults_bold_elements():
 
     assert strong_element in styles
     assert b_element in styles
-    assert styles[strong_element]["font-weight"] == "bold"
-    assert styles[b_element]["font-weight"] == "bold"
+    assert styles[strong_element]["font-weight"]["value"] == "bold"
+    assert styles[b_element]["font-weight"]["value"] == "bold"
 
 
 def test_apply_browser_defaults_headings():
@@ -269,14 +275,23 @@ def test_apply_browser_defaults_headings():
     assert h6_element in styles
 
     # Check font sizes from HEADING_FONT_SIZES
-    assert styles[h1_element]["font-size"] == f"{HEADING_FONT_SIZES['h1']}px"
-    assert styles[h3_element]["font-size"] == f"{HEADING_FONT_SIZES['h3']}px"
-    assert styles[h6_element]["font-size"] == f"{HEADING_FONT_SIZES['h6']}px"
+    assert (
+        styles[h1_element]["font-size"]["value"]
+        == f"{HEADING_FONT_SIZES['h1']}px"
+    )
+    assert (
+        styles[h3_element]["font-size"]["value"]
+        == f"{HEADING_FONT_SIZES['h3']}px"
+    )
+    assert (
+        styles[h6_element]["font-size"]["value"]
+        == f"{HEADING_FONT_SIZES['h6']}px"
+    )
 
     # All headings should be bold
-    assert styles[h1_element]["font-weight"] == "bold"
-    assert styles[h3_element]["font-weight"] == "bold"
-    assert styles[h6_element]["font-weight"] == "bold"
+    assert styles[h1_element]["font-weight"]["value"] == "bold"
+    assert styles[h3_element]["font-weight"]["value"] == "bold"
+    assert styles[h6_element]["font-weight"]["value"] == "bold"
 
 
 def test_apply_browser_defaults_empty_elements():
@@ -364,13 +379,13 @@ def test_apply_browser_defaults_mixed_content():
     assert img not in styles
 
     # Check specific styling
-    assert styles[h1]["font-size"] == f"{HEADING_FONT_SIZES['h1']}px"
-    assert styles[h1]["font-weight"] == "bold"
-    assert styles[h2]["font-size"] == f"{HEADING_FONT_SIZES['h2']}px"
-    assert styles[h2]["font-weight"] == "bold"
-    assert styles[strong]["font-weight"] == "bold"
-    assert styles[a]["color"] == DEFAULT_LINK_COLOR
-    assert styles[a]["visited-color"] == DEFAULT_LINK_VISITED
+    assert styles[h1]["font-size"]["value"] == f"{HEADING_FONT_SIZES['h1']}px"
+    assert styles[h1]["font-weight"]["value"] == "bold"
+    assert styles[h2]["font-size"]["value"] == f"{HEADING_FONT_SIZES['h2']}px"
+    assert styles[h2]["font-weight"]["value"] == "bold"
+    assert styles[strong]["font-weight"]["value"] == "bold"
+    assert styles[a]["color"]["value"] == DEFAULT_LINK_COLOR
+    assert styles[a]["visited-color"]["value"] == DEFAULT_LINK_VISITED
 
 
 def test_apply_browser_defaults_return_type():
@@ -638,3 +653,217 @@ def test_find_matching_elements_successful_matching():
     result = find_matching_elements(soup, "div p")
     assert len(result) == 2
     assert all(elem.name == "p" for elem in result)
+
+
+# Test apply_rule_to_element function
+def test_apply_rule_to_element_element_not_in_computed_styles():
+    """Test that function returns early if element not in computed_styles."""
+    html = "<html><body><p>Test</p></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    p_element = soup.find("p")
+
+    computed_styles = {}  # Empty - element not present
+    rule = {
+        "selector": "p",
+        "declarations": {"color": "red", "font-size": "18px"},
+    }
+
+    apply_rule_to_element(p_element, rule, computed_styles)
+
+    # Should remain empty since element wasn't in computed_styles
+    assert computed_styles == {}
+
+
+def test_apply_rule_to_element_new_properties():
+    """Test applying rule with new properties that don't exist on element."""
+    html = "<html><body><p>Test</p></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    p_element = soup.find("p")
+
+    computed_styles = {
+        p_element: {"color": "black"}  # Element exists with basic style
+    }
+    rule = {
+        "selector": "p",
+        "declarations": {"font-size": "18px", "font-weight": "bold"},
+    }
+
+    apply_rule_to_element(p_element, rule, computed_styles)
+
+    # Should add new properties
+    assert "font-size" in computed_styles[p_element]
+    assert "font-weight" in computed_styles[p_element]
+    assert computed_styles[p_element]["font-size"]["value"] == "18px"
+    assert computed_styles[p_element]["font-weight"]["value"] == "bold"
+
+
+def test_apply_rule_to_element_filters_irrelevant_properties():
+    """Test that non-contrast-relevant properties are filtered out."""
+    html = "<html><body><p>Test</p></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    p_element = soup.find("p")
+
+    computed_styles = {p_element: {"color": "black"}}
+    rule = {
+        "selector": "p",
+        "declarations": {
+            "color": "red",  # Should be applied (relevant)
+            "margin": "10px",  # Should be filtered out
+            "position": "absolute",  # Should be filtered out
+            "font-size": "16px",  # Should be applied (relevant)
+        },
+    }
+
+    apply_rule_to_element(p_element, rule, computed_styles)
+
+    # Only contrast-relevant properties should be applied
+    assert "color" in computed_styles[p_element]
+    assert "font-size" in computed_styles[p_element]
+    assert "margin" not in computed_styles[p_element]
+    assert "position" not in computed_styles[p_element]
+
+
+def test_apply_rule_to_element_higher_specificity_wins():
+    """Test that higher specificity rules override lower specificity."""
+    html = "<html><body><p class='text'>Test</p></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    p_element = soup.find("p")
+
+    # Start with element selector (low specificity)
+    computed_styles = {
+        p_element: {
+            "color": {
+                "value": "black",
+                "specificity": (0, 0, 0, 1),  # Element selector
+            }
+        }
+    }
+
+    # Apply class selector rule (higher specificity)
+    rule = {"selector": ".text", "declarations": {"color": "red"}}
+
+    apply_rule_to_element(p_element, rule, computed_styles)
+
+    # Higher specificity should win
+    assert computed_styles[p_element]["color"]["value"] == "red"
+    assert computed_styles[p_element]["color"]["specificity"] == "010"
+
+
+def test_apply_rule_to_element_lower_specificity_loses():
+    """Test that lower specificity rules don't override higher specificity."""
+    html = "<html><body><p class='text'>Test</p></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    p_element = soup.find("p")
+
+    # Start with class selector (higher specificity)
+    computed_styles = {
+        p_element: {
+            "color": {
+                "value": "blue",
+                "specificity": (0, 0, 1, 0),  # Class selector
+            }
+        }
+    }
+
+    # Try to apply element selector rule (lower specificity)
+    rule = {"selector": "p", "declarations": {"color": "red"}}
+
+    apply_rule_to_element(p_element, rule, computed_styles)
+
+    # Lower specificity should NOT override
+    assert computed_styles[p_element]["color"]["value"] == "blue"
+    assert computed_styles[p_element]["color"]["specificity"] == (0, 0, 1, 0)
+
+
+def test_apply_rule_to_element_same_specificity_later_wins():
+    """Test that with same specificity, later rule wins (source order)."""
+    html = "<html><body><p>Test</p></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    p_element = soup.find("p")
+
+    # Start with element selector
+    computed_styles = {
+        p_element: {
+            "color": {
+                "value": "black",
+                "specificity": "001",  # Element selector
+            }
+        }
+    }
+
+    # Apply another element selector rule (same specificity)
+    rule = {"selector": "p", "declarations": {"color": "red"}}
+
+    apply_rule_to_element(p_element, rule, computed_styles)
+
+    # Later rule should win with same specificity
+    assert computed_styles[p_element]["color"]["value"] == "red"
+    assert computed_styles[p_element]["color"]["specificity"] == "001"
+
+
+def test_apply_rule_to_element_overrides_default_styles():
+    """Test that any CSS rule overrides default browser styles."""
+    html = "<html><body><p>Test</p></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    p_element = soup.find("p")
+
+    # Start with default style (no specificity stored)
+    computed_styles = {p_element: {"color": "#000000"}}  # Default style format
+
+    rule = {"selector": "p", "declarations": {"color": "red"}}
+
+    apply_rule_to_element(p_element, rule, computed_styles)
+
+    # CSS rule should override default
+    assert computed_styles[p_element]["color"]["value"] == "red"
+    assert "specificity" in computed_styles[p_element]["color"]
+
+
+def test_apply_rule_to_element_multiple_properties():
+    """Test applying rule with multiple contrast-relevant properties."""
+    html = "<html><body><p>Test</p></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    p_element = soup.find("p")
+
+    computed_styles = {p_element: {"color": "black"}}
+    rule = {
+        "selector": "p",
+        "declarations": {
+            "color": "red",
+            "background-color": "yellow",
+            "font-size": "18px",
+            "font-weight": "bold",
+            "opacity": "0.8",
+        },
+    }
+
+    apply_rule_to_element(p_element, rule, computed_styles)
+
+    # All properties should be applied
+    for prop in [
+        "color",
+        "background-color",
+        "font-size",
+        "font-weight",
+        "opacity",
+    ]:
+        assert prop in computed_styles[p_element]
+        assert "value" in computed_styles[p_element][prop]
+        assert "specificity" in computed_styles[p_element][prop]
+
+
+def test_apply_rule_to_element_empty_declarations():
+    """Test applying rule with empty declarations."""
+    html = "<html><body><p>Test</p></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    p_element = soup.find("p")
+
+    original_styles = {"color": "black"}
+    computed_styles = {p_element: original_styles.copy()}
+
+    rule = {"selector": "p", "declarations": {}}  # Empty declarations
+
+    apply_rule_to_element(p_element, rule, computed_styles)
+
+    # Styles should remain unchanged
+    assert computed_styles[p_element] == original_styles
