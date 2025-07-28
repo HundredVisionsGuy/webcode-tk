@@ -39,6 +39,8 @@ from bs4 import BeautifulSoup
 from file_clerk import clerk
 
 from webcode_tk import css_tools
+from webcode_tk.font_tools import compute_font_size
+from webcode_tk.font_tools import split_value_unit
 
 # Browser default styling constants
 DEFAULT_GLOBAL_COLOR = "#000000"
@@ -276,17 +278,11 @@ def analyze_css(html_doc: dict, css_files: list[dict]) -> list[dict]:
     filename = html_doc["filename"]
     soup = html_doc["soup"]
 
-    print(soup)
-    contents = []
-    print(contents)
-
     # Step 1: Apply default styles to all elements
     default_styles = apply_browser_defaults(soup)
-    print(default_styles)
 
     # Find CSS rules specific to this HTML document
     doc_css_rules = get_css_rules_for_document(filename, css_files)
-    print(doc_css_rules)
 
     # Apply CSS rules to elements and compute styles
     computed_styles = compute_element_styles(
@@ -379,8 +375,13 @@ def get_css_rules_for_document(
     for sheet in css_files:
         if sheet.get(filename):
             source = sheet.get(filename)[0]
+            if source.get("source_type") == "internal":
+                source["css_name"] = f"style_tag--{filename}"
             parsed_styles = source.get("stylesheet")
             rules = parse_css_rules_from_tinycss2(parsed_styles)
+            rules = [
+                source,
+            ] + rules
             css_rules.append(rules)
     return css_rules
 
@@ -435,11 +436,26 @@ def compute_element_styles(
     computed_styles = copy.deepcopy(default_styles)
 
     # Step 2: Apply all CSS rules (cascade resolution)
-    for rules in css_rules:
-        for rule in rules:
+    for rules_list in css_rules:
+        # Extract source data (first item in the list)
+        source_data = rules_list[0]
+        actual_rules = rules_list[1:]
+
+        # Create CSS source info object
+        css_source_info = {
+            "filename": source_data.get("css_name"),
+            "source_type": source_data.get("source_type"),
+        }
+        # Now iterate over the actual CSS rules
+        for rule in actual_rules:
+            # Find elements that match this rule's selector
             matching_elements = find_matching_elements(soup, rule["selector"])
+
+            # Apply the rule to each matching element
             for element in matching_elements:
-                apply_rule_to_element(element, rule, computed_styles)
+                apply_rule_to_element(
+                    element, rule, computed_styles, css_source_info
+                )
 
     # Step 3: Apply inheritance (after all rules processed)
     apply_inheritance(soup, computed_styles)
@@ -540,7 +556,9 @@ def is_selector_supported_by_bs4(selector: str) -> bool:
     return True
 
 
-def apply_rule_to_element(element, rule: dict, computed_styles: dict) -> None:
+def apply_rule_to_element(
+    element, rule: dict, computed_styles: dict, css_source_info: dict = None
+) -> None:
     """
     Applies CSS declarations from a rule to a specific element, handling
     specificity conflicts.
@@ -565,8 +583,14 @@ def apply_rule_to_element(element, rule: dict, computed_styles: dict) -> None:
         for property_name, property_value in declarations.items():
             if property_name not in CONTRAST_RELEVANT_PROPERTIES:
                 continue
-            current_prop = computed_styles[element].get(property_name)
 
+            # Special handling for font-size - convert to pixels
+            if property_name == "font-size":
+                property_value = convert_font_size_to_pixels(
+                    property_value, element, computed_styles
+                )
+
+            current_prop = computed_styles[element].get(property_name)
             should_apply = False
 
             if current_prop is None:
@@ -593,9 +617,79 @@ def apply_rule_to_element(element, rule: dict, computed_styles: dict) -> None:
                 computed_styles[element][property_name] = {
                     "value": property_value,
                     "specificity": rule_specificity,
+                    "source": "rule",
+                    "selector": selector,
+                    "css_file": css_source_info.get("filename")
+                    if css_source_info
+                    else None,
+                    "css_source_type": css_source_info.get("source_type")
+                    if css_source_info
+                    else None,
                 }
 
     return
+
+
+def convert_font_size_to_pixels(
+    font_size_value: str, element, computed_styles: dict
+) -> str:
+    """
+    Converts font-size values to pixels for WCAG analysis using font_tools.
+
+    Args:
+        font_size_value (str): CSS font-size value (e.g., "2em", "120%",
+            "16px")
+        element: BeautifulSoup element for context
+        computed_styles (dict): Current computed styles for inheritance
+            context
+
+    Returns:
+        str: Font size converted to pixels (e.g., "32.0px")
+    """
+    font_size_value = font_size_value.strip()
+
+    # Use font_tools to split value and unit
+    try:
+        value, unit = split_value_unit(font_size_value)
+
+        # Get parent font size for relative calculations
+        parent_font_size_px = get_parent_font_size(element, computed_styles)
+
+        # Get element name for heading-specific calculations
+        element_name = element.name if element else ""
+
+        # Use your comprehensive compute_font_size function
+        computed_px = compute_font_size(
+            value=value,
+            unit=unit,
+            parent_size=parent_font_size_px,
+            element_name=element_name,
+        )
+
+        return f"{computed_px}px"
+
+    except (TypeError, IndexError, ValueError) as e:
+        # Fallback for parsing errors
+        print(f"Warning: Could not parse font-size '{font_size_value}': {e}")
+        return f"{font_size_value}px"  # Assume it's already in pixels
+
+
+def get_parent_font_size(element, computed_styles: dict) -> float:
+    """Get parent's computed font size in pixels for relative calculations."""
+
+    # Try to find parent in computed_styles
+    current = element.parent if element else None
+    while current:
+        if current in computed_styles:
+            parent_styles = computed_styles[current]
+            if "font-size" in parent_styles:
+                parent_size = parent_styles["font-size"]["value"]
+                # Extract pixel value (remove 'px')
+                return float(parent_size.replace("px", ""))
+        current = current.parent
+
+    # No parent found, use root font size (16px default)
+    return 16.0
 
 
 def apply_inheritance(soup: BeautifulSoup, computed_styles: dict) -> None:
@@ -611,22 +705,123 @@ def apply_inheritance(soup: BeautifulSoup, computed_styles: dict) -> None:
     Returns:
         None: Modifies computed_styles dictionary in place.
     """
-    pass
+    # Step 1: Apply true CSS inheritance (color, font properties)
+    apply_css_inheritance(computed_styles)
+
+    # Step 2: Apply visual background inheritance
+    apply_visual_background_inheritance(computed_styles)
 
 
-def calculate_css_specificity(selector: str) -> tuple[int, int, int, int]:
-    """
-    Calculates CSS specificity for a given selector.
+def apply_css_inheritance(computed_styles: dict) -> None:
+    """Apply traditional CSS inheritance for inheritable properties."""
+    inheritable_props = {"color", "font-size", "font-weight"}
 
-    Args:
-        selector (str): CSS selector string.
+    for parent_element in computed_styles:
+        parent_styles = computed_styles[parent_element]
 
-    Returns:
-        tuple[int, int, int, int]: Specificity tuple in format
-            (inline, IDs, classes, elements) where higher values indicate
-            higher specificity.
-    """
-    return (0, 0, 0, 0)
+        # Find all children that also have text content (in computed_styles)
+        children = parent_element.find_all()
+        children_with_styles = [
+            child for child in children if child in computed_styles
+        ]
+
+        for child_element in children_with_styles:
+            child_styles = computed_styles[child_element]
+
+            # Apply inheritance for each inheritable property
+            for prop in inheritable_props:
+                parent_prop = parent_styles.get(prop)
+
+                if parent_prop:  # Parent has this property
+                    child_prop = child_styles.get(prop)
+                    should_inherit = False
+
+                    if child_prop is None:
+                        # Child doesn't have this property - inherit
+                        should_inherit = True
+                    elif (
+                        isinstance(child_prop, dict)
+                        and "specificity" in child_prop
+                    ):
+                        # Child has property - compare specificities
+                        parent_specificity = parent_prop["specificity"]
+                        child_specificity = child_prop["specificity"]
+
+                        # Convert tuple to string if needed for comparison
+                        if isinstance(parent_specificity, tuple):
+                            parent_specificity = "".join(
+                                map(str, parent_specificity)
+                            )
+                        if isinstance(child_specificity, tuple):
+                            child_specificity = "".join(
+                                map(str, child_specificity)
+                            )
+
+                        # Parent wins if higher specificity
+                        if parent_specificity > child_specificity:
+                            should_inherit = True
+                        # Same specificity - CSS inheritance doesn't override
+                        # (child's explicit value wins over inherited)
+                    else:
+                        # Child has default value (no specificity)
+                        should_inherit = True
+
+                    if should_inherit:
+                        child_styles[prop] = {
+                            "value": parent_prop["value"],
+                            "specificity": parent_prop["specificity"],
+                            "inherited": True,
+                        }
+
+
+def apply_visual_background_inheritance(computed_styles: dict) -> None:
+    """Apply visual background colors to elements without explicit
+    backgrounds."""
+
+    for element in computed_styles:
+        element_styles = computed_styles[element]
+
+        # Check if element has explicit background
+        has_background = (
+            "background-color" in element_styles
+            or "background" in element_styles
+        )
+
+        if not has_background:
+            # Find nearest ancestor with background
+            ancestor_bg = find_ancestor_background(element, computed_styles)
+
+            if ancestor_bg:
+                element_styles["background-color"] = {
+                    "value": ancestor_bg["value"],
+                    "specificity": "000",  # Lowest possible specificity
+                    "visual_inheritance": True,  # Mark as visual inheritance
+                    "inherited_from": ancestor_bg[
+                        "source_element"
+                    ],  # Track source
+                }
+
+
+def find_ancestor_background(element, computed_styles):
+    """Walk up DOM tree to find first ancestor with background."""
+    current = element.parent
+
+    while current:
+        if current in computed_styles:
+            current_styles = computed_styles[current]
+
+            # Check for background-color or background
+            for bg_prop in ["background-color", "background"]:
+                if bg_prop in current_styles:
+                    return {
+                        "value": current_styles[bg_prop]["value"],
+                        "source_element": current,
+                    }
+
+        current = current.parent
+
+    # No ancestor background found, use default
+    return {"value": DEFAULT_GLOBAL_BACKGROUND, "source_element": None}
 
 
 def is_inheritable_property(property_name: str) -> bool:
