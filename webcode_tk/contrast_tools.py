@@ -314,14 +314,20 @@ def apply_browser_defaults(soup: BeautifulSoup) -> dict:
                 "color": {
                     "value": DEFAULT_GLOBAL_COLOR,
                     "specificity": default_specificity,
+                    "source": "default",
+                    "is_default": True,
                 },
                 "background-color": {
                     "value": DEFAULT_GLOBAL_BACKGROUND,
                     "specificity": default_specificity,
+                    "source": "default",
+                    "is_default": True,
                 },
                 "font-size": {
                     "value": f"{ROOT_FONT_SIZE}px",
                     "specificity": default_specificity,
+                    "source": "default",
+                    "is_default": True,
                 },
             }
 
@@ -606,9 +612,7 @@ def apply_rule_to_element(
                     current_specificity = "".join(
                         map(str, current_specificity)
                     )
-                if rule_specificity > current_specificity:
-                    should_apply = True
-                elif rule_specificity == current_specificity:
+                if rule_specificity >= current_specificity:
                     should_apply = True
             else:
                 # property exits but no specificity (default)
@@ -666,11 +670,11 @@ def convert_font_size_to_pixels(
             element_name=element_name,
         )
 
-        return f"{computed_px}px"
+        return f"{computed_px:.1f}px"
 
-    except (TypeError, IndexError, ValueError) as e:
+    except Exception as e:
         # Fallback for parsing errors
-        print(f"Warning: Could not parse font-size '{font_size_value}': {e}")
+        print(f"DEBUG: Exception caught: '{e}'")
         return f"{font_size_value}px"  # Assume it's already in pixels
 
 
@@ -737,40 +741,29 @@ def apply_css_inheritance(computed_styles: dict) -> None:
                     should_inherit = False
 
                     if child_prop is None:
-                        # Child doesn't have this property - inherit
+                        # Child has no property at all - inherit
                         should_inherit = True
-                    elif (
-                        isinstance(child_prop, dict)
-                        and "specificity" in child_prop
-                    ):
-                        # Child has property - compare specificities
-                        parent_specificity = parent_prop["specificity"]
-                        child_specificity = child_prop["specificity"]
-
-                        # Convert tuple to string if needed for comparison
-                        if isinstance(parent_specificity, tuple):
-                            parent_specificity = "".join(
-                                map(str, parent_specificity)
-                            )
-                        if isinstance(child_specificity, tuple):
-                            child_specificity = "".join(
-                                map(str, child_specificity)
-                            )
-
-                        # Parent wins if higher specificity
-                        if parent_specificity > child_specificity:
-                            should_inherit = True
-                        # Same specificity - CSS inheritance doesn't override
-                        # (child's explicit value wins over inherited)
+                    elif child_prop.get("is_default", False):
+                        # Child has default style - inheritance wins
+                        should_inherit = True
                     else:
-                        # Child has default value (no specificity)
-                        should_inherit = True
+                        # Child has explicit CSS rule - don't inherit
+                        should_inherit = False
 
                     if should_inherit:
                         child_styles[prop] = {
                             "value": parent_prop["value"],
                             "specificity": parent_prop["specificity"],
+                            "source": "inheritance",
+                            "selector": parent_prop.get(
+                                "selector", "inherited"
+                            ),
+                            "css_file": parent_prop.get("css_file"),
+                            "css_source_type": parent_prop.get(
+                                "css_source_type"
+                            ),
                             "inherited": True,
+                            "inherited_from": parent_element,
                         }
 
 

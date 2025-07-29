@@ -1,0 +1,13 @@
+# GitHub Copilot Instructions for webcode-tk project
+code_style:
+  max_line_length: 79
+  formatter: black
+  linter: flake8
+
+python_conventions:
+  - "Keep all lines under 79 characters"
+  - "Use Black formatting style"
+  - "Follow flake8 rules"
+  - "Break long function calls across multiple lines"
+  - "Use trailing commas in multi-line structures"
+  - "Break long strings with parentheses or backslashes"

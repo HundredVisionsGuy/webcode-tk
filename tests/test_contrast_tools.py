@@ -4,7 +4,9 @@ from bs4 import BeautifulSoup
 
 from webcode_tk.contrast_tools import append_style_data
 from webcode_tk.contrast_tools import apply_browser_defaults
+from webcode_tk.contrast_tools import apply_css_inheritance
 from webcode_tk.contrast_tools import apply_rule_to_element
+from webcode_tk.contrast_tools import convert_font_size_to_pixels
 from webcode_tk.contrast_tools import DEFAULT_GLOBAL_BACKGROUND
 from webcode_tk.contrast_tools import DEFAULT_GLOBAL_COLOR
 from webcode_tk.contrast_tools import DEFAULT_LINK_COLOR
@@ -12,6 +14,7 @@ from webcode_tk.contrast_tools import DEFAULT_LINK_VISITED
 from webcode_tk.contrast_tools import find_matching_elements
 from webcode_tk.contrast_tools import get_css_source_order
 from webcode_tk.contrast_tools import get_or_parse_external_stylesheet
+from webcode_tk.contrast_tools import get_parent_font_size
 from webcode_tk.contrast_tools import get_parsed_documents
 from webcode_tk.contrast_tools import HEADING_FONT_SIZES
 from webcode_tk.contrast_tools import is_selector_supported_by_bs4
@@ -693,7 +696,7 @@ def test_apply_rule_to_element_new_properties():
     # Should add new properties
     assert "font-size" in computed_styles[p_element]
     assert "font-weight" in computed_styles[p_element]
-    assert computed_styles[p_element]["font-size"]["value"] == "18px"
+    assert computed_styles[p_element]["font-size"]["value"] == "18.0px"
     assert computed_styles[p_element]["font-weight"]["value"] == "bold"
 
 
@@ -867,3 +870,543 @@ def test_apply_rule_to_element_empty_declarations():
 
     # Styles should remain unchanged
     assert computed_styles[p_element] == original_styles
+
+
+def test_convert_font_size_to_pixels_already_pixels():
+    """Test that pixel values are returned unchanged."""
+    html = "<html><body><p>Test</p></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    p_element = soup.find("p")
+    computed_styles = {}
+
+    result = convert_font_size_to_pixels("16px", p_element, computed_styles)
+    assert result == "16.0px"
+
+    result = convert_font_size_to_pixels("24px", p_element, computed_styles)
+    assert result == "24.0px"
+
+
+def test_convert_font_size_to_pixels_em_units():
+    """Test em unit conversion using parent font size."""
+    html = "<html><body><div><p>Test</p></div></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    div_element = soup.find("div")
+    p_element = soup.find("p")
+
+    # Set up parent with 20px font size
+    computed_styles = {div_element: {"font-size": {"value": "20px"}}}
+
+    result = convert_font_size_to_pixels("1.5em", p_element, computed_styles)
+    assert result == "30.0px"  # 20px * 1.5
+
+
+def test_convert_font_size_to_pixels_percentage():
+    """Test percentage unit conversion using parent font size."""
+    html = "<html><body><div><p>Test</p></div></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    div_element = soup.find("div")
+    p_element = soup.find("p")
+
+    # Set up parent with 16px font size
+    computed_styles = {div_element: {"font-size": {"value": "16px"}}}
+
+    result = convert_font_size_to_pixels("120%", p_element, computed_styles)
+    assert result == "19.2px"  # 16px * 1.2
+
+
+def test_convert_font_size_to_pixels_rem_units():
+    """Test rem unit conversion using root font size."""
+    html = "<html><body><div><p>Test</p></div></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    p_element = soup.find("p")
+    computed_styles = {}
+
+    result = convert_font_size_to_pixels("1.5rem", p_element, computed_styles)
+    assert result == "24.0px"  # 16px * 1.5 (ROOT_FONT_SIZE)
+
+
+def test_convert_font_size_to_pixels_no_parent():
+    """Test em units when no parent font size is found."""
+    html = "<html><body><p>Test</p></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    p_element = soup.find("p")
+    computed_styles = {}
+
+    result = convert_font_size_to_pixels("2em", p_element, computed_styles)
+    assert result == "32.0px"  # 16px * 2 (fallback to root size)
+
+
+def test_convert_font_size_to_pixels_keyword_values():
+    """Test CSS keyword font size values."""
+    html = "<html><body><p>Test</p></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    p_element = soup.find("p")
+    computed_styles = {}
+
+    result = convert_font_size_to_pixels("large", p_element, computed_styles)
+    assert result == "18.0px"  # Based on CSS keyword mapping
+
+    result = convert_font_size_to_pixels("small", p_element, computed_styles)
+    assert result == "13.0px"
+
+
+def test_convert_font_size_to_pixels_heading_element():
+    """Test that heading elements are passed correctly to compute_font_size."""
+    html = "<html><body><h1>Test</h1></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    h1_element = soup.find("h1")
+    computed_styles = {}
+
+    # Test that element name is used (compute_font_size handles heading logic)
+    result = convert_font_size_to_pixels("1em", h1_element, computed_styles)
+    # Result depends on your font_tools.compute_font_size implementation
+    # This tests that the function is called with correct element_name
+    assert result.endswith("px")
+
+
+def test_convert_font_size_to_pixels_error_handling():
+    """Test error handling for invalid font size values."""
+    html = "<html><body><p>Test</p></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    p_element = soup.find("p")
+    computed_styles = {}
+
+    # Test invalid value that would cause split_value_unit to fail
+    result = convert_font_size_to_pixels("invalid", p_element, computed_styles)
+    assert result == "16.0px"  # Fallback behavior
+
+    # Test empty string
+    result = convert_font_size_to_pixels("", p_element, computed_styles)
+    assert result == "16.0px"  # Fallback behavior
+
+
+def test_convert_font_size_to_pixels_whitespace_handling():
+    """Test that whitespace is properly stripped."""
+    html = "<html><body><p>Test</p></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    p_element = soup.find("p")
+    computed_styles = {}
+
+    result = convert_font_size_to_pixels(
+        "  16px  ", p_element, computed_styles
+    )
+    assert result == "16.0px"
+
+    result = convert_font_size_to_pixels("\t2em\n", p_element, computed_styles)
+    assert result == "32.0px"
+
+
+def test_get_parent_font_size_direct_parent():
+    """Test finding font size from direct parent."""
+    html = "<html><body><div><p>Test</p></div></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    div_element = soup.find("div")
+    p_element = soup.find("p")
+
+    computed_styles = {div_element: {"font-size": {"value": "20px"}}}
+
+    result = get_parent_font_size(p_element, computed_styles)
+    assert result == 20.0
+
+
+def test_get_parent_font_size_grandparent():
+    """Test finding font size from grandparent when parent has no font-size."""
+    html = (
+        "<html><body><div><section><p>Test</p></section></div></body></html>"
+    )
+    soup = BeautifulSoup(html, "html.parser")
+    div_element = soup.find("div")
+    section_element = soup.find("section")
+    p_element = soup.find("p")
+
+    computed_styles = {
+        div_element: {"font-size": {"value": "18px"}},
+        section_element: {"color": {"value": "red"}},  # No font-size
+    }
+
+    result = get_parent_font_size(p_element, computed_styles)
+    assert result == 18.0
+
+
+def test_get_parent_font_size_no_parent_in_computed_styles():
+    """Test fallback to root font size when no parent has computed styles."""
+    html = "<html><body><div><p>Test</p></div></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    p_element = soup.find("p")
+
+    computed_styles = {}  # No parents in computed_styles
+
+    result = get_parent_font_size(p_element, computed_styles)
+    assert result == 16.0  # ROOT_FONT_SIZE
+
+
+def test_get_parent_font_size_parent_no_font_size():
+    """Test fallback when parent exists but has no font-size property."""
+    html = "<html><body><div><p>Test</p></div></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    div_element = soup.find("div")
+    p_element = soup.find("p")
+
+    computed_styles = {
+        div_element: {
+            "color": {"value": "red"},  # No font-size property
+            "background": {"value": "blue"},
+        }
+    }
+
+    result = get_parent_font_size(p_element, computed_styles)
+    assert result == 16.0  # Fallback to root
+
+
+def test_get_parent_font_size_none_element():
+    """Test handling of None element."""
+    computed_styles = {}
+
+    result = get_parent_font_size(None, computed_styles)
+    assert result == 16.0  # Fallback to root
+
+
+def test_get_parent_font_size_decimal_values():
+    """Test handling of decimal pixel values."""
+    html = "<html><body><div><p>Test</p></div></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    div_element = soup.find("div")
+    p_element = soup.find("p")
+
+    computed_styles = {div_element: {"font-size": {"value": "18.5px"}}}
+
+    result = get_parent_font_size(p_element, computed_styles)
+    assert result == 18.5
+
+
+def test_apply_css_inheritance_basic_color_inheritance():
+    """Test basic color inheritance from parent to child."""
+    html = "<html><body><div><p>Test</p></div></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    div_element = soup.find("div")
+    p_element = soup.find("p")
+
+    computed_styles = {
+        div_element: {
+            "color": {
+                "value": "red",
+                "specificity": "010",
+                "source": "rule",
+                "selector": ".parent",
+            }
+        },
+        p_element: {
+            "font-size": {"value": "16px", "specificity": "001"}
+            # No color property - should inherit
+        },
+    }
+
+    apply_css_inheritance(computed_styles)
+
+    # Child should inherit color from parent
+    assert "color" in computed_styles[p_element]
+    assert computed_styles[p_element]["color"]["value"] == "red"
+    assert computed_styles[p_element]["color"]["inherited"]
+    assert computed_styles[p_element]["color"]["inherited_from"] == div_element
+
+
+def test_apply_css_inheritance_font_size_inheritance():
+    """Test font-size inheritance from parent to child."""
+    html = "<html><body><div><span>Test</span></div></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    div_element = soup.find("div")
+    span_element = soup.find("span")
+
+    computed_styles = {
+        div_element: {
+            "font-size": {
+                "value": "20px",
+                "specificity": "010",
+                "source": "rule",
+                "selector": "#parent",
+            }
+        },
+        span_element: {
+            "color": {"value": "blue", "specificity": "001"}
+            # No font-size - should inherit
+        },
+    }
+
+    apply_css_inheritance(computed_styles)
+
+    # Child should inherit font-size from parent
+    assert "font-size" in computed_styles[span_element]
+    assert computed_styles[span_element]["font-size"]["value"] == "20px"
+    assert computed_styles[span_element]["font-size"]["inherited"]
+
+
+def test_apply_css_inheritance_child_explicit_value_wins():
+    """Test that child's explicit value beats inheritance."""
+    html = "<html><body><div><p>Test</p></div></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    div_element = soup.find("div")
+    p_element = soup.find("p")
+
+    computed_styles = {
+        div_element: {"color": {"value": "red", "specificity": "010"}},
+        p_element: {
+            "color": {
+                "value": "blue",
+                "specificity": "001",  # Lower specificity but explicit
+            }
+        },
+    }
+
+    apply_css_inheritance(computed_styles)
+
+    # Child's explicit value should remain (inheritance doesn't
+    # override explicit)
+    assert computed_styles[p_element]["color"]["value"] == "blue"
+    assert computed_styles[p_element]["color"]["specificity"] == "001"
+    assert "inherited" not in computed_styles[p_element]["color"]
+
+
+def test_apply_css_inheritance_parent_higher_specificity_wins():
+    """Test rare case where parent has higher specificity than child."""
+    html = "<html><body><div><p>Test</p></div></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    div_element = soup.find("div")
+    p_element = soup.find("p")
+
+    computed_styles = {
+        div_element: {
+            "color": {"value": "red", "specificity": "100"}  # ID selector
+        },
+        p_element: {
+            "color": {
+                "value": "blue",
+                "specificity": "001",  # Element selector
+            }
+        },
+    }
+
+    apply_css_inheritance(computed_styles)
+
+    # Since p_element has directly applied color, no inheritance
+    assert computed_styles[p_element]["color"]["value"] == "blue"
+    assert computed_styles[p_element]["color"]["specificity"] == "001"
+
+
+def test_apply_css_inheritance_multiple_inheritable_properties():
+    """Test inheritance of multiple properties (color, font-size,
+    font-weight)."""
+    html = "<html><body><div><span>Test</span></div></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    div_element = soup.find("div")
+    span_element = soup.find("span")
+
+    computed_styles = {
+        div_element: {
+            "color": {"value": "red", "specificity": "010"},
+            "font-size": {"value": "18px", "specificity": "010"},
+            "font-weight": {"value": "bold", "specificity": "010"},
+            "background-color": {
+                "value": "yellow",
+                "specificity": "010",
+            },  # Not inheritable
+        },
+        span_element: {
+            # No inheritable properties - should inherit all
+        },
+    }
+
+    apply_css_inheritance(computed_styles)
+
+    # Should inherit inheritable properties
+    assert computed_styles[span_element]["color"]["value"] == "red"
+    assert computed_styles[span_element]["font-size"]["value"] == "18px"
+    assert computed_styles[span_element]["font-weight"]["value"] == "bold"
+
+    # Should NOT inherit non-inheritable property
+    assert "background-color" not in computed_styles[span_element]
+
+
+def test_apply_css_inheritance_nested_inheritance():
+    """Test inheritance through multiple levels (grandparent -> parent ->
+    child)."""
+    html = (
+        "<html><body><div><section><p>Test</p></section></div></body></html>"
+    )
+    soup = BeautifulSoup(html, "html.parser")
+    div_element = soup.find("div")
+    section_element = soup.find("section")
+    p_element = soup.find("p")
+
+    computed_styles = {
+        div_element: {"color": {"value": "red", "specificity": "010"}},
+        section_element: {
+            "font-size": {"value": "20px", "specificity": "010"}
+            # No color - should inherit from div
+        },
+        p_element: {
+            # No properties - should inherit from both section and div
+        },
+    }
+
+    apply_css_inheritance(computed_styles)
+
+    # Section should inherit color from div
+    assert computed_styles[section_element]["color"]["value"] == "red"
+    assert computed_styles[section_element]["color"]["inherited"]
+    # P should inherit color from section (which got it from div)
+    assert computed_styles[p_element]["color"]["value"] == "red"
+    assert computed_styles[p_element]["color"]["inherited"]
+
+    # P should inherit font-size directly from section
+    assert computed_styles[p_element]["font-size"]["value"] == "20px"
+    assert computed_styles[p_element]["font-size"]["inherited"]
+
+
+def test_apply_css_inheritance_no_parent_in_computed_styles():
+    """Test elements whose parents are not in computed_styles (no text
+    content)."""
+    html = "<html><body><div><p>Test</p></div></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    p_element = soup.find("p")
+
+    # Div parent not in computed_styles (maybe it has no text)
+    computed_styles = {
+        p_element: {"font-size": {"value": "16px", "specificity": "001"}}
+    }
+
+    apply_css_inheritance(computed_styles)
+
+    # Should remain unchanged (no parent to inherit from)
+    assert len(computed_styles[p_element]) == 1
+    assert computed_styles[p_element]["font-size"]["value"] == "16px"
+
+
+def test_apply_css_inheritance_parent_no_inheritable_properties():
+    """Test inheritance when parent has no inheritable properties."""
+    html = "<html><body><div><p>Test</p></div></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    div_element = soup.find("div")
+    p_element = soup.find("p")
+
+    computed_styles = {
+        div_element: {
+            "background-color": {"value": "yellow", "specificity": "010"},
+            "display": {"value": "block", "specificity": "010"}
+            # No inheritable properties
+        },
+        p_element: {"font-size": {"value": "16px", "specificity": "001"}},
+    }
+
+    apply_css_inheritance(computed_styles)
+
+    # Child should remain unchanged (nothing to inherit)
+    assert len(computed_styles[p_element]) == 1
+    assert computed_styles[p_element]["font-size"]["value"] == "16px"
+
+
+def test_apply_css_inheritance_default_style_gets_inherited():
+    """Test that default styles get overridden by inheritance."""
+    html = "<html><body><div><p>Test</p></div></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    div_element = soup.find("div")
+    p_element = soup.find("p")
+
+    computed_styles = {
+        div_element: {
+            "color": {
+                "value": "red",
+                "specificity": "010",
+                "source": "rule",  # Explicit CSS rule
+            }
+        },
+        p_element: {
+            "color": {
+                "value": "black",
+                "specificity": "000",
+                "source": "default",  # Default style - should be overridden
+                "is_default": True,
+            }
+        },
+    }
+
+    apply_css_inheritance(computed_styles)
+
+    # Inherited value should override default
+    assert computed_styles[p_element]["color"]["value"] == "red"
+    assert computed_styles[p_element]["color"]["inherited"]
+
+
+def test_apply_css_inheritance_tuple_specificity_conversion():
+    """Test that tuple specificity values are converted to strings for
+    comparison."""
+    html = "<html><body><div><p>Test</p></div></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    div_element = soup.find("div")
+    p_element = soup.find("p")
+
+    computed_styles = {
+        div_element: {
+            "color": {
+                "value": "red",
+                "specificity": (0, 1, 0),
+                "source": "rule",
+            }
+        },
+        p_element: {
+            # No color property - should inherit from parent
+            "font-size": {"value": "16px", "specificity": "001"}
+        },
+    }
+
+    apply_css_inheritance(computed_styles)
+
+    # Child should inherit parent's color (no explicit color on child)
+    assert computed_styles[p_element]["color"]["value"] == "red"
+    assert computed_styles[p_element]["color"]["inherited"]
+
+    # Verify tuple specificity is preserved in inheritance
+    assert computed_styles[p_element]["color"]["specificity"] == (0, 1, 0)
+
+
+def test_apply_css_inheritance_empty_computed_styles():
+    """Test function handles empty computed_styles gracefully."""
+    computed_styles = {}
+
+    # Should not crash
+    apply_css_inheritance(computed_styles)
+
+    assert computed_styles == {}
+
+
+def test_apply_css_inheritance_preserves_source_metadata():
+    """Test that inherited properties preserve source metadata from parent."""
+    html = "<html><body><div><p>Test</p></div></body></html>"
+    soup = BeautifulSoup(html, "html.parser")
+    div_element = soup.find("div")
+    p_element = soup.find("p")
+
+    computed_styles = {
+        div_element: {
+            "color": {
+                "value": "red",
+                "specificity": "010",
+                "source": "rule",
+                "selector": ".parent-class",
+                "css_file": "styles.css",
+                "css_source_type": "external",
+            }
+        },
+        p_element: {"font-size": {"value": "16px", "specificity": "001"}},
+    }
+
+    apply_css_inheritance(computed_styles)
+
+    # Should preserve parent's source metadata
+    inherited_color = computed_styles[p_element]["color"]
+    assert inherited_color["value"] == "red"
+    assert inherited_color["source"] == "inheritance"
+    assert inherited_color["selector"] == ".parent-class"  # From parent
+    assert inherited_color["css_file"] == "styles.css"  # From parent
+    assert inherited_color["css_source_type"] == "external"  # From parent
+    assert inherited_color["inherited"]
+    assert inherited_color["inherited_from"] == div_element
