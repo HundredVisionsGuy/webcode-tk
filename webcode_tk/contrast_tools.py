@@ -36,6 +36,7 @@ import re
 
 import tinycss2
 from bs4 import BeautifulSoup
+from bs4 import Tag
 from file_clerk import clerk
 
 from webcode_tk import css_tools
@@ -249,7 +250,22 @@ def parse_internal_style_tag(css: str):
         return tinycss2.parse_stylesheet(css)
 
 
-def append_style_data(html_file, sheet, href, parsed, css_source):
+def append_style_data(
+    html_file: str, sheet: dict, href: str, parsed: list, css_source: dict
+) -> None:
+    """
+    Append CSS style data to css_source dictionary.
+
+    Args:
+        html_file (str): HTML filename.
+        sheet (dict): Sheet metadata dictionary.
+        href (str): CSS file href or identifier.
+        parsed (list): Parsed CSS rules from tinycss2.
+        css_source (dict): Dictionary to append data to (modified in place).
+
+    Returns:
+        None: Modifies css_source dictionary in place.
+    """
     data = {}
     data["source_type"] = sheet.get("type")
     data["css_name"] = href
@@ -392,9 +408,16 @@ def get_css_rules_for_document(
     return css_rules
 
 
-def parse_css_rules_from_tinycss2(parsed_stylesheet):
+def parse_css_rules_from_tinycss2(parsed_stylesheet: list) -> list:
     """
     Converts tinycss2 parsed rules into a more usable format.
+
+    Args:
+        parsed_stylesheet (list): List of tinycss2 parsed rule objects.
+
+    Returns:
+        list[dict]: List of rule dictionaries with 'selector' and
+            'declarations' keys.
     """
     css_rules = []
 
@@ -478,7 +501,7 @@ def find_matching_elements(soup: BeautifulSoup, selector: str) -> list:
         selector (str): CSS selector string (e.g., "p", ".class", "#id").
 
     Returns:
-        list: List of BeautifulSoup Tag objects that match the selector.
+        list[Tag]: List of BeautifulSoup Tag objects that match the selector.
     """
 
     # Clean and validate
@@ -563,7 +586,10 @@ def is_selector_supported_by_bs4(selector: str) -> bool:
 
 
 def apply_rule_to_element(
-    element, rule: dict, computed_styles: dict, css_source_info: dict = None
+    element: Tag,
+    rule: dict,
+    computed_styles: dict,
+    css_source_info: dict = None,
 ) -> None:
     """
     Applies CSS declarations from a rule to a specific element, handling
@@ -635,7 +661,7 @@ def apply_rule_to_element(
 
 
 def convert_font_size_to_pixels(
-    font_size_value: str, element, computed_styles: dict
+    font_size_value: str, element: Tag, computed_styles: dict
 ) -> str:
     """
     Converts font-size values to pixels for WCAG analysis using font_tools.
@@ -679,7 +705,18 @@ def convert_font_size_to_pixels(
 
 
 def get_parent_font_size(element, computed_styles: dict) -> float:
-    """Get parent's computed font size in pixels for relative calculations."""
+    """
+    Get parent's computed font size in pixels for relative calculations.
+
+    Args:
+        element (Tag): BeautifulSoup Tag object to find parent font size for.
+        computed_styles (dict): Dictionary mapping elements to their
+            computed styles.
+
+    Returns:
+        float: Parent's font size in pixels, or 16.0 (root default) if no
+            parent found.
+    """
 
     # Try to find parent in computed_styles
     current = element.parent if element else None
@@ -717,7 +754,16 @@ def apply_inheritance(soup: BeautifulSoup, computed_styles: dict) -> None:
 
 
 def apply_css_inheritance(computed_styles: dict) -> None:
-    """Apply traditional CSS inheritance for inheritable properties."""
+    """
+    Apply traditional CSS inheritance for inheritable properties.
+
+    Args:
+        computed_styles (dict): Dictionary mapping elements to their
+            computed styles (modified in place).
+
+    Returns:
+        None: Modifies computed_styles dictionary in place.
+    """
     inheritable_props = {"color", "font-size", "font-weight"}
 
     for parent_element in computed_styles:
@@ -768,8 +814,15 @@ def apply_css_inheritance(computed_styles: dict) -> None:
 
 
 def apply_visual_background_inheritance(computed_styles: dict) -> None:
-    """Apply visual background colors to elements without explicit
-    backgrounds."""
+    """
+    Apply visual background colors to elements without explicit
+    backgrounds.
+
+    Args:
+        computed_styles: a dictionary of elements with computed styles.
+    Returns:
+        None
+    """
 
     for element in computed_styles:
         element_styles = computed_styles[element]
@@ -777,26 +830,150 @@ def apply_visual_background_inheritance(computed_styles: dict) -> None:
         # Check if element has explicit background
         has_background = (
             "background-color" in element_styles
-            or "background" in element_styles
+            or has_usable_background_color(element_styles.get("background"))
         )
 
         if not has_background:
             # Find nearest ancestor with background
             ancestor_bg = find_ancestor_background(element, computed_styles)
 
-            if ancestor_bg:
-                element_styles["background-color"] = {
-                    "value": ancestor_bg["value"],
-                    "specificity": "000",  # Lowest possible specificity
-                    "visual_inheritance": True,  # Mark as visual inheritance
-                    "inherited_from": ancestor_bg[
-                        "source_element"
-                    ],  # Track source
-                }
+            # Extract contrast-relevant color
+            contrast_color = extract_contrast_color(ancestor_bg["value"])
+
+            element_styles["background-color"] = {
+                "value": contrast_color
+                if contrast_color
+                else DEFAULT_GLOBAL_BACKGROUND,
+                "specificity": "000",
+                "visual_inheritance": True,
+                "inherited_from": ancestor_bg["source_element"],
+                "contrast_relevant": contrast_color is not None,
+                # Preserve original for debugging
+                "original_background": ancestor_bg["value"]
+                if ancestor_bg["value"] != DEFAULT_GLOBAL_BACKGROUND
+                else None,
+            }
 
 
-def find_ancestor_background(element, computed_styles):
-    """Walk up DOM tree to find first ancestor with background."""
+def has_usable_background_color(background_prop: dict) -> bool:
+    """
+    Check if background property contains usable color for contrast.
+
+    Args:
+        background_prop (dict): Background property dictionary with 'value'
+            key, or None.
+
+    Returns:
+        bool: True if background contains usable color for contrast
+            analysis, False otherwise.
+    """
+    if not background_prop:
+        return False
+
+    background_value = background_prop["value"]
+    return extract_contrast_color(background_value) is not None
+
+
+def extract_contrast_color(background_value: str) -> str:
+    """
+    Extract usable color for contrast analysis, or None.
+
+    Args:
+        background_value (str): CSS background property value.
+
+    Returns:
+        str: Color value suitable for contrast analysis, or None if no
+            usable color found.
+    """
+
+    # Remove raster images - they block color visibility
+    if re.search(
+        r"url\([^)]*\.(jpg|jpeg|png|gif|webp|bmp)", background_value, re.I
+    ):
+        # Check for fallback color after image
+        fallback = extract_fallback_color_after_image(background_value)
+        return fallback if fallback else None
+
+    # Handle gradients - extract representative color
+    if "gradient" in background_value.lower():
+        return extract_gradient_contrast_color(background_value)
+
+    # Handle solid colors
+    re_pattern = r"(#[a-f0-9]{3,6}|rgb\([^)]+\)|rgba\([^)]+\)|hsl\([^)]+\)|"
+    re_pattern += r"hsla\([^)]+\)|[a-z]+)"
+    color_match = re.search(
+        re_pattern,
+        background_value,
+        re.I,
+    )
+    return color_match.group(1) if color_match else None
+
+
+def extract_fallback_color_after_image(background_value: str) -> str:
+    """
+    Extract fallback color that appears after image url().
+
+    Args:
+        background_value (str): CSS background value containing url() and
+            potential fallback color.
+
+    Returns:
+        str: Fallback color value, or None if no fallback color found.
+    """
+
+    # Find color after url() - pattern: url(...) color
+    url_pattern = r"url\([^)]*\)\s*[^,]*"
+    remaining = re.sub(url_pattern, "", background_value)
+
+    # Look for color in remaining text
+    color_match = re.search(
+        r"(#[a-f0-9]{3,6}|rgb\([^)]+\)|[a-z]+)", remaining, re.I
+    )
+    return color_match.group(1) if color_match else None
+
+
+def extract_gradient_contrast_color(background_value: str) -> str:
+    """
+    Extract representative color from gradient for contrast analysis.
+
+    Args:
+        background_value (str): CSS gradient value (e.g.,
+            'linear-gradient(red, blue)').
+
+    Returns:
+        str: Representative color for contrast analysis, or None if no
+            color found.
+    """
+
+    # Strategy: Use the final color in gradient (most visible for reading)
+    # This handles: linear-gradient(red, blue) -> blue
+    #              radial-gradient(center, red, blue) -> blue
+
+    # Find all colors in gradient
+    color_pattern = r"(#[a-f0-9]{3,6}|rgb\([^)]+\)|rgba\([^)]+\)|"
+    color_pattern += r"hsl\([^)]+\)|hsla\([^)]+\)|[a-z]+)"
+    colors = re.findall(color_pattern, background_value, re.I)
+
+    if colors:
+        # Use last color (end of gradient)
+        return colors[-1]
+
+    return None
+
+
+def find_ancestor_background(element: Tag, computed_styles: dict) -> dict:
+    """
+    Walk up DOM tree to find first ancestor with background.
+
+    Args:
+        element (Tag): BeautifulSoup Tag object to start searching from.
+        computed_styles (dict): Dictionary mapping elements to their
+            computed styles.
+
+    Returns:
+        dict: Dictionary containing 'value' (background color) and
+            'source_element' (ancestor element or None).
+    """
     current = element.parent
 
     while current:
@@ -806,15 +983,28 @@ def find_ancestor_background(element, computed_styles):
             # Check for background-color or background
             for bg_prop in ["background-color", "background"]:
                 if bg_prop in current_styles:
+                    bg_value = current_styles[bg_prop][
+                        "value"
+                    ]  # ✅ Correct variable
                     return {
-                        "value": current_styles[bg_prop]["value"],
-                        "source_element": current,
+                        "value": bg_value,  # ✅ Use actual variable
+                        "source_element": current,  # ✅ Use actual variable
+                        # Optional metadata additions:
+                        "contrast_color": extract_contrast_color(bg_value),
+                        "contrast_relevant": extract_contrast_color(bg_value)
+                        is not None,
                     }
 
         current = current.parent
 
     # No ancestor background found, use default
-    return {"value": DEFAULT_GLOBAL_BACKGROUND, "source_element": None}
+    return {
+        "value": DEFAULT_GLOBAL_BACKGROUND,
+        "source_element": None,
+        # Optional metadata for default:
+        "contrast_color": DEFAULT_GLOBAL_BACKGROUND,
+        "contrast_relevant": True,
+    }
 
 
 def is_inheritable_property(property_name: str) -> bool:
