@@ -789,7 +789,7 @@ def apply_css_inheritance(computed_styles: dict) -> None:
                     if child_prop is None:
                         # Child has no property at all - inherit
                         should_inherit = True
-                    elif child_prop.get("is_default", False):
+                    elif child_prop.get("source") == "default":
                         # Child has default style - inheritance wins
                         should_inherit = True
                     else:
@@ -808,9 +808,57 @@ def apply_css_inheritance(computed_styles: dict) -> None:
                             "css_source_type": parent_prop.get(
                                 "css_source_type"
                             ),
-                            "inherited": True,
                             "inherited_from": parent_element,
                         }
+
+
+def find_parent_in_computed_styles(element: Tag, computed_styles: dict) -> Tag:
+    """
+    Find the nearest parent element that exists in computed_styles.
+
+    Args:
+        element (Tag): Child element to find parent for
+        computed_styles (dict): Dictionary of elements with computed styles
+
+    Returns:
+        Tag: Parent element, or None if no parent found in computed_styles
+    """
+    current = element.parent
+    while current:
+        if current in computed_styles:
+            return current
+        current = current.parent
+    return None
+
+
+def should_inherit_property(child_prop: dict) -> bool:
+    """
+    Determine if a child property should inherit from parent.
+
+    Args:
+        child_prop (dict): Child's current property dict, or None
+
+    Returns:
+        bool: True if inheritance should occur, False otherwise
+    """
+    if child_prop is None:
+        # Child has no property at all - inherit
+        return True
+
+    child_source = child_prop.get("source")
+
+    if child_source == "default":
+        # Child has only default style - inheritance wins
+        return True
+    elif child_source == "rule":
+        # Child has explicit CSS rule - don't inherit
+        return False
+    elif child_source == "inheritance":
+        # Child already inherited - don't inherit again
+        return False
+    else:
+        # Unknown source - be conservative, don't inherit
+        return False
 
 
 def apply_visual_background_inheritance(computed_styles: dict) -> None:
@@ -823,36 +871,79 @@ def apply_visual_background_inheritance(computed_styles: dict) -> None:
     Returns:
         None
     """
+    # Track which elements got new backgrounds this iteration
+    changes_made = True
+    max_iterations = 10  # Prevent infinite loops
+    iteration = 0
 
-    for element in computed_styles:
-        element_styles = computed_styles[element]
+    while changes_made and iteration < max_iterations:
+        changes_made = False
+        iteration += 1
 
-        # Check if element has explicit background
-        has_background = (
-            "background-color" in element_styles
-            or has_usable_background_color(element_styles.get("background"))
-        )
+        for element in computed_styles:
+            element_styles = computed_styles[element]
 
-        if not has_background:
-            # Find nearest ancestor with background
+            # Skip if element already has background-color
+            if "background-color" in element_styles:
+                continue
+
+            # Check for explicit backgrounds
+            if "background" in element_styles:
+                bg_value = element_styles["background"]["value"]
+
+                # Check if background contains a raster image
+                if contains_raster_image(bg_value):
+                    # Mark as contrast-indeterminate - cannot analyze
+                    element_styles["background-color"] = {
+                        "value": None,  # No usable color
+                        "specificity": "000",
+                        "contrast_analysis": "indeterminate",
+                        "reason": "background_image_blocks_color_analysis",
+                        "original_background": bg_value,
+                        "visual_inheritance": False,
+                    }
+                    changes_made = True
+                    continue
+                else:
+                    # Has usable background shorthand - skip inheritance
+                    continue
+
+            # Element needs background inheritance
             ancestor_bg = find_ancestor_background(element, computed_styles)
 
-            # Extract contrast-relevant color
-            contrast_color = extract_contrast_color(ancestor_bg["value"])
-
-            element_styles["background-color"] = {
-                "value": contrast_color
-                if contrast_color
-                else DEFAULT_GLOBAL_BACKGROUND,
-                "specificity": "000",
-                "visual_inheritance": True,
-                "inherited_from": ancestor_bg["source_element"],
-                "contrast_relevant": contrast_color is not None,
-                # Preserve original for debugging
-                "original_background": ancestor_bg["value"]
-                if ancestor_bg["value"] != DEFAULT_GLOBAL_BACKGROUND
-                else None,
-            }
+            if ancestor_bg.get("contrast_analysis") == "indeterminate":
+                # Ancestor is indeterminate - propagate that status
+                element_styles["background-color"] = {
+                    "value": None,
+                    "specificity": "000",
+                    "contrast_analysis": "indeterminate",
+                    "reason": ancestor_bg["reason"],
+                    "inherited_from": ancestor_bg["source_element"],
+                    "source": "visual_inheritance",
+                    "original_background": ancestor_bg.get(
+                        "original_background"
+                    ),
+                }
+                changes_made = True
+            else:
+                # Normal inheritance - extract usable color
+                contrast_color = extract_contrast_color(ancestor_bg["value"])
+                effective_color = (
+                    contrast_color if contrast_color else ancestor_bg["value"]
+                )
+                element_styles["background-color"] = {
+                    "value": effective_color,
+                    "specificity": "000",
+                    "source": "visual_inheritance",
+                    "inherited_from": ancestor_bg["source_element"],
+                    "contrast_analysis": "determinable",
+                    "original_background": (
+                        ancestor_bg["value"]
+                        if ancestor_bg["value"] != DEFAULT_GLOBAL_BACKGROUND
+                        else None
+                    ),
+                }
+                changes_made = True
 
 
 def has_usable_background_color(background_prop: dict) -> bool:
@@ -871,7 +962,37 @@ def has_usable_background_color(background_prop: dict) -> bool:
         return False
 
     background_value = background_prop["value"]
-    return extract_contrast_color(background_value) is not None
+
+    # If it contains a raster image, color is not usable
+    if contains_raster_image(background_value):
+        return False
+
+    # Check for gradients or solid colors
+    return bool(
+        re.search(
+            r"(gradient|#[a-f0-9]{3,6}|rgb|hsl|[a-z]+)", background_value, re.I
+        )
+    )
+
+
+def contains_raster_image(background_value: str) -> bool:
+    """Check if background contains a raster image that blocks color analysis.
+
+    Args:
+        background_value: the css value applied to the background property.
+
+    Returns:
+        bool: whether the background value includes a raster image or not.
+    """
+    # Add None check
+    if background_value is None:
+        return False
+
+    return bool(
+        re.search(
+            r"url\([^)]*\.(jpg|jpeg|png|gif|webp|bmp)", background_value, re.I
+        )
+    )
 
 
 def extract_contrast_color(background_value: str) -> str:
@@ -885,6 +1006,9 @@ def extract_contrast_color(background_value: str) -> str:
         str: Color value suitable for contrast analysis, or None if no
             usable color found.
     """
+    # Add None check at the beginning
+    if background_value is None:
+        return None
 
     # Remove raster images - they block color visibility
     if re.search(
@@ -920,6 +1044,9 @@ def extract_fallback_color_after_image(background_value: str) -> str:
     Returns:
         str: Fallback color value, or None if no fallback color found.
     """
+    # Add None check
+    if background_value is None:
+        return None
 
     # Find color after url() - pattern: url(...) color
     url_pattern = r"url\([^)]*\)\s*[^,]*"
@@ -944,6 +1071,9 @@ def extract_gradient_contrast_color(background_value: str) -> str:
         str: Representative color for contrast analysis, or None if no
             color found.
     """
+    # Add None check
+    if background_value is None:
+        return None
 
     # Strategy: Use the final color in gradient (most visible for reading)
     # This handles: linear-gradient(red, blue) -> blue
@@ -980,20 +1110,70 @@ def find_ancestor_background(element: Tag, computed_styles: dict) -> dict:
         if current in computed_styles:
             current_styles = computed_styles[current]
 
+            # Flag to track if we should skip this ancestor
+            skip_ancestor = False
+
             # Check for background-color or background
             for bg_prop in ["background-color", "background"]:
                 if bg_prop in current_styles:
-                    bg_value = current_styles[bg_prop][
-                        "value"
-                    ]  # ✅ Correct variable
-                    return {
-                        "value": bg_value,  # ✅ Use actual variable
-                        "source_element": current,  # ✅ Use actual variable
-                        # Optional metadata additions:
-                        "contrast_color": extract_contrast_color(bg_value),
-                        "contrast_relevant": extract_contrast_color(bg_value)
-                        is not None,
-                    }
+                    bg_source = current_styles[bg_prop].get("source")
+
+                    # Skip elements that only have visual inheritance
+                    if bg_source == "visual_inheritance":
+                        skip_ancestor = True
+                        break  # ✅ Break out of property loop
+
+                    # Accept both "rule" and "default" sources
+                    if bg_source in ["rule", "default"]:
+                        bg_value = current_styles[bg_prop]["value"]
+
+                        # Does this ancestor already is indeterminate status
+                        if (
+                            current_styles[bg_prop].get("contrast_analysis")
+                            == "indeterminate"
+                        ):
+                            return {
+                                "value": None,
+                                "source_element": current,
+                                "contrast_analysis": "indeterminate",
+                                "reason": "ancestor_has_background_image",
+                                "original_background": current_styles[
+                                    bg_prop
+                                ].get("original_background", bg_value),
+                            }
+
+                        # Skip None values and continue searching
+                        if bg_value is None:
+                            continue  # Continue to next property
+
+                        # Check if this background contains a raster image
+                        if contains_raster_image(bg_value):
+                            return {
+                                "value": None,
+                                "source_element": current,
+                                "contrast_analysis": "indeterminate",
+                                "reason": "ancestor_has_background_image",
+                                "original_background": bg_value,
+                            }
+
+                        # Found explicit background
+                        bg_items = current_styles[bg_prop].items()
+                        return {
+                            "value": bg_value,
+                            "source_element": current,
+                            "contrast_analysis": "determinable",
+                            # Copy metadata from ancestor
+                            **{
+                                metadata_key: metadata_value
+                                for metadata_key, metadata_value in bg_items
+                                if metadata_key not in ["value"]
+                            },
+                        }
+
+            # If we flagged this ancestor to skip, move to next ancestor
+            if skip_ancestor:
+                current = current.parent
+                continue  # ✅ Now this continues to next ancestor
 
         current = current.parent
 
@@ -1001,9 +1181,8 @@ def find_ancestor_background(element: Tag, computed_styles: dict) -> dict:
     return {
         "value": DEFAULT_GLOBAL_BACKGROUND,
         "source_element": None,
-        # Optional metadata for default:
-        "contrast_color": DEFAULT_GLOBAL_BACKGROUND,
-        "contrast_relevant": True,
+        "contrast_analysis": "determinable",
+        "source": "default",
     }
 
 
