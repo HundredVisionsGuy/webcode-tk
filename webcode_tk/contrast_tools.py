@@ -601,6 +601,7 @@ def apply_rule_to_element(
             'declarations'.
         computed_styles (dict): Dictionary mapping elements to their current
             computed styles (modified in place).
+        css_source_info (dict): Information about the CSS source.
 
     Returns:
         None: Modifies computed_styles dictionary in place.
@@ -616,36 +617,21 @@ def apply_rule_to_element(
             if property_name not in CONTRAST_RELEVANT_PROPERTIES:
                 continue
 
-            # Special handling for font-size - convert to pixels
+            # Special handling for font-size
+            # convert to pixels and store enhanced data
             if property_name == "font-size":
-                property_value = convert_font_size_to_pixels(
+                original_value = property_value
+                computed_pixels = convert_font_size_to_pixels(
                     property_value, element, computed_styles
                 )
 
-            current_prop = computed_styles[element].get(property_name)
-            should_apply = False
+                # Classify unit type for debugging/analysis
+                unit_type = classify_font_unit(original_value)
 
-            if current_prop is None:
-                # property doesn't exist, apply it
-                should_apply = True
-            elif (
-                isinstance(current_prop, dict)
-                and "specificity" in current_prop
-            ):
-                # property exists with specificiy info
-                current_specificity = current_prop["specificity"]
-                if isinstance(current_specificity, tuple):
-                    current_specificity = "".join(
-                        map(str, current_specificity)
-                    )
-                if rule_specificity >= current_specificity:
-                    should_apply = True
-            else:
-                # property exits but no specificity (default)
-                should_apply = True
-            if should_apply:
-                computed_styles[element][property_name] = {
-                    "value": property_value,
+                font_size_data = {
+                    "value": computed_pixels,
+                    "original_value": original_value,
+                    "unit_type": unit_type,
                     "specificity": rule_specificity,
                     "source": "rule",
                     "selector": selector,
@@ -657,7 +643,89 @@ def apply_rule_to_element(
                     else None,
                 }
 
+                # Check if we should apply this font-size rule
+                current_prop = computed_styles[element].get(property_name)
+                should_apply = False
+
+                if current_prop is None:
+                    should_apply = True
+                elif (
+                    isinstance(current_prop, dict)
+                    and "specificity" in current_prop
+                ):
+                    current_specificity = current_prop["specificity"]
+                    if isinstance(current_specificity, tuple):
+                        current_specificity = "".join(
+                            map(str, current_specificity)
+                        )
+                    if rule_specificity >= current_specificity:
+                        should_apply = True
+                else:
+                    should_apply = True
+
+                if should_apply:
+                    computed_styles[element][property_name] = font_size_data
+            else:
+                # Regular property handling for non-font-size properties
+                current_prop = computed_styles[element].get(property_name)
+                should_apply = False
+
+                if current_prop is None:
+                    # property doesn't exist, apply it
+                    should_apply = True
+                elif (
+                    isinstance(current_prop, dict)
+                    and "specificity" in current_prop
+                ):
+                    # property exists with specificity info
+                    current_specificity = current_prop["specificity"]
+                    if isinstance(current_specificity, tuple):
+                        current_specificity = "".join(
+                            map(str, current_specificity)
+                        )
+                    if rule_specificity >= current_specificity:
+                        should_apply = True
+                else:
+                    # property exists but no specificity (default)
+                    should_apply = True
+
+                if should_apply:
+                    computed_styles[element][property_name] = {
+                        "value": property_value,
+                        "specificity": rule_specificity,
+                        "source": "rule",
+                        "selector": selector,
+                        "css_file": css_source_info.get("filename")
+                        if css_source_info
+                        else None,
+                        "css_source_type": css_source_info.get("source_type")
+                        if css_source_info
+                        else None,
+                    }
+
     return
+
+
+def classify_font_unit(font_size_value: str) -> str:
+    """Classify font-size unit type for analysis."""
+    if re.search(r"px|pt|pc|in|cm|mm", font_size_value, re.I):
+        return "absolute"
+    elif re.search(r"em|rem|%", font_size_value, re.I):
+        return "relative"
+    elif font_size_value.lower() in ["larger", "smaller"]:
+        return "relative_keyword"
+    elif font_size_value.lower() in [
+        "xx-small",
+        "x-small",
+        "small",
+        "medium",
+        "large",
+        "x-large",
+        "xx-large",
+    ]:
+        return "absolute_keyword"
+    else:
+        return "unknown"
 
 
 def convert_font_size_to_pixels(
@@ -810,55 +878,6 @@ def apply_css_inheritance(computed_styles: dict) -> None:
                             ),
                             "inherited_from": parent_element,
                         }
-
-
-def find_parent_in_computed_styles(element: Tag, computed_styles: dict) -> Tag:
-    """
-    Find the nearest parent element that exists in computed_styles.
-
-    Args:
-        element (Tag): Child element to find parent for
-        computed_styles (dict): Dictionary of elements with computed styles
-
-    Returns:
-        Tag: Parent element, or None if no parent found in computed_styles
-    """
-    current = element.parent
-    while current:
-        if current in computed_styles:
-            return current
-        current = current.parent
-    return None
-
-
-def should_inherit_property(child_prop: dict) -> bool:
-    """
-    Determine if a child property should inherit from parent.
-
-    Args:
-        child_prop (dict): Child's current property dict, or None
-
-    Returns:
-        bool: True if inheritance should occur, False otherwise
-    """
-    if child_prop is None:
-        # Child has no property at all - inherit
-        return True
-
-    child_source = child_prop.get("source")
-
-    if child_source == "default":
-        # Child has only default style - inheritance wins
-        return True
-    elif child_source == "rule":
-        # Child has explicit CSS rule - don't inherit
-        return False
-    elif child_source == "inheritance":
-        # Child already inherited - don't inherit again
-        return False
-    else:
-        # Unknown source - be conservative, don't inherit
-        return False
 
 
 def apply_visual_background_inheritance(computed_styles: dict) -> None:
@@ -1014,9 +1033,7 @@ def extract_contrast_color(background_value: str) -> str:
     if re.search(
         r"url\([^)]*\.(jpg|jpeg|png|gif|webp|bmp)", background_value, re.I
     ):
-        # Check for fallback color after image
-        fallback = extract_fallback_color_after_image(background_value)
-        return fallback if fallback else None
+        return None
 
     # Handle gradients - extract representative color
     if "gradient" in background_value.lower():
@@ -1029,32 +1046,6 @@ def extract_contrast_color(background_value: str) -> str:
         re_pattern,
         background_value,
         re.I,
-    )
-    return color_match.group(1) if color_match else None
-
-
-def extract_fallback_color_after_image(background_value: str) -> str:
-    """
-    Extract fallback color that appears after image url().
-
-    Args:
-        background_value (str): CSS background value containing url() and
-            potential fallback color.
-
-    Returns:
-        str: Fallback color value, or None if no fallback color found.
-    """
-    # Add None check
-    if background_value is None:
-        return None
-
-    # Find color after url() - pattern: url(...) color
-    url_pattern = r"url\([^)]*\)\s*[^,]*"
-    remaining = re.sub(url_pattern, "", background_value)
-
-    # Look for color in remaining text
-    color_match = re.search(
-        r"(#[a-f0-9]{3,6}|rgb\([^)]+\)|[a-z]+)", remaining, re.I
     )
     return color_match.group(1) if color_match else None
 
