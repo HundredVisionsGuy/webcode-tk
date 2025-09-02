@@ -36,11 +36,15 @@ import re
 
 import tinycss2
 from bs4 import BeautifulSoup
+from bs4 import NavigableString
 from bs4 import Tag
 from file_clerk import clerk
 
+from webcode_tk import color_tools
 from webcode_tk import css_tools
+from webcode_tk import font_tools
 from webcode_tk.font_tools import compute_font_size
+from webcode_tk.font_tools import is_large_text
 from webcode_tk.font_tools import split_value_unit
 
 # Browser default styling constants
@@ -294,23 +298,98 @@ def analyze_css(html_doc: dict, css_files: list[dict]) -> list[dict]:
     filename = html_doc["filename"]
     soup = html_doc["soup"]
 
+    # Check for CSS sources and create warnings if needed
+    warnings = []
+
+    if not has_any_css_sources(soup):
+        message = f"{filename} has no CSS sources "
+        message += "(no <link> or <style> tags)"
+        warnings.append(
+            {
+                "type": "no_css_sources",
+                "message": message,
+                "impact": "Only browser defaults will be applied",
+            }
+        )
+
     # Step 1: Apply default styles to all elements
     default_styles = apply_browser_defaults(soup)
 
     # Find CSS rules specific to this HTML document
     doc_css_rules = get_css_rules_for_document(filename, css_files)
 
+    # Additional warning if no CSS rules found
+    if not doc_css_rules or all(len(rules) <= 1 for rules in doc_css_rules):
+        warnings.append(
+            {
+                "type": "no_css_rules",
+                "message": f"{filename} has no CSS rules to process",
+                "impact": "Results will only show browser default styling",
+            }
+        )
+
     # Apply CSS rules to elements and compute styles
     computed_styles = compute_element_styles(
         soup, doc_css_rules, default_styles
     )
-    print(computed_styles)
 
-    # TODO: Traverse DOM and analyze contrast for elements with text
-    # doc_results = traverse_elements_for_contrast(soup,
-    # computed_styles, filename)
+    # Traverse DOM and analyze contrast for elements with text
+    doc_results = analyze_elements_for_contrast(computed_styles, filename)
+
+    # Add warnings to results if any exist
+    if warnings:
+        for warning in warnings:
+            warning_result = {
+                "filename": filename,
+                "element_tag": None,
+                "element_id": None,
+                "element_class": None,
+                "text_content": None,
+                "text_color": None,
+                "text_color_source": None,
+                "background_color": None,
+                "background_color_source": None,
+                "font_size_px": None,
+                "font_weight": None,
+                "is_large_text": None,
+                "contrast_ratio": None,
+                "wcag_aa_pass": None,
+                "wcag_aaa_pass": None,
+                "contrast_analysis": "warning",
+                "warning_type": warning["type"],
+                "warning_message": warning["message"],
+                "warning_impact": warning["impact"],
+            }
+            doc_results.append(warning_result)
 
     return doc_results
+
+
+def has_any_css_sources(soup: BeautifulSoup) -> bool:
+    """
+    Check if HTML document has any CSS sources (external or internal).
+
+    Args:
+        soup: BeautifulSoup object of the HTML document
+
+    Returns:
+        bool: True if CSS sources found, False otherwise
+    """
+    head = soup.find("head")
+    if not head:
+        return False
+
+    # Check for external stylesheets
+    links = head.find_all("link", {"rel": "stylesheet"})
+    if links:
+        return True
+
+    # Check for internal style tags
+    styles = head.find_all("style")
+    if styles and any(style.get_text(strip=True) for style in styles):
+        return True
+
+    return False
 
 
 def apply_browser_defaults(soup: BeautifulSoup) -> dict:
@@ -345,6 +424,12 @@ def apply_browser_defaults(soup: BeautifulSoup) -> dict:
                     "source": "default",
                     "is_default": True,
                 },
+                "font-weight": {
+                    "value": "bold" if element.name in IS_BOLD else "normal",
+                    "specificity": default_specificity,
+                    "source": "default",
+                    "is_default": True,
+                },
             }
 
             # Apply element-specific defaults
@@ -358,21 +443,13 @@ def apply_browser_defaults(soup: BeautifulSoup) -> dict:
                     "value": DEFAULT_LINK_VISITED,
                     "specificity": default_specificity,
                 }
-
-            if element.name in IS_BOLD:
-                element_styles[element]["font-weight"] = {
-                    "value": "bold",
-                    "specificity": default_specificity,
-                }
-
             if element.name in HEADING_FONT_SIZES:
-                element_styles[element]["font-size"] = element_styles[element][
-                    "color"
-                ] = {
+                element_styles[element]["font-size"] = {
                     "value": f"{HEADING_FONT_SIZES[element.name]}px",
                     "specificity": default_specificity,
+                    "source": "default",
+                    "is_default": True,
                 }
-
     return element_styles
 
 
@@ -617,8 +694,8 @@ def apply_rule_to_element(
             if property_name not in CONTRAST_RELEVANT_PROPERTIES:
                 continue
 
-            # Special handling for font-size
-            # convert to pixels and store enhanced data
+            # Special handling for font-size - convert to pixels
+            # and store enhanced data
             if property_name == "font-size":
                 original_value = property_value
                 computed_pixels = convert_font_size_to_pixels(
@@ -665,7 +742,77 @@ def apply_rule_to_element(
 
                 if should_apply:
                     computed_styles[element][property_name] = font_size_data
+
+            # Special handling for background-color and background
+            elif property_name in ["background-color", "background"]:
+                # Check if this background contains a raster image
+                if contains_raster_image(property_value):
+                    background_data = {
+                        "value": None,
+                        "specificity": rule_specificity,
+                        "source": "rule",
+                        "selector": selector,
+                        "css_file": css_source_info.get("filename")
+                        if css_source_info
+                        else None,
+                        "css_source_type": css_source_info.get("source_type")
+                        if css_source_info
+                        else None,
+                        "contrast_analysis": "indeterminate",
+                        "reason": "background_image_blocks_color_analysis",
+                        "original_background": property_value,
+                    }
+                else:
+                    # Extract usable color for contrast analysis
+                    contrast_color = extract_contrast_color(property_value)
+                    effective_color = (
+                        contrast_color if contrast_color else property_value
+                    )
+
+                    background_data = {
+                        "value": effective_color,
+                        "specificity": rule_specificity,
+                        "source": "rule",
+                        "selector": selector,
+                        "css_file": css_source_info.get("filename")
+                        if css_source_info
+                        else None,
+                        "css_source_type": css_source_info.get("source_type")
+                        if css_source_info
+                        else None,
+                        "contrast_analysis": "determinable",
+                        "original_background": property_value
+                        if property_value != effective_color
+                        else None,
+                    }
+
+                # Apply specificity logic and set the property
+                current_prop = computed_styles[element].get(property_name)
+                should_apply = False
+
+                if current_prop is None:
+                    should_apply = True
+                elif (
+                    isinstance(current_prop, dict)
+                    and "specificity" in current_prop
+                ):
+                    current_specificity = current_prop["specificity"]
+                    if isinstance(current_specificity, tuple):
+                        current_specificity = "".join(
+                            map(str, current_specificity)
+                        )
+                    if rule_specificity >= current_specificity:
+                        should_apply = True
+                else:
+                    should_apply = True
+
+                if should_apply:
+                    computed_styles[element][property_name] = background_data
+
             else:
+                # Regular property handling for non-font-size, non-background
+                # properties
+                # ... rest of your existing else block code ...
                 # Regular property handling for non-font-size properties
                 current_prop = computed_styles[element].get(property_name)
                 should_apply = False
@@ -688,7 +835,6 @@ def apply_rule_to_element(
                 else:
                     # property exists but no specificity (default)
                     should_apply = True
-
                 if should_apply:
                     computed_styles[element][property_name] = {
                         "value": property_value,
@@ -708,9 +854,10 @@ def apply_rule_to_element(
 
 def classify_font_unit(font_size_value: str) -> str:
     """Classify font-size unit type for analysis."""
-    if re.search(r"px|pt|pc|in|cm|mm", font_size_value, re.I):
+    if re.match(r"^\d*\.?\d+(px|pt|pc|in|cm|mm)$", font_size_value, re.I):
         return "absolute"
-    elif re.search(r"em|rem|%", font_size_value, re.I):
+    # Match number + unit pattern for relative units
+    elif re.match(r"^\d*\.?\d+(em|rem|%)$", font_size_value, re.I):
         return "relative"
     elif font_size_value.lower() in ["larger", "smaller"]:
         return "relative_keyword"
@@ -1189,6 +1336,185 @@ def is_inheritable_property(property_name: str) -> bool:
         bool: True if the property is inheritable, False otherwise.
     """
     return False
+
+
+def analyze_elements_for_contrast(
+    computed_styles: dict, filename: str
+) -> list:
+    """Returns a list of elements with text with contrast results
+
+    Args:
+        computed_styles: a dictionary of elements with font size, background
+            color, color, and any other pertinent metadata
+        filename: the name of the HTML document.
+
+    Returns:
+        contrast_results: a list of all elements that contain content
+    """
+    contrast_results = []
+
+    for element in computed_styles:
+        # filter out any element that doesn't directly render text
+        direct_text = get_direct_text(element)
+        if not direct_text:
+            continue
+
+        # get element contrast data
+        element_data = computed_styles.get(element)
+        font_size = element_data["font-size"].get("value")
+        size, unit = font_tools.split_value_unit(font_size)
+        font_size = font_tools.compute_font_size(size, unit)
+        font_weight = element_data.get("font-weight").get("value")
+        is_large = is_large_text(font_size, font_weight)
+        text_color = element_data["color"].get("value")
+        color_hex = color_tools.get_hex(text_color)
+        text_bg = element_data["background-color"].get("value")
+        bg_hex = color_tools.get_hex(text_bg)
+        contrast_ratio = color_tools.contrast_ratio(color_hex, bg_hex)
+        contrast_report = color_tools.get_color_contrast_report(
+            color_hex, bg_hex
+        )
+        contrast_analysis = element_data["background-color"].get(
+            "contrast_analysis"
+        )
+        if is_large:
+            aaa_results = contrast_report.get("Large AAA")
+            aa_results = contrast_report.get("Large AA")
+        else:
+            aaa_results = contrast_report.get("Normal AAA")
+            aa_results = contrast_report.get("Normal AA")
+
+        # apply results
+        element_result = {
+            "filename": filename,
+            "element_tag": element.name,
+            "element_id": element.get("id"),
+            "element_class": element.get("class"),
+            "text_content": direct_text,
+            # Color values and their sources
+            "text_color": text_color,
+            "text_color_source": extract_property_source(
+                element_data["color"]
+            ),
+            "background_color": text_bg,
+            "background_color_source": extract_property_source(
+                element_data["background-color"]
+            ),
+            # Font and contrast results
+            "font_size_px": font_size,
+            "font_weight": font_weight,
+            "is_large_text": is_large,
+            "contrast_ratio": contrast_ratio,
+            "wcag_aa_pass": aa_results,
+            "wcag_aaa_pass": aaa_results,
+            "contrast_analysis": contrast_analysis,
+        }
+
+        # add to results
+        contrast_results.append(element_result)
+    return contrast_results
+
+
+def get_direct_text(element: dict) -> str:
+    """returns whether the element contains direct text
+
+    Direct text means text rendered directly through an element. For example,
+    in the following code: `<p><strong>Hey, everybody!</strong></p>`, only
+    the `<strong>` element directly renders text (not the `<p>`). This is
+    because the `<p>` could fail color contrast and the `<strong>` could
+    pass. As long as the text itself passes color contrast, it doesn't matter
+    if the `<p>` that contains the `<strong>` element does not.
+
+    Args:
+        element: the computed colors and size of an element.
+
+    Returns:
+        str: the direct text if any otherwise an empty string.
+    """
+    if element.name in [
+        "html",
+        "head",
+        "title",
+        "meta",
+        "link",
+        "script",
+        "style",
+    ]:
+        return ""
+    else:
+        for content in element.contents:
+            if isinstance(content, NavigableString):
+                if content.strip():
+                    return content.strip()
+    return ""
+
+
+def extract_property_source(property_data: dict) -> dict:
+    """
+    Extract source information from a computed property.
+
+    Args:
+        property_data (dict): Property dictionary with metadata
+
+    Returns:
+        dict: Source information for reporting
+    """
+    if not property_data:
+        return {
+            "source_type": "missing",
+            "css_file": None,
+            "selector": None,
+            "inherited_from": None,
+        }
+
+    source_type = property_data.get("source", "unknown")
+
+    if source_type == "inheritance":
+        return {
+            "source_type": "inherited",
+            "css_file": property_data.get("css_file"),
+            "selector": property_data.get("selector"),
+            "inherited_from": getattr(
+                property_data.get("inherited_from"), "name", None
+            ),
+        }
+    elif source_type == "visual_inheritance":
+        inherited_element = property_data.get("inherited_from")
+        return {
+            "source_type": "visual_inheritance",
+            "css_file": "visual_cascade",
+            "selector": "ancestor_background",
+            "inherited_from": getattr(inherited_element, "name", None)
+            if inherited_element
+            else None,
+        }
+    elif source_type == "rule":
+        return {
+            "source_type": "css_rule",
+            "css_file": property_data.get("css_file"),
+            "selector": property_data.get("selector"),
+            "inherited_from": None,
+        }
+    elif source_type == "default":
+        return {
+            "source_type": "browser_default",
+            "css_file": "user_agent_stylesheet",
+            "selector": element_name_or_default(property_data),
+            "inherited_from": None,
+        }
+    else:
+        return {
+            "source_type": source_type,
+            "css_file": property_data.get("css_file"),
+            "selector": property_data.get("selector"),
+            "inherited_from": None,
+        }
+
+
+def element_name_or_default(property_data: dict) -> str:
+    """Get element name for default styling or fallback."""
+    # You might need to pass element context here
+    return "default"
 
 
 if __name__ == "__main__":

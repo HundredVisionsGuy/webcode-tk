@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 
+from webcode_tk.contrast_tools import classify_font_unit
 from webcode_tk.contrast_tools import convert_font_size_to_pixels
 from webcode_tk.contrast_tools import get_parent_font_size
 
@@ -99,3 +100,26 @@ class TestGetParentFontSize:
     def test_get_parent_font_size_none_element(self):
         result = get_parent_font_size(None, {})
         assert result == 16.0
+
+
+class TestClassifyFontUnit:
+    """Test classify_font_unit function"""
+
+    def test_classify_absolute_units(self):
+        assert classify_font_unit("16px") == "absolute"
+        assert classify_font_unit("12pt") == "absolute"
+        assert classify_font_unit("1in") == "absolute"
+
+    def test_classify_relative_units(self):
+        assert classify_font_unit("1.5em") == "relative"
+        assert classify_font_unit("2rem") == "relative"
+        assert classify_font_unit("120%") == "relative"
+
+    def test_classify_keyword_units(self):
+        assert classify_font_unit("larger") == "relative_keyword"
+        assert classify_font_unit("smaller") == "relative_keyword"
+        assert classify_font_unit("large") == "absolute_keyword"
+        assert classify_font_unit("medium") == "absolute_keyword"
+
+    def test_classify_unknown_units(self):
+        assert classify_font_unit("invalid") == "unknown"
