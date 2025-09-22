@@ -153,19 +153,19 @@ def test_is_hex_for_invalid_number_digits():
 
 
 def test_contrast_ratio_for_3_digit_favorite_and_white():
-    expected = 5.99
+    expected = 6.0
     results = color.contrast_ratio(favorite_hex_3_digits, white_3_digits)
     assert results == expected
 
 
 def test_contrast_ratio_for_inverted_indigo_white(indigo_rgb):
-    expected = 12.95
+    expected = 13.0
     results = color.contrast_ratio("#4B0082", "#ffffff")
     assert expected == results
 
 
 def test_contrast_ratio_for_aquamarine_and_white():
-    expected = 1.22
+    expected = 1.2
     results = color.contrast_ratio(aquamarine, white)
     assert expected == results
 
@@ -334,9 +334,9 @@ def test_to_hex(color_code, output):
             radial_gradient,
             "#ffffff",
             [
-                (1.12, "#d7f8f7", "#ffffff", "#ffffff", False),
-                (1.37, "#bee4d2", "#ffffff", "#ffffff", False),
-                (1.74, "#fab2ac", "#ffffff", "#ffffff", False),
+                (1.1, "#d7f8f7", "#ffffff", "#ffffff", False),
+                (1.4, "#bee4d2", "#ffffff", "#ffffff", False),
+                (1.7, "#fab2ac", "#ffffff", "#ffffff", False),
                 (2.0, "rgb(237, 161, 193)", "#ffffff", "#ffffff", False),
             ],
         ),

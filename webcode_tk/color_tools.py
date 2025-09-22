@@ -613,11 +613,9 @@ def contrast_ratio(hex1: str, hex2: str) -> float:
         l1 = l2
         l2 = temp
     ratio = (l1 + 0.05) / (l2 + 0.05)
-    # get the ratio to 2 decimal places without rounding
-    ratio_string = str(ratio)
-    dot_pos = ratio_string.index(".")
-    ratio_string = ratio_string[: dot_pos + 3]
-    return float(ratio_string)
+    # round to 1 decimal place
+    ratio = round(ratio, 1)
+    return ratio
 
 
 def get_color_type(code: str) -> str:

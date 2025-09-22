@@ -816,7 +816,7 @@ def test_get_project_color_contrast_for_header_h1_in_large(large_project_path):
         if matching_result:
             is_large = result[2] == "Large AAA"
             expected.append(is_large)
-            contrast_is_correct = result[5] == 4.46
+            contrast_is_correct = result[5] == 4.5
             expected.append(contrast_is_correct)
             break
     if expected:

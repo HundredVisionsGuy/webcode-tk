@@ -134,7 +134,7 @@ def test_element_for_link_styles():
 
 
 def test_single_link_for_contrast_ratio(single_file_link):
-    expected = 12.45
+    expected = 12.5
     results = single_file_link.contrast_data.get("ratio")
     assert results == expected
 
@@ -531,8 +531,8 @@ def radial_gradient_section(radial_gradient_children):
 def test_radial_gradient_section_for_contrast_ratio_failure(
     radial_gradient_section,
 ):
-    # contrast should fail at 4.08
-    expected_results = 4.08
+    # contrast should fail at 4.1
+    expected_results = 4.1
     actual_contrast_data = radial_gradient_section.contrast_data
     actual_results = actual_contrast_data.get("ratio")
     assert expected_results == actual_results
@@ -557,7 +557,7 @@ def test_horizontal_gradient_for_expected_child_ratio(
 ):
     child = horizontal_gradient_section.children[0]
     actual_ratio = child.contrast_data.get("ratio")
-    expected_ratio = 2.44
+    expected_ratio = 2.4
     assert actual_ratio == expected_ratio
 
 
@@ -650,7 +650,7 @@ def test_gallery_for_applied_colors_to_figcaption(gallery_tree):
     expected = (
         color == "black"
         and bg_color == "whitesmoke"
-        and contrast_ratio == 19.26
+        and contrast_ratio == 19.3
     )
     assert expected
 

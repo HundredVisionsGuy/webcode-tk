@@ -84,6 +84,97 @@ CONTRAST_RELEVANT_PROPERTIES = {
 }
 
 
+def generate_contrast_report(
+    project_path: str, wcag_level: str = "AAA"
+) -> list[str]:
+    """returns a report on a project's color contrast results.
+
+    Gets all contrast results (all elements that contains text), filters out
+    warning entries, identify any failures. If there are no failures in a doc,
+    then append a single pass for the file. Append a fail message for each
+    element that fails to mee contrast requirement.
+
+    Example Output:
+    [
+        "pass: index.html passes color contrast.",
+        "fail: in about.html, the <h1> element failed WCAG AA contrast
+            requirements (ratio: 3.2, required: 4.5).",
+        "fail: in about.html, the <p class='intro'> element failed WCAG AA
+            contrast requirements (ratio: 2.1, required: 4.5).",
+        "pass: contact.html passes color contrast.",
+        "fail: in gallery.html, the <a id='nav-home'> element failed WCAG AA
+            contrast requirements (indeterminate due to background image)."
+    ]
+
+    Args:
+        project_path: the web project's root folder.
+        wcag_level: the WCAG level (AAA or AA).
+
+    Returns:
+        report: the list of strings to determine whether a page passes
+            or fails.
+
+    """
+    report = []
+    project_files = {}
+    wcag_level_key = f"wcag_{wcag_level}_pass".lower()
+
+    # Collect data from project folder
+    contrast_data = analyze_contrast(project_path)
+
+    # Analayze documents
+    for item in contrast_data:
+        current_file = item.get("filename")
+        if current_file not in project_files:
+            project_files[current_file] = []
+
+        # Check if fails WCAG level
+        result = item.get(wcag_level_key)
+        if result:
+            result = result.lower()
+        else:
+            warning_msg = item.get("warning_message")
+            warning_msg = "fail: " + warning_msg
+            project_files[current_file].append(warning_msg)
+            continue
+        if result == "fail":
+            # collect data
+            element = item.get("element_tag")
+            is_large = item.get("is_large_text")
+            if is_large:
+                if wcag_level == "AAA":
+                    target_ratio = WCAG_AAA_LARGE
+                else:
+                    target_ratio = WCAG_AA_LARGE
+            else:
+                if wcag_level == "AAA":
+                    target_ratio = WCAG_AAA_NORMAL
+                else:
+                    target_ratio = WCAG_AA_NORMAL
+            actual_ratio = item.get("contrast_ratio")
+            actual_ratio = round(actual_ratio, 1)
+
+            # append fail message to project_files
+            msg = f"{result}: in {current_file}, the {element} failed WCAG "
+            msg += f"{wcag_level} contrast requirements (ratio: "
+            msg += f"{actual_ratio}, required: {target_ratio})."
+            project_files[current_file].append(msg)
+
+    # Check for html docs with no fails.
+    for file in project_files:
+        errors = project_files.get(file)
+        if errors:
+            if "has no CSS" in errors[0]:
+                report.append(errors[0])
+            else:
+                report.extend(errors)
+        else:
+            msg = f"pass: {file} passes color contrast."
+            report.append(msg)
+
+    return report
+
+
 def analyze_contrast(project_folder: str) -> list[dict]:
     """
     Analyzes color contrast for all HTML documents in the given project
@@ -1371,6 +1462,9 @@ def analyze_elements_for_contrast(
         text_bg = element_data["background-color"].get("value")
         bg_hex = color_tools.get_hex(text_bg)
         contrast_ratio = color_tools.contrast_ratio(color_hex, bg_hex)
+
+        # Round to 1 decimal place before running the report
+        contrast_ratio = round(contrast_ratio, 1)
         contrast_report = color_tools.get_color_contrast_report(
             color_hex, bg_hex
         )
@@ -1519,4 +1613,5 @@ def element_name_or_default(property_data: dict) -> str:
 
 if __name__ == "__main__":
     project_path = "tests/test_files/large_project/"
-    contrast_results = analyze_contrast(project_path)
+    contrast_results = generate_contrast_report(project_path, "AA")
+    print(contrast_results)
