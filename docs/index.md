@@ -22,11 +22,12 @@ I have other helper tools that work with the html_tools and css_tools. I have in
 4. [cascade_tools.py](reference/cascade_tools.md)
 5. [color_tools.py](reference/color_tools.md)
 6. [color_keywords.py](reference/color_keywords.md)
-7. [animation_tools.py](reference/animation_tools.md)
-8. [ux_tools.py](reference/ux_tools.md)
-9. [utils.py](reference/utils.md)
-10. [validator_tools.py](reference/validator_tools.md)
-11. [Explanation](explanation.md)
+7. [contrast_tools.py](reference/contrast_tools.md)
+8. [animation_tools.py](reference/animation_tools.md)
+9. [ux_tools.py](reference/ux_tools.md)
+10. [utils.py](reference/utils.md)
+11. [validator_tools.py](reference/validator_tools.md)
+12. [Explanation](explanation.md)
 
 Quickly find what you're looking for depending on
 your use case by looking at the different pages.
