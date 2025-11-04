@@ -1,3 +1,4 @@
+import json
 import os
 import re
 
@@ -100,6 +101,9 @@ def get_markup_validity(file_path: str) -> list:
 
         r = requests.post(w3cURL, data=payload, headers=headers)
         errors = r.json()
+        print("Errors as JSON = ")
+        pretty_errors = json.dumps(errors, indent=4)
+        print(pretty_errors)
         errors = errors.get("messages")
 
         # raise the alarm if the response code is not 200
