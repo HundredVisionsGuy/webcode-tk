@@ -100,24 +100,20 @@ request_too_many_requests = 429
 bad_request = 400
 project_folder = "tests/test_files/project"
 
-# no_error_results equals
-# val
-# dot
-# get_markup_validity(
-# with html_file_with_no_errors
-# )
+# change the string to actual validator function just to check
+no_error_results = "val.get_markup_validity(html_file_with_no_errors)"
+print(no_error_results)
 
 
 # Process CSS
 css_errors = []
-# Will mock this later using:
-# val
-#     dot
-# validate_css
-#     with
-# (invalid_css_code)
-css_errors_list = val.get_css_errors_list(css_errors)
 
+# try validate_css on invalid and valid code and get the JSON object
+print(css_errors)
+
+# change the string to actual validator function
+css_errors_list = "val.get_css_errors_list(css_errors)"
+print(valid_css_code)
 
 @pytest.fixture
 def valid_css_results():
