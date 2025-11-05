@@ -955,7 +955,11 @@ def test_get_font_families_for_at_import_url():
 def test_get_all_project_stylesheets_for_large_project(large_project_path):
     expected = 4
     sheets = css_tools.get_all_project_stylesheets(large_project_path)
-    results = len(sheets[0][1])
+    results = 0
+    for file in sheets:
+        if file[0] == "about.html":
+            results = len(file[1])
+
     assert expected == results
 
 
