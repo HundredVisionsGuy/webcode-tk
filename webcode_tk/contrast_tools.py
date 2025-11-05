@@ -169,9 +169,20 @@ def generate_contrast_report(
             else:
                 report.extend(errors)
         else:
-            msg = f"pass: {file} passes color contrast."
+            # Check for global selectors (html, *, or body) and calculate
+            # contrast
+            global_color_result = css_tools.get_global_color_report(
+                project_path
+            )
+            if isinstance(global_color_result, list):
+                for result in global_color_result:
+                    if "fail" in result:
+                        if file in result:
+                            error_msg = result.split(file)[1]
+                            msg = f"fail: in {file}, {error_msg.strip()}"
+                    else:
+                        msg = f"pass: {file} passes color contrast."
             report.append(msg)
-
     return report
 
 
@@ -194,7 +205,7 @@ def analyze_contrast(project_folder: str) -> list[dict]:
 
     # Analyze CSS Files
     for html_doc in parsed_html_docs:
-        doc_results = analyze_css(html_doc, css_files)
+        doc_results = analyze_css(html_doc, css_files, project_folder)
         project_contrast_results.extend(doc_results)
     return project_contrast_results
 
@@ -368,7 +379,9 @@ def append_style_data(
     css_source[html_file].append(data)
 
 
-def analyze_css(html_doc: dict, css_files: list[dict]) -> list[dict]:
+def analyze_css(
+    html_doc: dict, css_files: list[dict], project_path=""
+) -> list[dict]:
     """
     Analyzes CSS application and color contrast for a single HTML document.
 
@@ -452,7 +465,6 @@ def analyze_css(html_doc: dict, css_files: list[dict]) -> list[dict]:
                 "warning_impact": warning["impact"],
             }
             doc_results.append(warning_result)
-
     return doc_results
 
 
@@ -1613,6 +1625,6 @@ def element_name_or_default(property_data: dict) -> str:
 
 if __name__ == "__main__":
     project_path = "tests/test_files/large_project/"
-    project_path = "tests/test_files/color_contrast_test/"
+    project_path = "tests/test_files/contrast_tool_test/"
     contrast_results = generate_contrast_report(project_path, "AAA")
     print(contrast_results)
