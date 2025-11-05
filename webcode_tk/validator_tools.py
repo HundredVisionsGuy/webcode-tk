@@ -4,7 +4,6 @@ import re
 import bs4
 import mechanicalsoup
 import requests
-import time
 from bs4 import BeautifulSoup
 from file_clerk import clerk
 
@@ -101,7 +100,6 @@ def get_markup_validity(file_path: str) -> list:
         }
 
         r = requests.post(w3cURL, data=payload, headers=headers)
-        print(r.headers)
         try:
             errors = r.json()
             errors = errors.get("messages")
@@ -256,13 +254,15 @@ def get_validation_by_browser(file_path: str) -> list:
             results = browser.get_current_page().select("div#results")
     except Exception:
         # Convert the file "no_css_connection.html" into a soup tag object
-        no_connection_code = "<h1>Sorry, but we could not make a connection</h1>"
+        no_connection_code = (
+            "<h1>Sorry, but we could not make a connection</h1>"
+        )
         no_connection_code += "<h2>Please try later</h2>"
         soup = BeautifulSoup(no_connection_code, "lxml")
         # Convert string to result set
         results = soup.contents
-    print(f"Results\n{results}")
     return results
+
 
 def validate_css(css_code: str) -> bs4.ResultSet:
     """Validates CSS and returns the results from the css-validator.
@@ -296,7 +296,6 @@ def validate_css(css_code: str) -> bs4.ResultSet:
         soup = BeautifulSoup(no_connection_code, "lxml")
         # Convert string to result set
         results = soup.select("#results_container")
-    print(f"Results\n{results}")
     return results
 
 
