@@ -4,6 +4,7 @@ import re
 import bs4
 import mechanicalsoup
 import requests
+import time
 from bs4 import BeautifulSoup
 from file_clerk import clerk
 
@@ -101,8 +102,12 @@ def get_markup_validity(file_path: str) -> list:
 
         r = requests.post(w3cURL, data=payload, headers=headers)
         print(r.headers)
-        errors = r.json()
-        errors = errors.get("messages")
+        try:
+            errors = r.json()
+            errors = errors.get("messages")
+        except Exception:
+            # We need to use the web browser
+            errors = get_validation_by_browser(file_path)
 
         # raise the alarm if the response code is not 200
         if r.status_code != 200:
@@ -221,6 +226,43 @@ def is_css_valid(validator_results):
     soup = BeautifulSoup(str(validator_results[0]), "html.parser")
     return bool(soup.find(id="congrats"))
 
+
+def get_validation_by_browser(file_path: str) -> list:
+    """Validates HTML using the browser.
+
+    This function will get the HTML code by file and use the mechanical
+    soup browser to get validator results as a ResultSet.
+
+    Args:
+        css_code: CSS code in the form of a string.
+
+    Returns:
+        results: A ResultSet of Tag objects.
+    """
+    # Get HTML code from file path
+    html_code = clerk.file_to_string(file_path)
+    try:
+        response = browser.open("https://validator.w3.org/")
+        if not response.ok:
+            response = browser.open("https://validator.w3.org/nu/#textarea")
+            browser.select_form("form")
+            browser["doc"] = html_code
+            browser.submit_selected()
+            results = browser.get_current_page().select("div#results")
+        else:
+            browser.select_form("#validate-by-input form")
+            browser["fragment"] = html_code
+            browser.submit_selected()
+            results = browser.get_current_page().select("div#results")
+    except Exception:
+        # Convert the file "no_css_connection.html" into a soup tag object
+        no_connection_code = "<h1>Sorry, but we could not make a connection</h1>"
+        no_connection_code += "<h2>Please try later</h2>"
+        soup = BeautifulSoup(no_connection_code, "lxml")
+        # Convert string to result set
+        results = soup.contents
+    print(f"Results\n{results}")
+    return results
 
 def validate_css(css_code: str) -> bs4.ResultSet:
     """Validates CSS and returns the results from the css-validator.
