@@ -1613,5 +1613,6 @@ def element_name_or_default(property_data: dict) -> str:
 
 if __name__ == "__main__":
     project_path = "tests/test_files/large_project/"
-    contrast_results = generate_contrast_report(project_path, "AA")
+    project_path = "tests/test_files/color_contrast_test/"
+    contrast_results = generate_contrast_report(project_path, "AAA")
     print(contrast_results)
