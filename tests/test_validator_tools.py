@@ -1,4 +1,4 @@
-import pytest
+from bs4 import BeautifulSoup
 
 from webcode_tk import validator_tools as val
 
@@ -18,12 +18,6 @@ invalid_css_code = """ body {
 html_file_with_errors = "tests/test_files/sample_with_errors.html"
 # Add mocks
 
-# invalid_markup equals
-# val dot
-# get_markup_validity
-# (
-# html_file_with_errors
-# )
 
 invalid_json_response = {
     "version": "25.11.4",
@@ -109,20 +103,12 @@ print(no_error_results)
 css_errors = []
 
 # try validate_css on invalid and valid code and get the JSON object
-print(css_errors)
+# css_errors = val.validate_css(invalid_css_code)
+# print(css_errors)
 
 # change the string to actual validator function
-css_errors_list = "val.get_css_errors_list(css_errors)"
-print(valid_css_code)
-
-
-@pytest.fixture
-def valid_css_results():
-    results = []
-    # Will mock later
-    # mocking validate_css from val with (valid_css_code)
-    yield results
-
+# css_errors_list = val.get_css_errors_list(css_errors)
+# print(valid_css_code)
 
 # The following should be fixed in the next commit
 
@@ -149,11 +135,31 @@ def test_get_markup_validity_for_no_errors():
     assert not results
 
 
-def test_get_markup_validity_for_5_items():
-    # will mock get_markup_validity using len() function
-    results = 5
-    expected = 5
-    assert results == expected
+def test_get_markup_validity_with_mocked_json(mocker):
+    # Mock file reading
+    mock_file = mocker.mock_open(
+        read_data="<html><h1 name='heading'>Sample</h1></html>"
+    )
+    mocker.patch("builtins.open", mock_file)
+
+    # Mock requests.post
+    mock_response = mocker.Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = invalid_json_response
+    mocker.patch(
+        "webcode_tk.validator_tools.requests.post", return_value=mock_response
+    )
+
+    # Call the function
+    result = val.get_markup_validity("fake_path.html")
+
+    # Assertions
+    assert isinstance(result, list)
+    assert len(result) == len(invalid_json_response["messages"])
+    assert result[0]["type"] == "info"
+    assert "style" in result[0]["message"]
+    assert result[1]["type"] == "error"
+    assert "Attribute" in result[1]["message"]
 
 
 def test_get_html_file_names_for_test_files_project_folder():
@@ -218,12 +224,66 @@ def test_validate_css_with_no_errors():
     assert results
 
 
-def test_validate_css_with_errors():
-    # Need to mock this with validate_css using invalid_css_results
-    results = True
-    # Will assert that results are equal to valid_css_results
-    invalid_css_results = True
-    assert results == invalid_css_results
+def test_validate_css_with_errors(mocker):
+    mock_browser = mocker.MagicMock()
+
+    mock_response = mocker.Mock()
+    mock_response.ok = True
+    mock_browser.open.return_value = mock_response
+    mock_browser.select_form.return_value = None
+    mock_browser.submit_selected.return_value = None
+
+    # Create a realistic ResultSet using BeautifulSoup
+    html = """
+    <div id="results_container">
+        <h2>W3C CSS Validator results for TextArea (CSS level 3 + SVG)</h2>
+        <div id="errors">
+            <h3>Sorry! We found the following errors (2)</h3>
+            <div class="error-section-all">
+                <div class="error-section">
+                    <h4>URI : TextArea</h4>
+                    <table>
+                        <tr class="error">
+                            <td class="linenumber" title="Line 3">3</td>
+                            <td class="codeContext"> body </td>
+                            <td class="parse-error">
+                                Value Error : font-size
+                                Unknown dimension
+                                <span class="skippedString">100pct</span>
+                            </td>
+                        </tr>
+                        <tr class="error">
+                            <td class="linenumber" title="Line 9">9</td>
+                            <td class="codeContext"> p </td>
+                            <td class="parse-error">
+                                Property <code>align</code> doesn't exist :
+                                <span class="exp">left</span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    """
+    soup = BeautifulSoup(html, "lxml")
+    mock_resultset = soup.select("#results_container")
+
+    # Mock get_current_page().select() to return the ResultSet
+    mock_browser.get_current_page.return_value.select.return_value = (
+        mock_resultset
+    )
+
+    # Patch the browser used in your function
+    mocker.patch("webcode_tk.validator_tools.browser", mock_browser)
+
+    # Call the function
+    result = val.validate_css("body { font-size: 100pct; } p { align: left; }")
+
+    # Assertions
+    assert isinstance(result, list)
+    assert len(result) == 1
+    assert "Sorry! We found the following errors" in result[0].text
 
 
 def test_get_project_validation_for_project_css_fail():

@@ -1,4 +1,3 @@
-import json
 import os
 import re
 
@@ -103,9 +102,6 @@ def get_markup_validity(file_path: str) -> list:
         r = requests.post(w3cURL, data=payload, headers=headers)
         print(r.headers)
         errors = r.json()
-        print("Errors as JSON = ")
-        pretty_errors = json.dumps(errors, indent=4)
-        print(pretty_errors)
         errors = errors.get("messages")
 
         # raise the alarm if the response code is not 200
@@ -258,6 +254,7 @@ def validate_css(css_code: str) -> bs4.ResultSet:
         soup = BeautifulSoup(no_connection_code, "lxml")
         # Convert string to result set
         results = soup.select("#results_container")
+    print(f"Results\n{results}")
     return results
 
 
