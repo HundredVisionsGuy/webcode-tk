@@ -409,7 +409,7 @@ def hex_to_decimal(c: str) -> int:
         msg += "2 digits"
         raise ValueError(msg)
     if c[0].lower() not in hex_map.keys():
-        raise ValueError(f"The value `{c}` is not a valid hex code.")
+        raise ValueError(f"The value {repr(c)} is not a valid hex code.")
     c = c.lower()
     ones = hex_map[c[1]]
     sixteens = hex_map[c[0]] * 16

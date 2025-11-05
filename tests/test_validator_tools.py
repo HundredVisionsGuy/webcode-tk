@@ -115,6 +115,7 @@ print(css_errors)
 css_errors_list = "val.get_css_errors_list(css_errors)"
 print(valid_css_code)
 
+
 @pytest.fixture
 def valid_css_results():
     results = []

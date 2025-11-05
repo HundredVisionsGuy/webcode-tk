@@ -97,7 +97,7 @@ def get_markup_validity(file_path: str) -> list:
         headers = {
             "content-type": "text/html; charset=utf-8",
             "Accept-Charset": "UTF-8",
-            'User-Agent': 'python-requests/2.32.5'
+            "User-Agent": "python-requests/2.32.5",
         }
 
         r = requests.post(w3cURL, data=payload, headers=headers)
