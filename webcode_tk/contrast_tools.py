@@ -158,7 +158,8 @@ def generate_contrast_report(
             msg = f"{result}: in {current_file}, the {element} failed WCAG "
             msg += f"{wcag_level} contrast requirements (ratio: "
             msg += f"{actual_ratio}, required: {target_ratio})."
-            project_files[current_file].append(msg)
+            if msg not in project_files[current_file]:
+                project_files[current_file].append(msg)
 
     # Check for html docs with no fails.
     for file in project_files:
@@ -182,6 +183,7 @@ def generate_contrast_report(
                             msg = f"fail: in {file}, {error_msg.strip()}"
                     else:
                         msg = f"pass: {file} passes color contrast."
+
             report.append(msg)
     return report
 
@@ -402,6 +404,9 @@ def analyze_css(
     filename = html_doc["filename"]
     soup = html_doc["soup"]
 
+    # Check to see if background color was set globally
+    global_bg = detect_document_background(project_path, filename)
+
     # Check for CSS sources and create warnings if needed
     warnings = []
 
@@ -417,7 +422,7 @@ def analyze_css(
         )
 
     # Step 1: Apply default styles to all elements
-    default_styles = apply_browser_defaults(soup)
+    default_styles = apply_browser_defaults(soup, default_bg=global_bg)
 
     # Find CSS rules specific to this HTML document
     doc_css_rules = get_css_rules_for_document(filename, css_files)
@@ -468,6 +473,43 @@ def analyze_css(
     return doc_results
 
 
+def detect_document_background(project_path: str, filename: str) -> str:
+    """
+    Detect global background color from CSS rules for this document.
+
+    Args:
+        project_path: Path to project root
+        filename: Name of current HTML file
+
+    Returns:
+        str: Background color hex value, or DEFAULT_GLOBAL_BACKGROUND if
+            none found
+    """
+    # Get global colors for entire project
+    global_colors = css_tools.get_project_global_colors(project_path)
+
+    # Find entry for this specific HTML file
+    for file_path, color_data_list in global_colors.items():
+        # Match filename (handle both full path and just filename)
+        if filename in file_path:
+            # color_data_list is a list of dicts with global selector info
+            for color_data in color_data_list:
+                # Look for body selector specifically
+                if color_data.get("selector") == "body":
+                    bg_color = color_data.get("background-color")
+                    if bg_color:
+                        return bg_color
+
+                # Also check for html or * selectors
+                if color_data.get("selector") in ["html", "*"]:
+                    bg_color = color_data.get("background-color")
+                    if bg_color:
+                        return bg_color
+
+    # No global background found, use default white
+    return DEFAULT_GLOBAL_BACKGROUND
+
+
 def has_any_css_sources(soup: BeautifulSoup) -> bool:
     """
     Check if HTML document has any CSS sources (external or internal).
@@ -495,7 +537,9 @@ def has_any_css_sources(soup: BeautifulSoup) -> bool:
     return False
 
 
-def apply_browser_defaults(soup: BeautifulSoup) -> dict:
+def apply_browser_defaults(
+    soup: BeautifulSoup, default_bg: str = DEFAULT_GLOBAL_BACKGROUND
+) -> dict:
     """
     Apply browser default styles to all elements with text content.
 
@@ -516,7 +560,7 @@ def apply_browser_defaults(soup: BeautifulSoup) -> dict:
                     "is_default": True,
                 },
                 "background-color": {
-                    "value": DEFAULT_GLOBAL_BACKGROUND,
+                    "value": default_bg,
                     "specificity": default_specificity,
                     "source": "default",
                     "is_default": True,
@@ -1627,4 +1671,6 @@ if __name__ == "__main__":
     project_path = "tests/test_files/large_project/"
     project_path = "tests/test_files/contrast_tool_test/"
     contrast_results = generate_contrast_report(project_path, "AAA")
+    global_colors = css_tools.get_project_global_colors(project_path)
+    print(global_colors)
     print(contrast_results)

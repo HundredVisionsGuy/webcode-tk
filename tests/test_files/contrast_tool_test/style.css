@@ -1,4 +1,10 @@
 body {
-    color:aliceblue;
-    background-color: beige;
+    color: aliceblue;
+    background-color: #e7e7c7;
+}
+h1, h2, h3 {
+    color: #336699;
+}
+a {
+    color: #FFA600;
 }
