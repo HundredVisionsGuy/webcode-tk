@@ -130,6 +130,13 @@ path_to_general_css = "tests/test_files/large_project/css/general.css"
 
 
 @pytest.fixture
+def global_color_report_failure():
+    project_path = "tests/test_files/contrast_tool_test/"
+    global_colors_fail_result = css_tools.get_global_color_report(project_path)
+    return global_colors_fail_result[0]
+
+
+@pytest.fixture
 def large_project_path():
     return "tests/test_files/large_project/"
 
@@ -238,6 +245,14 @@ def navigation_styles():
     styles = clerk.file_to_string(path)
     sheet = css_tools.Stylesheet("navigation.css", styles)
     yield sheet
+
+
+def test_get_global_color_report_for_correct_fail_formatting(
+    global_color_report_failure,
+):
+    result = global_color_report_failure
+    expected = "fail:" in result[:5]
+    assert expected
 
 
 def test_css_with_variables_for_replaced_var_functions():

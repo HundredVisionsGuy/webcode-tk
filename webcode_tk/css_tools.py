@@ -2458,7 +2458,10 @@ def get_global_color_report(project_dir: str, level="aaa") -> list:
             if global_color_data:
                 for item in global_color_data:
                     file, result = get_color_data(filename, item, level)
-                    passes.append(f"pass: {file} {result}")
+                    if "fail" in result:
+                        passes.append(f"fail: {file} {result}")
+                    else:
+                        passes.append(f"pass: {file} {result}")
         if passes:
             details = ""
             for detail in passes:
@@ -2877,3 +2880,7 @@ if __name__ == "__main__":
     rulesets = get_element_rulesets(
         "tests/test_files/cascade_complexities", "figure"
     )
+    passing_global_colors = get_global_color_report(project_folder)
+    project_path = "tests/test_files/contrast_tool_test/"
+    global_colors = get_global_color_report(project_path)
+    print(global_colors)

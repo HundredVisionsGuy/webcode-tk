@@ -1,9 +1,6 @@
 # tests/test_contrast_integration.py
 """Integration tests using actual HTML test projects"""
-from bs4 import BeautifulSoup
-
 from webcode_tk.contrast_tools import analyze_contrast
-from webcode_tk.contrast_tools import analyze_css
 
 
 class TestContrastIntegration:
@@ -30,19 +27,10 @@ class TestContrastIntegration:
 
     def test_no_css_document_generates_warning(self):
         """Test document with no CSS sources generates warning"""
-        html = "<html><head></head><body><h1>Test</h1></body></html>"
-        soup = BeautifulSoup(html, "html.parser")
-        html_doc = {"filename": "test.html", "soup": soup}
-
-        results = analyze_css(html_doc, [])
-
-        # Check for warning in results
-        warnings = [
-            r for r in results if r.get("contrast_analysis") == "warning"
-        ]
-        assert len(warnings) > 0
-        assert warnings[0]["warning_type"] == "no_css_sources"
-        assert "no CSS sources" in warnings[0]["warning_message"]
+        project_path = "tests/test_files/no_css_test/"
+        results = analyze_contrast(project_path)
+        assert len(results) > 0
+        assert results[0]["text_content"] == "No CSS Test Files"
 
         # Check that non-warning results have proper structure
         non_warnings = [

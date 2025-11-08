@@ -493,6 +493,10 @@ def detect_document_background(project_path: str, filename: str) -> str:
         # Match filename (handle both full path and just filename)
         if filename in file_path:
             # color_data_list is a list of dicts with global selector info
+            if isinstance(color_data_list, dict):
+                color_data_list = [
+                    color_data_list,
+                ]
             for color_data in color_data_list:
                 # Look for body selector specifically
                 if color_data.get("selector") == "body":
@@ -1671,6 +1675,7 @@ if __name__ == "__main__":
     project_path = "tests/test_files/large_project/"
     project_path = "tests/test_files/contrast_tool_test/"
     contrast_results = generate_contrast_report(project_path, "AAA")
+    project_path = "tests/test_files/contrast_tool_test/"
     global_colors = css_tools.get_project_global_colors(project_path)
     print(global_colors)
     print(contrast_results)
