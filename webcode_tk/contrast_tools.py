@@ -690,7 +690,10 @@ def compute_element_styles(
             after applying CSS cascade and inheritance.
     """
     # Step 1: Start with default styles
-    computed_styles = copy.deepcopy(default_styles)
+    computed_styles = {
+        element: copy.deepcopy(styles)
+        for element, styles in default_styles.items()
+    }
 
     # Step 2: Apply all CSS rules (cascade resolution)
     for rules_list in css_rules:
@@ -999,7 +1002,9 @@ def apply_rule_to_element(
                         if css_source_info
                         else None,
                     }
-
+    if element.name == "body" and property_name == "background-color":
+        print("DEBUG: Applied background-color to body: ")
+        print(f"{computed_styles[element]['background-color']}")
     return
 
 
@@ -1202,7 +1207,13 @@ def apply_visual_background_inheritance(computed_styles: dict) -> None:
 
             # Skip if element already has background-color
             if "background-color" in element_styles:
-                continue
+                bg_source = element_styles["background-color"].get("source")
+                if bg_source in ["rule", "visual_inheritance"]:
+                    continue  # Has explicit CSS rule, don't inherit
+                # Otherwise, default needs to be replaced by visual inheritance
+                else:
+                    # Has default - remove it to apply visual inheritance
+                    del element_styles["background-color"]
 
             # Check for explicit backgrounds
             if "background" in element_styles:
@@ -1227,7 +1238,8 @@ def apply_visual_background_inheritance(computed_styles: dict) -> None:
 
             # Element needs background inheritance
             ancestor_bg = find_ancestor_background(element, computed_styles)
-
+            if element.name == "a":
+                print(ancestor_bg)
             if ancestor_bg.get("contrast_analysis") == "indeterminate":
                 # Ancestor is indeterminate - propagate that status
                 element_styles["background-color"] = {
@@ -1260,6 +1272,9 @@ def apply_visual_background_inheritance(computed_styles: dict) -> None:
                         else None
                     ),
                 }
+                if element.name == "a":
+                    print("DEBUG: Assigned background to <a>:")
+                    print(f"{element_styles['background-color']}")
                 changes_made = True
 
 
@@ -1394,7 +1409,25 @@ def find_ancestor_background(element: Tag, computed_styles: dict) -> dict:
             'source_element' (ancestor element or None).
     """
     current = element.parent
-
+    if element.name == "a":
+        print("DEBUG: Parent chain for <a>:")
+        temp = element.parent
+        count = 0
+        while temp and count < 10:  # Limit to 10 to avoid infinite loops
+            in_styles = temp in computed_styles
+            has_bg = False
+            bg_src = None
+            if in_styles and "background-color" in computed_styles[temp]:
+                has_bg = True
+                bg_src = computed_styles[temp]["background-color"].get(
+                    "source"
+                )
+            output = f"  {count}. {temp.name} | in_styles={in_styles} | "
+            output += f"has_bg={has_bg} | source={bg_src}"
+            print(output)
+            temp = temp.parent
+            count += 1
+        print("DEBUG: End of chain")
     while current:
         if current in computed_styles:
             current_styles = computed_styles[current]
@@ -1412,8 +1445,13 @@ def find_ancestor_background(element: Tag, computed_styles: dict) -> dict:
                         skip_ancestor = True
                         break  # ✅ Break out of property loop
 
-                    # Accept both "rule" and "default" sources
-                    if bg_source in ["rule", "default"]:
+                    # Accept Accept only explicit CSS rules, skip defaults
+                    if bg_source == "rule":
+                        if element.name == "a":
+                            output = "  - Found ancestor with rule! Element:"
+                            output += f"{current.name}, value: "
+                            output += f"{current_styles[bg_prop]['value']}"
+                            print()
                         bg_value = current_styles[bg_prop]["value"]
 
                         # Does this ancestor already is indeterminate status
