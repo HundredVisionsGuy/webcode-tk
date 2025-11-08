@@ -16,6 +16,11 @@
 
 - **`color_tools`**: processes CSS color related properties and values.
 
+- **`contrast_tools`**: calculates contrast results taking into account how
+          the background is invisible, but still affects contrast on elements
+          even if those elements do not have a background color explicitly
+          applied. It also only checks elements with text in the innerHTML.
+
 - **`css_tools`**: creates Stylesheet objects that store CSS information.
 
 - **`font_tools`**: A collection of functions used to process font-related
@@ -35,4 +40,4 @@
 - **`validator_tools`**: sends HTML or CSS code to the W3C Validator to check
           for errors.
 """
-__version__ = "1.2.6"
+__version__ = "1.2.7"
