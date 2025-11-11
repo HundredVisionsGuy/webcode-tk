@@ -40,7 +40,9 @@ class TestContrastIntegration:
             result = non_warnings[0]
 
             # color inherits by default
-            assert result["text_color_source"]["source_type"] == "inherited"
+            assert (
+                result["text_color_source"]["source_type"] == "browser_default"
+            )
 
             # background color is invisible and doesn't inherit by default
             assert (

@@ -130,6 +130,7 @@ def generate_contrast_report(
 
         # Check if fails WCAG level
         result = item.get(wcag_level_key)
+
         if result:
             result = result.lower()
         else:
@@ -154,37 +155,42 @@ def generate_contrast_report(
             actual_ratio = item.get("contrast_ratio")
             actual_ratio = round(actual_ratio, 1)
 
-            # append fail message to project_files
-            msg = f"{result}: in {current_file}, the {element} failed WCAG "
-            msg += f"{wcag_level} contrast requirements (ratio: "
-            msg += f"{actual_ratio}, required: {target_ratio})."
+            msg = f"{result}: in {current_file}, the <{element}> element"
+            msg += f" WCAG {wcag_level} contrast requirements with a "
+            msg += f"ratio of {actual_ratio} (min: {target_ratio})."
+
             if msg not in project_files[current_file]:
                 project_files[current_file].append(msg)
 
     # Check for html docs with no fails.
     for file in project_files:
         errors = project_files.get(file)
+
+        # Check for global selectors (html, *, or body) and calculate contrast
+        global_color_result = css_tools.get_global_color_report(project_path)
+
+        if isinstance(global_color_result, list):
+            for result in global_color_result:
+                if file in result:
+                    # Always add global color failures
+                    if "fail" in result:
+                        error_msg = result.split(file)[1]
+                        msg = f"fail: in {file}, {error_msg.strip()}"
+                        # Add to errors list if not already there
+                        if msg not in project_files[file]:
+                            project_files[file].append(msg)
+
+        # Now append to report
         if errors:
             if "has no CSS" in errors[0]:
                 report.append(errors[0])
             else:
                 report.extend(errors)
         else:
-            # Check for global selectors (html, *, or body) and calculate
-            # contrast
-            global_color_result = css_tools.get_global_color_report(
-                project_path
-            )
-            if isinstance(global_color_result, list):
-                for result in global_color_result:
-                    if "fail" in result:
-                        if file in result:
-                            error_msg = result.split(file)[1]
-                            msg = f"fail: in {file}, {error_msg.strip()}"
-                    else:
-                        msg = f"pass: {file} passes color contrast."
-
+            # File has no element-level failures
+            msg = f"pass: {file} passes color contrast."
             report.append(msg)
+
     return report
 
 
@@ -553,8 +559,18 @@ def apply_browser_defaults(
     element_styles = {}
     default_specificity = css_tools.get_specificity("")
 
-    for element in soup.find_all():
-        if not element.is_empty_element and element.get_text(strip=True):
+    for element in soup.descendants:
+        # Skip non-tag elements
+        if not isinstance(element, Tag):
+            continue
+
+        # Always include html and body elements for inheritance chain
+        is_structural = element.name in ["html", "body"]
+        has_text = not element.is_empty_element and element.get_text(
+            strip=True
+        )
+
+        if is_structural or has_text:
             # The element object itself becomes the key
             element_styles[element] = {
                 "color": {
@@ -583,6 +599,8 @@ def apply_browser_defaults(
                 },
             }
 
+            if element.name in ["html", "body"]:
+                print(f"  ✓ Added <{element.name}> to element_styles")
             # Apply element-specific defaults
             # Apply link colors
             if element.name == "a":
@@ -689,8 +707,12 @@ def compute_element_styles(
         dict: Dictionary mapping elements to their final computed styles
             after applying CSS cascade and inheritance.
     """
-    # Step 1: Start with default styles
-    computed_styles = copy.deepcopy(default_styles)
+    # ✅ NEW: Shallow copy of dict, deep copy only the style values
+    computed_styles = {}
+    for element, styles in default_styles.items():
+        # Keep the SAME element object (preserves parent relationship)
+        # but deep copy its styles dictionary
+        computed_styles[element] = copy.deepcopy(styles)
 
     # Step 2: Apply all CSS rules (cascade resolution)
     for rules_list in css_rules:
@@ -1122,145 +1144,144 @@ def apply_inheritance(soup: BeautifulSoup, computed_styles: dict) -> None:
 def apply_css_inheritance(computed_styles: dict) -> None:
     """
     Apply traditional CSS inheritance for inheritable properties.
-
-    Args:
-        computed_styles (dict): Dictionary mapping elements to their
-            computed styles (modified in place).
-
-    Returns:
-        None: Modifies computed_styles dictionary in place.
+    Only inherit from the closest ancestor with an explicit rule.
     """
     inheritable_props = {"color", "font-size", "font-weight"}
 
-    for parent_element in computed_styles:
-        parent_styles = computed_styles[parent_element]
+    for child_element in computed_styles:
+        child_styles = computed_styles[child_element]
 
-        # Find all children that also have text content (in computed_styles)
-        children = parent_element.find_all()
-        children_with_styles = [
-            child for child in children if child in computed_styles
-        ]
+        # find closest ancestor with explicit value
+        for prop in inheritable_props:
+            child_prop = child_styles.get(prop)
 
-        for child_element in children_with_styles:
-            child_styles = computed_styles[child_element]
+            # Skip if child has explicit CSS rule (not default)
+            if child_prop and child_prop.get("source") not in [
+                "default",
+                None,
+            ]:
+                continue
 
-            # Apply inheritance for each inheritable property
-            for prop in inheritable_props:
-                parent_prop = parent_styles.get(prop)
+            # Walk up tree to find first ancestor with explicit value
+            current = child_element.parent
+            inherited_value = None
 
-                if parent_prop:  # Parent has this property
-                    child_prop = child_styles.get(prop)
-                    should_inherit = False
+            while current and not inherited_value:
+                if current in computed_styles:
+                    parent_styles = computed_styles[current]
+                    parent_prop = parent_styles.get(prop)
 
-                    if child_prop is None:
-                        # Child has no property at all - inherit
-                        should_inherit = True
-                    elif child_prop.get("source") == "default":
-                        # Child has default style - inheritance wins
-                        should_inherit = True
-                    else:
-                        # Child has explicit CSS rule - don't inherit
-                        should_inherit = False
+                    # Found a parent with this property
+                    if parent_prop:
+                        # Only inherit if parent has explicit rule
+                        if parent_prop.get("source") == "rule":
+                            inherited_value = parent_prop
+                            inherited_from = current
+                            break  # ← Stop at first explicit ancestor
 
-                    if should_inherit:
-                        child_styles[prop] = {
-                            "value": parent_prop["value"],
-                            "specificity": parent_prop["specificity"],
-                            "source": "inheritance",
-                            "selector": parent_prop.get(
-                                "selector", "inherited"
-                            ),
-                            "css_file": parent_prop.get("css_file"),
-                            "css_source_type": parent_prop.get(
-                                "css_source_type"
-                            ),
-                            "inherited_from": parent_element,
-                        }
+                current = current.parent
+
+            # Apply inherited value if found
+            if inherited_value:
+                child_styles[prop] = {
+                    "value": inherited_value["value"],
+                    "specificity": inherited_value["specificity"],
+                    "source": "inheritance",
+                    "selector": inherited_value.get("selector", "inherited"),
+                    "css_file": inherited_value.get("css_file"),
+                    "css_source_type": inherited_value.get("css_source_type"),
+                    "inherited_from": inherited_from,
+                }
 
 
 def apply_visual_background_inheritance(computed_styles: dict) -> None:
     """
-    Apply visual background colors to elements without explicit
-    backgrounds.
+    Apply visual background colors to elements without explicit backgrounds.
 
     Args:
         computed_styles: a dictionary of elements with computed styles.
     Returns:
         None
     """
-    # Track which elements got new backgrounds this iteration
-    changes_made = True
-    max_iterations = 10  # Prevent infinite loops
-    iteration = 0
 
-    while changes_made and iteration < max_iterations:
-        changes_made = False
-        iteration += 1
+    for element in computed_styles:
+        element_styles = computed_styles[element]
 
-        for element in computed_styles:
-            element_styles = computed_styles[element]
+        # Check for BOTH background-color AND background
+        current_bg = element_styles.get("background-color")
+        has_background_shorthand = "background" in element_styles
 
-            # Skip if element already has background-color
-            if "background-color" in element_styles:
-                continue
+        # If element has background shorthand, process it for images
+        if has_background_shorthand:
+            bg_value = element_styles["background"]["value"]
 
-            # Check for explicit backgrounds
-            if "background" in element_styles:
-                bg_value = element_styles["background"]["value"]
-
-                # Check if background contains a raster image
-                if contains_raster_image(bg_value):
-                    # Mark as contrast-indeterminate - cannot analyze
-                    element_styles["background-color"] = {
-                        "value": None,  # No usable color
-                        "specificity": "000",
-                        "contrast_analysis": "indeterminate",
-                        "reason": "background_image_blocks_color_analysis",
-                        "original_background": bg_value,
-                        "visual_inheritance": False,
-                    }
-                    changes_made = True
-                    continue
-                else:
-                    # Has usable background shorthand - skip inheritance
-                    continue
-
-            # Element needs background inheritance
-            ancestor_bg = find_ancestor_background(element, computed_styles)
-
-            if ancestor_bg.get("contrast_analysis") == "indeterminate":
-                # Ancestor is indeterminate - propagate that status
+            # Check if background contains a raster image
+            if contains_raster_image(bg_value):
+                # Mark as contrast-indeterminate - cannot analyze
                 element_styles["background-color"] = {
                     "value": None,
                     "specificity": "000",
                     "contrast_analysis": "indeterminate",
-                    "reason": ancestor_bg["reason"],
-                    "inherited_from": ancestor_bg["source_element"],
-                    "source": "visual_inheritance",
-                    "original_background": ancestor_bg.get(
-                        "original_background"
-                    ),
+                    "reason": "background_image_blocks_color_analysis",
+                    "original_background": bg_value,
+                    "visual_inheritance": False,
                 }
-                changes_made = True
+                continue
             else:
-                # Normal inheritance - extract usable color
-                contrast_color = extract_contrast_color(ancestor_bg["value"])
-                effective_color = (
-                    contrast_color if contrast_color else ancestor_bg["value"]
-                )
-                element_styles["background-color"] = {
-                    "value": effective_color,
-                    "specificity": "000",
-                    "source": "visual_inheritance",
-                    "inherited_from": ancestor_bg["source_element"],
-                    "contrast_analysis": "determinable",
-                    "original_background": (
-                        ancestor_bg["value"]
-                        if ancestor_bg["value"] != DEFAULT_GLOBAL_BACKGROUND
-                        else None
-                    ),
-                }
-                changes_made = True
+                # Has usable background shorthand - skip inheritance
+                continue
+        if not current_bg:
+            continue
+
+        bg_source = current_bg.get("source")
+        bg_value = current_bg.get("value")
+
+        # Skip elements with explicit CSS rules
+        if bg_source == "rule":
+            continue
+
+        # Only update elements that still have the default white background
+        # This prevents overwriting elements with existing proper backgrounds
+        if bg_source != "default":
+            continue
+
+        # Element needs background inheritance (lines 1120-1141)
+        ancestor_bg = find_ancestor_background(element, computed_styles)
+
+        if not ancestor_bg or ancestor_bg.get("source") == "default":
+            # No explicit background to inherit - keep browser default
+            continue
+
+        if ancestor_bg.get("contrast_analysis") == "indeterminate":
+            # Ancestor is indeterminate - propagate that status
+            element_styles["background-color"] = {
+                "value": None,
+                "specificity": "000",
+                "contrast_analysis": "indeterminate",
+                "reason": ancestor_bg["reason"],
+                "inherited_from": ancestor_bg["source_element"],
+                "source": "visual_inheritance",
+                "original_background": ancestor_bg.get("original_background"),
+            }
+
+        else:
+            # Normal inheritance - extract usable color
+            contrast_color = extract_contrast_color(ancestor_bg["value"])
+            effective_color = (
+                contrast_color if contrast_color else ancestor_bg["value"]
+            )
+            element_styles["background-color"] = {
+                "value": effective_color,
+                "specificity": "000",
+                "source": "visual_inheritance",
+                "inherited_from": ancestor_bg["source_element"],
+                "contrast_analysis": "determinable",
+                "original_background": (
+                    ancestor_bg["value"]
+                    if ancestor_bg["value"] != DEFAULT_GLOBAL_BACKGROUND
+                    else None
+                ),
+            }
 
 
 def has_usable_background_color(background_prop: dict) -> bool:
@@ -1415,6 +1436,10 @@ def find_ancestor_background(element: Tag, computed_styles: dict) -> dict:
                     # Accept both "rule" and "default" sources
                     if bg_source in ["rule", "default"]:
                         bg_value = current_styles[bg_prop]["value"]
+                        if bg_source == "default":
+                            # Skip ancestors with only default backgrounds
+                            skip_ancestor = True
+                            break
 
                         # Does this ancestor already is indeterminate status
                         if (
@@ -1531,6 +1556,26 @@ def analyze_elements_for_contrast(
         contrast_analysis = element_data["background-color"].get(
             "contrast_analysis"
         )
+
+        # Check if this element inherited both text and background colors
+        text_color_source_type = extract_property_source(
+            element_data["color"]
+        ).get("source_type")
+        bg_color_source_type = extract_property_source(
+            element_data["background-color"]
+        ).get("source_type")
+
+        # Determine if this is a global color failure
+        inherited_text = text_color_source_type in [
+            "inherited",
+            "browser_default",
+        ]
+        inherited_bg = bg_color_source_type in [
+            "visual_inheritance",
+            "browser_default",
+        ]
+        is_global_failure = inherited_text and inherited_bg
+
         if is_large:
             aaa_results = contrast_report.get("Large AAA")
             aa_results = contrast_report.get("Large AA")
@@ -1562,6 +1607,7 @@ def analyze_elements_for_contrast(
             "wcag_aa_pass": aa_results,
             "wcag_aaa_pass": aaa_results,
             "contrast_analysis": contrast_analysis,
+            "global_color_failure": is_global_failure,
         }
 
         # add to results
@@ -1677,5 +1723,5 @@ if __name__ == "__main__":
     contrast_results = generate_contrast_report(project_path, "AAA")
     project_path = "tests/test_files/contrast_tool_test/"
     global_colors = css_tools.get_project_global_colors(project_path)
-    print(global_colors)
-    print(contrast_results)
+    print()
+    print()

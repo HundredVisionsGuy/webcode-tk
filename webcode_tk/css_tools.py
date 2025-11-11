@@ -2488,8 +2488,6 @@ def get_color_data(file: str, color_details: dict, level="aaa") -> tuple:
     Returns:
         color_data: a tuple with filename and results as a string"""
     selector = color_details.get("selector")
-    bg_color = color_details.get("background-color")
-    color = color_details.get("color")
     contrast_ratio = color_details.get("contrast_ratio")
     if level == "aaa":
         passes = color_details.get("passes_normal_aaa")
@@ -2498,8 +2496,8 @@ def get_color_data(file: str, color_details: dict, level="aaa") -> tuple:
     if passes:
         results = "passes global colors"
     else:
-        results = f"{selector} {bg_color} and {color} fail with a contrast"
-        results += f" ratio of {contrast_ratio}."
+        results = f"the <{selector}> element fails WCAG {level.upper()}"
+        results += f"contrast with a ratio of {contrast_ratio}."
     color_data = (file, results)
     return color_data
 

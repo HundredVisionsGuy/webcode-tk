@@ -1187,16 +1187,40 @@ def test_apply_css_inheritance_multiple_inheritable_properties():
 
     computed_styles = {
         div_element: {
-            "color": {"value": "red", "specificity": "010"},
-            "font-size": {"value": "18px", "specificity": "010"},
-            "font-weight": {"value": "bold", "specificity": "010"},
-            "background-color": {
-                "value": "yellow",
+            "color": {
+                "value": "red",
                 "specificity": "010",
-            },  # Not inheritable
+                "source": "rule",
+            },  # ← Add
+            "font-size": {
+                "value": "18px",
+                "specificity": "010",
+                "source": "rule",
+            },  # ← Add
+            "font-weight": {
+                "value": "bold",
+                "specificity": "010",
+                "source": "rule",
+            },  # ← Add
+            "background-color": {"value": "yellow", "specificity": "010"},
         },
         span_element: {
-            # No inheritable properties - should inherit all
+            # Add default source for properties that should exist
+            "color": {
+                "value": "#000000",
+                "specificity": "000",
+                "source": "default",
+            },  # ← Add
+            "font-size": {
+                "value": "16px",
+                "specificity": "000",
+                "source": "default",
+            },  # ← Add
+            "font-weight": {
+                "value": "normal",
+                "specificity": "000",
+                "source": "default",
+            },  # ← Add
         },
     }
 
@@ -1223,13 +1247,38 @@ def test_apply_css_inheritance_nested_inheritance():
     p_element = soup.find("p")
 
     computed_styles = {
-        div_element: {"color": {"value": "red", "specificity": "010"}},
+        div_element: {
+            "color": {
+                "value": "red",
+                "specificity": "010",
+                "source": "rule",  # ← ADD
+            }
+        },
         section_element: {
-            "font-size": {"value": "20px", "specificity": "010"}
-            # No color - should inherit from div
+            "font-size": {
+                "value": "20px",
+                "specificity": "010",
+                "source": "rule",  # ← ADD
+            },
+            # Add default color so it can inherit
+            "color": {
+                "value": "#000000",
+                "specificity": "000",
+                "source": "default",  # ← ADD
+            },
         },
         p_element: {
-            # No properties - should inherit from both section and div
+            # Add defaults so inheritance can work
+            "color": {
+                "value": "#000000",
+                "specificity": "000",
+                "source": "default",  # ← ADD
+            },
+            "font-size": {
+                "value": "16px",
+                "specificity": "000",
+                "source": "default",  # ← ADD
+            },
         },
     }
 
@@ -1625,9 +1674,16 @@ def test_apply_visual_background_inheritance_basic_inheritance():
             },
             "color": {"value": "black", "specificity": "001"},
         },
-        p_element: {"color": {"value": "black", "specificity": "001"}},
+        p_element: {
+            "color": {"value": "black", "specificity": "001"},
+            # ← ADD default background so inheritance can work:
+            "background-color": {
+                "value": "#ffffff",
+                "specificity": "000",
+                "source": "default",
+            },
+        },
     }
-
     apply_visual_background_inheritance(computed_styles)
 
     # P should get visual background from div
@@ -1722,8 +1778,22 @@ def test_apply_visual_background_inheritance_children_inherit_indeterminate():
                 "source": "rule",
             }
         },
-        p_element: {"color": {"value": "black", "specificity": "001"}},
-        span_element: {"color": {"value": "black", "specificity": "001"}},
+        p_element: {
+            "color": {"value": "black", "specificity": "001"},
+            "background-color": {  # ← ADD
+                "value": "#ffffff",
+                "specificity": "000",
+                "source": "default",
+            },
+        },
+        span_element: {
+            "color": {"value": "black", "specificity": "001"},
+            "background-color": {  # ← ADD
+                "value": "#ffffff",
+                "specificity": "000",
+                "source": "default",
+            },
+        },
     }
 
     apply_visual_background_inheritance(computed_styles)
@@ -1742,7 +1812,7 @@ def test_apply_visual_background_inheritance_children_inherit_indeterminate():
 
 
 def test_apply_visual_background_inheritance_nested_hierarchy():
-    """Test inheritance in nested hierarchy."""
+    """Test inheritance in nested hierarchy with realistic initial state."""
     html = (
         "<html><body><header><nav><ul><li>Item</li></ul></nav>"
         "</header></body></html>"
@@ -1750,8 +1820,6 @@ def test_apply_visual_background_inheritance_nested_hierarchy():
     soup = BeautifulSoup(html, "html.parser")
     body_element = soup.find("body")
     header_element = soup.find("header")
-    nav_element = soup.find("nav")
-    ul_element = soup.find("ul")
     li_element = soup.find("li")
 
     computed_styles = {
@@ -1759,7 +1827,7 @@ def test_apply_visual_background_inheritance_nested_hierarchy():
             "background-color": {
                 "value": "lightgray",
                 "specificity": "001",
-                "source": "rule",  # ✅ ADD THIS
+                "source": "rule",
                 "selector": "body",
             }
         },
@@ -1767,24 +1835,29 @@ def test_apply_visual_background_inheritance_nested_hierarchy():
             "background-color": {
                 "value": "darkblue",
                 "specificity": "001",
-                "source": "rule",  # ✅ ADD THIS
+                "source": "rule",
                 "selector": "header",
             }
         },
-        nav_element: {"color": {"value": "black", "specificity": "001"}},
-        ul_element: {"color": {"value": "black", "specificity": "001"}},
-        li_element: {"color": {"value": "black", "specificity": "001"}},
+        # ✅ ONLY li has text, so only li would be in computed_styles
+        li_element: {
+            "color": {"value": "black", "specificity": "001"},
+            "background-color": {  # ← Added by apply_browser_defaults()
+                "value": "#ffffff",
+                "specificity": "000",
+                "source": "default",
+            },
+        },
     }
 
     apply_visual_background_inheritance(computed_styles)
 
-    # nav, ul, and li should all inherit header's background
-    for element in [nav_element, ul_element, li_element]:
-        assert "background-color" in computed_styles[element]
-        bg_prop = computed_styles[element]["background-color"]
-        assert bg_prop["value"] == "darkblue"
-        assert bg_prop["source"] == "visual_inheritance"
-        assert bg_prop["inherited_from"] == header_element
+    # assert li inherits from header (nearest ancestor with CSS background)
+    assert "background-color" in computed_styles[li_element]
+    bg_prop = computed_styles[li_element]["background-color"]
+    assert bg_prop["value"] == "darkblue"
+    assert bg_prop["source"] == "visual_inheritance"
+    assert bg_prop["inherited_from"] == header_element
 
 
 def test_apply_visual_background_inheritance_no_ancestor_background():
@@ -1795,8 +1868,22 @@ def test_apply_visual_background_inheritance_no_ancestor_background():
     p_element = soup.find("p")
 
     computed_styles = {
-        div_element: {"color": {"value": "black", "specificity": "001"}},
-        p_element: {"color": {"value": "black", "specificity": "001"}},
+        div_element: {
+            "color": {"value": "black", "specificity": "001"},
+            "background-color": {  # ← ADD
+                "value": "#ffffff",
+                "specificity": "000",
+                "source": "default",
+            },
+        },
+        p_element: {
+            "color": {"value": "black", "specificity": "001"},
+            "background-color": {  # ← ADD
+                "value": "#ffffff",
+                "specificity": "000",
+                "source": "default",
+            },
+        },
     }
 
     apply_visual_background_inheritance(computed_styles)
@@ -1805,8 +1892,8 @@ def test_apply_visual_background_inheritance_no_ancestor_background():
     assert "background-color" in computed_styles[p_element]
     bg_prop = computed_styles[p_element]["background-color"]
     assert bg_prop["value"] == DEFAULT_GLOBAL_BACKGROUND
-    assert bg_prop["source"] == "visual_inheritance"  # UPDATED
-    assert bg_prop["inherited_from"] is None
+    assert bg_prop["source"] == "default"  # UPDATED
+    assert "inherited_from" not in bg_prop
 
 
 def test_apply_visual_background_inheritance_multiple_elements():
@@ -1828,11 +1915,31 @@ def test_apply_visual_background_inheritance_multiple_elements():
                 "source": "rule",
             }
         },
-        p_elements[0]: {"color": {"value": "black", "specificity": "001"}},
-        span_element: {"color": {"value": "black", "specificity": "001"}},
-        p_elements[1]: {"color": {"value": "black", "specificity": "001"}},
+        p_elements[0]: {
+            "color": {"value": "black", "specificity": "001"},
+            "background-color": {  # ← ADD
+                "value": "#ffffff",
+                "specificity": "000",
+                "source": "default",
+            },
+        },
+        span_element: {
+            "color": {"value": "black", "specificity": "001"},
+            "background-color": {  # ← ADD
+                "value": "#ffffff",
+                "specificity": "000",
+                "source": "default",
+            },
+        },
+        p_elements[1]: {
+            "color": {"value": "black", "specificity": "001"},
+            "background-color": {  # ← ADD
+                "value": "#ffffff",
+                "specificity": "000",
+                "source": "default",
+            },
+        },
     }
-
     apply_visual_background_inheritance(computed_styles)
 
     # All child elements should inherit div's background
@@ -1868,14 +1975,23 @@ def test_apply_visual_background_inheritance_mixed_explicit_inherited():
             "background-color": {
                 "value": "red",
                 "specificity": "001",
+                "source": "rule",  # ← ADD (so it won't be overridden)
             }
         },
-        span_element: {"color": {"value": "black", "specificity": "001"}},
+        span_element: {
+            "color": {"value": "black", "specificity": "001"},
+            "background-color": {  # ← ADD
+                "value": "#ffffff",
+                "specificity": "000",
+                "source": "default",
+            },
+        },
         em_element: {
             "background": {
                 "value": "blue",
                 "specificity": "001",
             }
+            # em has "background", not "background-color" no change needed
         },
     }
 
@@ -1933,7 +2049,12 @@ def test_apply_visual_background_inheritance_element_not_in_dom():
                 "value": "black",
                 "specificity": "001",
                 "source": "rule",
-            }
+            },
+            "background-color": {  # ← ADD
+                "value": "#ffffff",
+                "specificity": "000",
+                "source": "default",
+            },
         },
         div_element: {
             "background-color": {
@@ -1943,7 +2064,6 @@ def test_apply_visual_background_inheritance_element_not_in_dom():
             }
         },
     }
-
     apply_visual_background_inheritance(computed_styles)
 
     # P should get default background (no ancestors)
@@ -1952,8 +2072,7 @@ def test_apply_visual_background_inheritance_element_not_in_dom():
         == DEFAULT_GLOBAL_BACKGROUND
     )
     assert (
-        computed_styles[p_element]["background-color"]["source"]
-        == "visual_inheritance"
+        computed_styles[p_element]["background-color"]["source"] == "default"
     )  # FIXED
 
     # Div already has background, should remain unchanged
@@ -1985,7 +2104,16 @@ def test_apply_visual_background_inheritance_skips_ancestors_not_in_styles():
             }
         },
         p_element: {
-            "color": {"value": "black", "specificity": "001", "source": "rule"}
+            "color": {
+                "value": "black",
+                "specificity": "001",
+                "source": "rule",
+            },
+            "background-color": {  # ← ADD
+                "value": "#ffffff",
+                "specificity": "000",
+                "source": "default",
+            },
         },
     }
 
@@ -2067,7 +2195,12 @@ def test_apply_visual_background_inheritance_specificity_zero():
                 "value": "black",
                 "specificity": "001",
                 "source": "rule",
-            }
+            },
+            "background-color": {  # ← ADD
+                "value": "#ffffff",
+                "specificity": "000",
+                "source": "default",
+            },
         },
     }
 

@@ -28,7 +28,7 @@ lxml = "^6.0.0"
 mechanicalsoup = "^1.4.0"
 pytest-mock = "^3.15.1"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 pytest = "*"
 mkdocs = "*"
 mkgendocs = "*"
