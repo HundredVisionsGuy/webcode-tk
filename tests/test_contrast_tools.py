@@ -1531,7 +1531,7 @@ def test_find_ancestor_background_skips_elements_without_styles():
             "background-color": {
                 "value": "lightgray",
                 "specificity": "001",
-                "source": "rule",  # ✅ ADD THIS
+                "source": "rule",  # ADD THIS
                 "selector": "body",
             }
         },
@@ -1561,7 +1561,7 @@ def test_find_ancestor_background_checks_background_property():
             "background": {
                 "value": "url(image.jpg) red",
                 "specificity": "010",
-                "source": "rule",  # ✅ ADD THIS
+                "source": "rule",  # ADD THIS
                 "selector": "div",
             }
         },
@@ -1614,13 +1614,13 @@ def test_find_ancestor_background_prefers_background_color():
             "background-color": {
                 "value": "blue",
                 "specificity": "010",
-                "source": "rule",  # ✅ ADD THIS
+                "source": "rule",  # ADD THIS
                 "selector": "div",
             },
             "background": {
                 "value": "url(image.jpg) red",
                 "specificity": "005",
-                "source": "rule",  # ✅ ADD THIS
+                "source": "rule",  # ADD THIS
                 "selector": "div",
             },
         },
@@ -1839,7 +1839,7 @@ def test_apply_visual_background_inheritance_nested_hierarchy():
                 "selector": "header",
             }
         },
-        # ✅ ONLY li has text, so only li would be in computed_styles
+        # ONLY li has text, so only li would be in computed_styles
         li_element: {
             "color": {"value": "black", "specificity": "001"},
             "background-color": {  # ← Added by apply_browser_defaults()
