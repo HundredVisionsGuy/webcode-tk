@@ -313,13 +313,17 @@ def has_alpha_channel(code: str) -> bool:
     """
     has_alpha = False
     if "#" in code:
-        if len(code) == 9:
+        if len(code) == 9 or len(code) == 5:
             has_alpha = True
     if "hsla(" in code:
         has_alpha = True
     if "hsl(" in code and "/" in code:
         has_alpha = True
     if "rgba(" in code:
+        has_alpha = True
+    if "rgb" in code and "/" in code:
+        has_alpha = True
+    if "transparent" in code:
         has_alpha = True
     return has_alpha
 

@@ -214,6 +214,39 @@ def test_has_alpha_channel_for_hex_code_with_alpha():
     assert expected == results
 
 
+def test_has_alpha_channel_for_4_digit_hex():
+    expected = True
+    results = color.has_alpha_channel("#3696")
+    assert expected == results
+
+
+@pytest.mark.parametrize(
+    "value,expect",
+    [
+        ("#336699FF", True),  # alpha present but fully opaque
+        ("#FF0000FF", True),
+        (
+            "#AAFF0000",
+            True,
+        ),  # should still be True (alpha present)
+        (
+            "#369F",
+            True,
+        ),  # 4-digit with alpha=F (opaque alpha but channel present)
+        ("rgb(10 20 30 / 0.5)", True),
+        ("rgb(10 20 30 / 50%)", True),
+        ("rgba(10, 20, 30, 1)", True),  # alpha channel present, fully opaque
+        ("hsl(210 100% 50% / 0.0)", True),  # explicitly transparent
+        ("transparent", True),
+        ("rgb(10, 20, 30)", False),
+        ("hsl(210, 100%, 50%)", False),
+        ("#336699", False),
+    ],
+)
+def test_has_alpha_channel_more_cases(value, expect):
+    assert color.has_alpha_channel(value) == expect
+
+
 def test_has_alpha_channel_for_hex_code_without_alpha():
     expected = False
     results = color.has_alpha_channel("#336699")
