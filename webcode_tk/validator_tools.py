@@ -360,18 +360,3 @@ if __name__ == "__main__":
     print("report is a {}.".format(type(report)))
     for item in report:
         print(item)
-    num_errors = get_num_markup_errors(report)
-    # how many html files in project directory?
-    html_files = get_html_file_names()
-
-    # test getting number of errorsz
-    print(get_num_errors(report))
-
-    css_code = clerk.file_to_string("tests/test_files/css_for_testing.css")
-    css_validator_results = validate_css(css_code)
-    is_valid = is_css_valid(css_validator_results)
-    print(is_valid)
-    css_validator_results = validate_css("p } color: #336699; }")
-    print(css_validator_results)
-    is_valid = is_css_valid(css_validator_results)
-    print(is_valid)

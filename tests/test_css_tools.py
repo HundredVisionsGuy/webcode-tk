@@ -1216,3 +1216,36 @@ non_text_color_colors_results = cascade.get_color_contrast_report(
 @pytest.mark.parametrize("results", non_text_color_colors_results)
 def test_for_nonetype_error_in_image_gallery(results):
     assert "fail:" in results[:5]
+
+
+# Test CSS variable parsing:
+class TestCSSVariables:
+    """Tests for CSS custom property (variable) parsing and resolution"""
+
+    def test_extract_root_variables(self):
+        # Test finding variables in :root selector
+        pass
+
+    def test_extract_element_variables(self):
+        # Test finding variables on specific elements
+        pass
+
+    def test_resolve_simple_variable(self):
+        # Test var(--color-name) resolution
+        pass
+
+    def test_resolve_variable_with_fallback(self):
+        # Test var(--color-name, #ffffff)
+        pass
+
+    def test_resolve_nested_variables(self):
+        # Test var(--primary) where --primary: var(--blue)
+        pass
+
+    def test_undefined_variable_no_fallback(self):
+        # Test behavior when variable not defined and no fallback
+        pass
+
+    def test_variable_scope_inheritance(self):
+        # Test that element variables override root variables
+        pass
