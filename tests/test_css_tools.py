@@ -1218,6 +1218,41 @@ def test_for_nonetype_error_in_image_gallery(results):
     assert "fail:" in results[:5]
 
 
+# Test get_properties_applied_with_grouped_selector for large_project
+def test_get_properties_applied_report_with_grouped_selector():
+    """Test that padding is detected when applied via grouped selector.
+
+    This tests the grouped selector from layout.css:
+    header, section, article, .sidebar, footer.main {
+        padding: 1rem .5rem;
+    }
+
+    We're checking that padding is correctly detected on header, article,
+    and section elements on the about page.
+    """
+    project_folder = "tests/test_files/large_project"
+    goals = {
+        "header": {"properties": ("padding",)},
+        "article": {"properties": ("padding",)},
+        "section": {"properties": ("padding",)},
+    }
+    report = css_tools.get_properties_applied_report(project_folder, goals)
+
+    # All three elements should pass: they're all in the grouped selector
+    passes = 0
+    fails = 0
+    for result in report:
+        if "about.html" in result:
+            if "pass:" in result[:5]:
+                passes += 1
+            elif "fail:" in result[:5]:
+                fails += 1
+
+    # We expect 3 passes (one for each element) and 0 fails
+    assert passes == 3, f"Expected 3 passes but got {passes}. Report: {report}"
+    assert fails == 0, f"Expected 0 fails but got {fails}. Report: {report}"
+
+
 # Test CSS variable parsing:
 class TestCSSVariables:
     """Tests for CSS custom property (variable) parsing and resolution"""
