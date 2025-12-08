@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "webcode-tk"
-version = "1.2.9"
+version = "1.2.11"
 description = "A set of tools for inspecting HTML and CSS code"
 authors = ["hundredvisionsguy <cwinikka@gmail.com>"]
 keywords = ["html", "validation", "css", ]
