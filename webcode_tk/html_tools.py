@@ -50,6 +50,29 @@ def get_all_html_files(dir_path: str) -> list:
     return html_files
 
 
+def get_image_hotlinks(soup: BeautifulSoup) -> list:
+    """Returns a list of all img src values that are external (hotlinked) URLs.
+
+    Hotlinked images are those with src attributes pointing to external
+    domains rather than local/relative paths. I ask that all students avoid
+    hotlinking images, as it's bad form and generally frowned upon.
+
+    Args:
+        soup: html soupt object.
+
+    Returns:
+        hotlinks: a list of hotlinked image srcs"""
+    hotlinks = []
+    # Get all img urls
+    image_elements = soup.find_all("img")
+    image_srcs = [img["src"] for img in image_elements]
+    for src in image_srcs:
+        if "http" in src[:4]:
+            hotlinks.append(src)
+
+    return hotlinks
+
+
 def get_html(file_path: str) -> BeautifulSoup:
     """Returns an html document (from file_path) as a BeautifulSoup object
 
