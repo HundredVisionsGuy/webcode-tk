@@ -257,3 +257,85 @@ def test_get_number_of_elements_per_file_for_large_project():
         large_project_path, required_elements
     )
     assert len(results) == 12
+
+
+# Tests for get_image_hotlinks()
+def test_get_image_hotlinks_with_no_hotlinks():
+    """Test that function returns empty list when no hotlinked images exist."""
+    html = """
+    <!DOCTYPE html>
+    <html>
+    <head><title>Test Page</title></head>
+    <body>
+        <img src="images/logo.png" alt="Logo">
+        <img src="../assets/banner.jpg" alt="Banner">
+        <img src="/img/icon.svg" alt="Icon">
+        <img src="photo.gif" alt="Photo">
+    </body>
+    </html>
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    hotlinked = html_tools.get_image_hotlinks(soup)
+    assert len(hotlinked) == 0
+    assert hotlinked == []
+
+
+def test_get_image_hotlinks_with_single_hotlink():
+    """Test that function detects a single hotlinked image."""
+    html = """
+    <!DOCTYPE html>
+    <html>
+    <head><title>Test Page</title></head>
+    <body>
+        <img src="images/logo.png" alt="Logo">
+        <img src="https://example.com/external.jpg" alt="External">
+        <img src="photo.gif" alt="Photo">
+    </body>
+    </html>
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    hotlinked = html_tools.get_image_hotlinks(soup)
+    assert len(hotlinked) == 1
+    assert hotlinked[0] == "https://example.com/external.jpg"
+
+
+def test_get_image_hotlinks_with_multiple_hotlinks():
+    """Test that function detects multiple hotlinked images."""
+    html = """
+    <!DOCTYPE html>
+    <html>
+    <head><title>Test Page</title></head>
+    <body>
+        <img src="images/logo.png" alt="Logo">
+        <img src="http://cdn.example.com/image1.jpg" alt="CDN Image">
+        <img src="https://another-site.org/photo.png" alt="Another Site">
+        <img src="../local/pic.jpg" alt="Local">
+        <img src="https://third-party.com/banner.gif" alt="Third Party">
+    </body>
+    </html>
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    hotlinked = html_tools.get_image_hotlinks(soup)
+    assert len(hotlinked) == 3
+    # Check that all hotlinked URLs are found
+    assert "http://cdn.example.com/image1.jpg" in hotlinked
+    assert "https://another-site.org/photo.png" in hotlinked
+    assert "https://third-party.com/banner.gif" in hotlinked
+
+
+def test_get_image_hotlinkss_with_no_images():
+    """Test that function returns empty list when page has no images."""
+    html = """
+    <!DOCTYPE html>
+    <html>
+    <head><title>Test Page</title></head>
+    <body>
+        <h1>Page with no images</h1>
+        <p>Just text content here.</p>
+    </body>
+    </html>
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    hotlinked = html_tools.get_image_hotlinks(soup)
+    assert len(hotlinked) == 0
+    assert hotlinked == []

@@ -2675,6 +2675,7 @@ def get_properties_applied_report(project_dir: str, goals: dict) -> list:
                             )
                     if selector_type == "grouped_selector":
                         sel_split = selector.split(",")
+                        sel_split = [s.strip() for s in sel_split]
                         if element in sel_split:
                             take_targetted_properties(
                                 properties_found,
