@@ -744,8 +744,8 @@ def test_get_global_colors_for_single_file(gallery_path):
 
 
 def test_passes_global_color_contrast_for_gallery(gallery_path):
-    results = css_tools.passes_global_color_contrast(gallery_path)
-    assert results
+    passes = css_tools.passes_global_color_contrast(gallery_path)
+    assert passes
 
 
 def test_get_unique_font_rules_for_2_sets_in_about(large_project_path):
@@ -1080,6 +1080,23 @@ def test_get_global_color_report_for_large_project_pass(large_project_path):
         else:
             fails += 1
     assert passes == 2 and fails == 1
+
+
+report = "tests/test_files/two_global_selectors/"
+two_global_selectors_report = css_tools.get_global_color_report(report)
+
+
+@pytest.mark.parametrize("result", two_global_selectors_report)
+def test_get_global_color_report_with_two_global_selectors_one_partial(result):
+    assert "pass:" in result and "fail:" not in result
+    if "index.html" in result:
+        assert "11.0" in result
+    elif "reverse.html" in result:
+        assert "7.5" in result
+    elif "previous-greater" in result:
+        assert "7.3" in result
+    elif "previous-lesser" in result:
+        assert "11.4" in result
 
 
 def test_get_heading_color_report_for_large_project(large_project_path):

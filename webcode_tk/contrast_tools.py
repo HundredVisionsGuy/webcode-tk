@@ -166,20 +166,6 @@ def generate_contrast_report(
     for file in project_files:
         errors = project_files.get(file)
 
-        # Check for global selectors (html, *, or body) and calculate contrast
-        global_color_result = css_tools.get_global_color_report(project_path)
-
-        if isinstance(global_color_result, list):
-            for result in global_color_result:
-                if file in result:
-                    # Always add global color failures
-                    if "fail" in result:
-                        error_msg = result.split(file)[1]
-                        msg = f"fail: in {file}, {error_msg.strip()}"
-                        # Add to errors list if not already there
-                        if msg not in project_files[file]:
-                            project_files[file].append(msg)
-
         # Now append to report
         if errors:
             if "has no CSS" in errors[0]:
@@ -1557,25 +1543,6 @@ def analyze_elements_for_contrast(
             "contrast_analysis"
         )
 
-        # Check if this element inherited both text and background colors
-        text_color_source_type = extract_property_source(
-            element_data["color"]
-        ).get("source_type")
-        bg_color_source_type = extract_property_source(
-            element_data["background-color"]
-        ).get("source_type")
-
-        # Determine if this is a global color failure
-        inherited_text = text_color_source_type in [
-            "inherited",
-            "browser_default",
-        ]
-        inherited_bg = bg_color_source_type in [
-            "visual_inheritance",
-            "browser_default",
-        ]
-        is_global_failure = inherited_text and inherited_bg
-
         if is_large:
             aaa_results = contrast_report.get("Large AAA")
             aa_results = contrast_report.get("Large AA")
@@ -1607,7 +1574,6 @@ def analyze_elements_for_contrast(
             "wcag_aa_pass": aa_results,
             "wcag_aaa_pass": aaa_results,
             "contrast_analysis": contrast_analysis,
-            "global_color_failure": is_global_failure,
         }
 
         # add to results

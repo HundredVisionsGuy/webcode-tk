@@ -1383,7 +1383,11 @@ def get_global_color_details(rulesets: Union[list, tuple]) -> list:
     global_selectors = ("html", "body", ":root", "*")
     global_rulesets = []
     for ruleset in rulesets:
-        if ruleset.selector in global_selectors:
+        if (
+            ruleset.selector in global_selectors
+            or "html" in ruleset.selector[:4]
+            or "body" in ruleset.selector[:4]
+        ):
             selector = ruleset.selector
             background_color = ""
             color = ""
@@ -1392,10 +1396,6 @@ def get_global_color_details(rulesets: Union[list, tuple]) -> list:
                     background_color = declaration.value
                 elif declaration.property == "color":
                     color = declaration.value
-                    if is_gradient(color):
-                        colors = process_gradient(color)
-                        todo = input("We have colors: " + colors)
-                        print(todo)
                 elif declaration.property == "background":
                     background_color = declaration.value
                     if is_gradient(background_color):
@@ -2452,22 +2452,93 @@ def get_global_color_report(project_dir: str, level="aaa") -> list:
     for data in all_file_data:
         filename = data[0]
         passes = []
+        global_data = {
+            "selector": "",
+            "specificity": "",
+            "bg_color": "",
+            "color": "",
+            "contrast_ratio": 0.0,
+            "passes_normal": False,
+            "passes_large": False,
+        }
         for sheet in data[1]:
             rules = sheet.rulesets
             global_color_data = get_global_color_details(rules)
             if global_color_data:
-                for item in global_color_data:
-                    file, result = get_color_data(filename, item, level)
-                    if "fail" in result:
-                        passes.append(f"fail: {file} {result}")
+                previous_selector = global_data.get("selector")
+                if previous_selector:
+                    previous_data = global_data.copy()
+
+                data = global_color_data[0]
+                current_selector = data.get("selector")
+                global_data["selector"] = current_selector
+
+                current_specificity = get_specificity(current_selector)
+                global_data["specificity"] = current_specificity
+
+                bg_color = data.get("background-color")
+                global_data["bg_color"] = bg_color
+
+                color = data.get("color")
+                global_data["color"] = color
+
+                ratio = data.get("contrast_ratio")
+                global_data["contrast_ratio"] = ratio
+
+                if level == "aaa":
+                    passes_normal = data.get("passes_normal_aaa")
+                    passes_large = data.get("passes_large_aaa")
+                else:
+                    passes_normal = data.get("passes_normal_aa")
+                    passes_large = data.get("passes_large_aa")
+
+                global_data["passes_normal"] = passes_normal
+                global_data["passes_large"] = passes_large
+
+                # If there was a previous selector
+                if previous_selector:
+                    previous_specificity = previous_data.get("specificity")
+
+                    # If previous specificity is higher, we need everything
+                    # from previous
+                    if previous_specificity > current_specificity:
+                        # Keep all from previous data
+                        for key, val in previous_data.items():
+                            if key in ["bg_color", "color"] and val:
+                                global_data[key] = val
                     else:
-                        passes.append(f"pass: {file} {result}")
-        if passes:
-            details = ""
-            for detail in passes:
-                details += detail
+                        # we already overrode everything
+                        # Anything missing? We need to pull from previous data
+                        for key, val in global_data.items():
+                            if not val:
+                                new_val = previous_data.get(key)
+                                if new_val:
+                                    global_data[key] = new_val
+        # reassess color contrast for global_data
+        bg_color = global_data.get("bg_color")
+        color = global_data.get("color")
+        if not bg_color or not color:
+            details = f"fail: {filename} does not apply "
+            if not bg_color and not color:
+                details += "neither background nor text color."
+            elif not bg_color:
+                details += "background color."
+            else:
+                details += "text color."
         else:
-            details = f"fail: {filename} does NOT apply global colors"
+            bg_hex = color_tools.get_hex(bg_color)
+            color_hex = color_tools.get_hex(color)
+            contrast_ratio = color_tools.contrast_ratio(bg_hex, color_hex)
+            normal_level = f"Normal {level.upper()}"
+            passes = color_tools.passes_color_contrast(
+                normal_level, bg_hex, color_hex
+            )
+            if passes:
+                details = f"pass: {filename} applies global colors and passes"
+                details += f" Normal {level.upper()} at a ratio of "
+                details += f"{contrast_ratio}:1."
+            else:
+                details = f"fail: {filename} does NOT apply global colors"
         report.append(details)
     if not report:
         report.append("fail: no html files to apply color styles to")

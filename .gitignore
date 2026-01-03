@@ -169,3 +169,4 @@ tests/test_files/large_project/images
 # found by students
 tests/test_files/project_refactor_tests/*
 !tests/test_files/project_refactor_tests/*README.md
+tests/test_student_refactor.py

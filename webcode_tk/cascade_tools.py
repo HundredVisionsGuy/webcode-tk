@@ -1539,6 +1539,16 @@ def targets_element_directly(element: Element, selector: str) -> bool:
     elif selector_type == "id_selector":
         attributes = element.attributes
         if attributes:
+            if not isinstance(attributes, dict):
+                try:
+                    attributes = dict(attributes)
+                except Exception:
+                    msg = "This is not a dictionary and cannot be converted"
+                    msg += " into one!"
+                    raise ValueError(msg)
+            else:
+                data_type = str(type(attributes))
+                print(data_type)
             id_attribute = attributes.get("id")
             if id_attribute:
                 targets = selector in attributes.get("id")

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Previous Selector - Lesser Specificity</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body.important {
+            color: #0e1d2c;
+        }
+    </style>
+</head>
+<body class="important">
+    <h1>Previous Selector - Lesser Specificity</h1>
+    <h2>Possible Scenarios</h2>
+    <ul>
+        <li>Equal Specificity:
+            <ul>
+                <li><b>Covered</b>First targets both values second targets only one</li>
+                <li><b>Covered</b>First targets only one value, and Second targets both</li>
+            </ul>
+        </li>
+        <li>First has higher specificity:
+            <ul>
+                <li>First targets both values second targets only one</li>
+                <li>First targets only one value, and Second targets both</li>
+            </ul>
+        </li>
+        <li>First has lower specificity:
+            <ul>
+                <li><b>This one</b>First targets both values second targets only one<br>
+                <b><i>THAT'S THIS PAGE!</i></b></li>
+                <li>First targets only one value, and Second targets both</li>
+                <li>Each targets one, but is combined.</li>
+            </ul>
+        </li>
+        <li>We have more than two global selectors - deal with that in a future version</li>
+    </ul>
+    <p>In this document, there will be a style tag first with a specificity, and link to </p>
+</body>
+</html>
