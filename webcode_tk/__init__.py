@@ -40,4 +40,4 @@
 - **`validator_tools`**: sends HTML or CSS code to the W3C Validator to check
           for errors.
 """
-__version__ = "1.2.11"
+__version__ = "1.2.12"
