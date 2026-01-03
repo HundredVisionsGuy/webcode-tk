@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Previous Selector - Greater Specificity</title>
+    <style>
+        body.important {
+            background-color: #b3d9a9;
+            color: green;
+        }
+    </style>
+    <link rel="stylesheet" href="partial.css">
+    <style>
+        html body.important {
+            color: #2C291B;
+        }
+    </style>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="important">
+    <h1>Previous Selector - Greater Specificity</h1>
+    <p>In this document, there will be a style tag first with a greater specificity, and link to style. The ratio should be 7.3</p>
+</body>
+</html>

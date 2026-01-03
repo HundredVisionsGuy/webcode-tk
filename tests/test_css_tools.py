@@ -1082,12 +1082,14 @@ def test_get_global_color_report_for_large_project_pass(large_project_path):
     assert passes == 2 and fails == 1
 
 
-report = "tests/test_files/two_global_selectors/"
-two_global_selectors_report = css_tools.get_global_color_report(report)
+report = "tests/test_files/multiple_global_selectors/"
+multiple_global_selectors_report = css_tools.get_global_color_report(report)
 
 
-@pytest.mark.parametrize("result", two_global_selectors_report)
-def test_get_global_color_report_with_two_global_selectors_one_partial(result):
+@pytest.mark.parametrize("result", multiple_global_selectors_report)
+def test_get_global_color_report_with_multiple_global_selectors_one_partial(
+    result,
+):
     assert "pass:" in result and "fail:" not in result
     if "index.html" in result:
         assert "11.0" in result
@@ -1097,6 +1099,8 @@ def test_get_global_color_report_with_two_global_selectors_one_partial(result):
         assert "7.3" in result
     elif "previous-lesser" in result:
         assert "11.4" in result
+    elif "multiple-selectors" in result:
+        assert "9.3" in result
 
 
 def test_get_heading_color_report_for_large_project(large_project_path):
