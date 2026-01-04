@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page 1</title>
+    <link rel="stylesheet" href="reset.css" type="text/css">
+    <link rel="stylesheet" href="theme.css" type="text/css">
+    <style>
+        :root {
+          --primary-color: #111;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <hgroup>
+            <h1>Page 1</h1>
+            <p>A test of css variables</p>
+        </hgroup>
+    </header>
+    <main>
+        <h2>Structure</h2>
+        <p>Below is the structure of CSS for Page 1:</p>
+        <ul>
+            <li><code>reset.css</code> - defines <code>--primary-color: #333</code> on <code>:root</code></li>
+            <li><code>theme.css</code> - uses<code>color: var(--primary-color)</code> on <code>p</code></li>
+            <li><code>&lt;style&gt;</code> tag - redefines <code>-primary-color: #666</code> and uses it in spite of it's demonic hex code.</li>
+        </ul>
+        <p class="highlight">This tests: variable definition in first stylesheet, usage in later stylesheet, and override in style tag.</p>
+        <p><b>NOTE</b>: <a href="page2.html">page 2</a> uses the same two external stylesheets, but a different style tag.</p>
+    </main>
+</body>
+</html>

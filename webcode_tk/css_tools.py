@@ -20,6 +20,7 @@ regex_patterns: dict = {
     "attribute_selectors": r"[a-zA-Z]*\[(.*?)\]",
     "child_combinator": r"\w+\s*>\s*\w+",
     "class_selector": r"\w*\.\w+",
+    "css_variable": r"(--[a-zA-Z0-9_-]+):\s*([^;]+);?",
     "descendant_selector": r"\w+\s\w+",
     "general_sibling_combinator": r"\w+\s*~\s*\w+",
     "grouped_selector": r"\w+\s*,\s*\w+",
@@ -98,7 +99,7 @@ class Stylesheet:
         text: the actual code itself of the entire file or style tag.
         type: whether it's a file or local if it's from an style tag.
         nested_at_rules: a list of all nested at-rules.
-        rulesets: a list of all rulesets.
+        rulesets: a list of all rulesetsF.
         comments: a list of all comments in string format.
         color_rulesets: a list of all rulesets that target color or
             background colors.
@@ -125,13 +126,17 @@ class Stylesheet:
         self.color_rulesets = []
         self.selectors = []
         self.has_repeat_selectors = False
+        self.has_variable_definitions = False
         self.repeated_selectors = []
+        self.uses_variables = False
+        self.variables = []
         self.__minify()
         self.__replace_variables()
         self.__remove_external_imports()
         self.__extract_comments()
         self.__extract_nested_at_rules()
         self.__extract_rulesets()
+        self.__extract_variables()
         self.__set_selectors()
 
     def __clean_text(self):
@@ -167,7 +172,8 @@ class Stylesheet:
         the variable's values."""
         # get a list of all variables and their values
         variable_list = get_variables(self.text)
-
+        if "var(" in self.text:
+            self.uses_variables = True
         # Loop through the variable list and do a find
         # and replace on all occurrances of the variable
         new_text = self.text
@@ -257,6 +263,28 @@ class Stylesheet:
                 ruleset = Ruleset(ruleset + "}")
                 self.rulesets.append(ruleset)
                 self.get_color_ruleset(ruleset)
+
+    def __extract_variables(self):
+        """extracts and stores variable data"""
+        for rule in self.rulesets:
+            selector = rule.selector
+            text = rule.declaration_block.text
+            matches = re.findall(regex_patterns["css_variable"], text)
+            if matches:
+                self.has_variable_definitions = True
+            for var_name, var_value in matches:
+                var_name = var_name.strip()
+                var_value = var_value.strip()
+                specificity = get_specificity(selector)
+                position = self.text.index(var_name)
+                variable = {
+                    "name": var_name,
+                    "value": var_value,
+                    "selector": selector,
+                    "specificity": specificity,
+                    "position": position,
+                }
+                self.variables.append(variable)
 
     def __remove_external_imports(self):
         text = self.text

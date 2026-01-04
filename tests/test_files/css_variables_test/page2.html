@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page 2</title>
+    <link rel="stylesheet" href="reset.css" type="text/css">
+    <link rel="stylesheet" href="theme.css" type="text/css">
+    <style>
+        :root {
+          --bg-color: #1b0505;
+          --primary-color: #d7e3d8;
+        }
+        a {
+            color: var(--missing-color, #b0dab4)
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <hgroup>
+            <h1>Page 2</h1>
+            <p>A test of css variables</p>
+        </hgroup>
+    </header>
+    <main>
+        <h2>Structure</h2>
+        <p>Below is the structure of CSS for Page 2. Note: the first two stylesheet links are the same as <a href="page1.html">page 1</a>.</p>
+        <ul>
+            <li><code>reset.css</code> - defines <code>--primary-color: #333</code> on <code>:root</code></li>
+            <li><code>theme.css</code> - uses<code>color: var(--primary-color)</code> on <code>p</code></li>
+            <li>Has it's own <code>&lt;style&gt;</code> tag that redefines <code>-primary-color: #333</code> and uses it to counteract page1's demonic hex code.</li>
+        </ul>
+        <p class="highlight">This tests: variable definition in first stylesheet, usage in later stylesheet, and override in style tag.</p>
+    </main>
+</body>
+</html>

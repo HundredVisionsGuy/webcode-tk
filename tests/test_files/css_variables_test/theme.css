@@ -1,0 +1,21 @@
+body {
+  background-color: var(--bg-color);
+  color: var(--primary-color);
+}
+
+p.highlight {
+  background-color: var(--undefined-color, #ccc);
+  color: var(--text-color);
+  padding: 5px;
+  font-weight: bold;
+}
+
+hgroup {
+  --hgroup-color: #black;
+}
+
+hgroup p {
+  border: 2px solid green;
+  border-color: var(--hgroup-color);
+  padding: 0.5em;
+}
