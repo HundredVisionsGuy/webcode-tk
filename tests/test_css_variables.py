@@ -1,8 +1,118 @@
 import pytest
 
 from webcode_tk import contrast_tools as contrast
+from webcode_tk import css_tools
 
 project_dir = "tests/test_files/css_variables_test/"
+
+
+# test extract_variables_for_document
+@pytest.mark.parametrize(
+    "html_file,var_name,expected_entries",
+    [
+        # page1.html tests
+        (
+            "page1.html",
+            "--primary-color",
+            [
+                {
+                    "value": "#333",
+                    "selector": ":root",
+                    "specificity": "010",
+                    "sheet_index": 0,
+                },
+                {
+                    "value": "#111",
+                    "selector": ":root",
+                    "specificity": "010",
+                    "sheet_index": 2,
+                },
+            ],
+        ),
+        (
+            "page1.html",
+            "--text-color",
+            [
+                {
+                    "value": "#160739",
+                    "selector": ":root",
+                    "specificity": "010",
+                    "sheet_index": 0,
+                },
+            ],
+        ),
+        (
+            "page1.html",
+            "--p-color",
+            [
+                {
+                    "value": "#111c26",
+                    "selector": ":root",
+                    "specificity": "010",
+                    "sheet_index": 0,
+                },
+            ],
+        ),
+        (
+            "page1.html",
+            "--bg-color",
+            [
+                {
+                    "value": "#bdd7bd",
+                    "selector": ":root",
+                    "specificity": "010",
+                    "sheet_index": 0,
+                },
+            ],
+        ),
+        # page2.html tests
+        (
+            "page2.html",
+            "--primary-color",
+            [
+                {
+                    "value": "#333",
+                    "selector": ":root",
+                    "specificity": "010",
+                    "sheet_index": 0,
+                },
+                {
+                    "value": "#d7e3d8",
+                    "selector": ":root",
+                    "specificity": "010",
+                    "sheet_index": 2,
+                },
+            ],
+        ),
+        (
+            "page2.html",
+            "--bg-color",
+            [
+                {
+                    "value": "#bdd7bd",
+                    "selector": ":root",
+                    "specificity": "010",
+                    "sheet_index": 0,
+                },
+                {
+                    "value": "#1b0505",
+                    "selector": ":root",
+                    "specificity": "010",
+                    "sheet_index": 2,
+                },
+            ],
+        ),
+    ],
+)
+def test_extract_variables_for_document(html_file, var_name, expected_entries):
+    html_path = f"tests/test_files/css_variables_test/{html_file}"
+    variables_registry = css_tools.extract_variables_for_document(html_path)
+
+    assert var_name in variables_registry
+    actual_entries = variables_registry[var_name]
+
+    for expected in expected_entries:
+        assert expected in actual_entries
 
 
 @pytest.mark.parametrize(

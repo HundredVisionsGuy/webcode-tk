@@ -877,6 +877,44 @@ def condense_the_rules(rules: list, source_file: str) -> dict:
     return condensed
 
 
+def extract_variables_for_document(html_path: str) -> dict:
+    """returns variable names with their values and meta data
+
+    Checks all stylesheets (including styletags) linked by an html document
+    to see if there are CSS variables and if so, collects each
+    variable's name, selector, value, specificity, and sheet_index
+    (which is the order in which it is linked).
+
+    Args:
+        html_path: relative path to html doc in project folder.
+
+    Returns:
+        variables_registry: a dictionary of all CSS variables and their
+            metadata in the order in which they appear as linked by html doc.
+    """
+    stylesheets = get_all_stylesheets_by_file(html_path)
+    variables_registry = {}
+    sheet_index = 0
+    for sheet in stylesheets:
+        if sheet.has_variable_definitions:
+            for variable in sheet.variables:
+                var_data = {}
+                name = variable.get("name")
+                value = variable.get("value")
+                selector = variable.get("selector")
+                specificity = variable.get("specificity")
+                var_data["value"] = value
+                var_data["selector"] = selector
+                var_data["specificity"] = specificity
+                var_data["sheet_index"] = sheet_index
+                if name not in variables_registry:
+                    variables_registry[name] = []
+                variables_registry[name].append(var_data)
+
+        sheet_index += 1
+    return variables_registry
+
+
 def file_applies_property_by_selector(
     file_path: str, selector: str, property: str
 ) -> bool:
