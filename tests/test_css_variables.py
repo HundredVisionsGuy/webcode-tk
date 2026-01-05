@@ -150,3 +150,30 @@ def test_css_variables_contrast_resolution(
     element_result = matching_result[0]
     assert element_result.get("color") == expected_color
     assert element_result.get("background-color") == expected_bg
+
+
+@pytest.mark.parametrize(
+    "var_name,fallback,expected_value,expected_resolved",
+    [
+        # Variable exists in registry
+        ("--primary-color", None, "#111", True),
+        ("--text-color", None, "#160739", True),
+        # Variable doesn't exist, has fallback
+        ("--missing-color", "#b0dab4", "#b0dab4", False),
+        ("--undefined-var", "#ccc", "#ccc", False),
+        # Variable doesn't exist, no fallback
+        ("--nonexistent", None, None, False),
+    ],
+)
+def test_resolve_variable(
+    var_name, fallback, expected_value, expected_resolved
+):
+    html_path = "tests/test_files/css_variables_test/page1.html"
+    variables_registry = css_tools.extract_variables_for_document(html_path)
+
+    resolved_value, was_resolved = css_tools.resolve_variable(
+        var_name, variables_registry, fallback
+    )
+
+    assert resolved_value == expected_value
+    assert was_resolved == expected_resolved

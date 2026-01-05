@@ -915,6 +915,29 @@ def extract_variables_for_document(html_path: str) -> dict:
     return variables_registry
 
 
+def resolve_variable(
+    var_name: str, variables_registry: dict, fallback: str = None
+) -> str:
+    """Resolve a CSS variable to its value.
+
+    Args:
+        var_name: Variable name like "--primary-color"
+        variables_registry: From extract_variables_for_document()
+        fallback: Fallback value if variable not found
+
+    Returns:
+        Resolved value, fallback value, or original var() reference
+    """
+    variable_data = variables_registry.get(var_name)
+    if not variable_data:
+        if not fallback:
+            return (None, False)
+        else:
+            return (fallback, False)
+    value = variable_data[-1].get("value")
+    return (value, True)
+
+
 def file_applies_property_by_selector(
     file_path: str, selector: str, property: str
 ) -> bool:
