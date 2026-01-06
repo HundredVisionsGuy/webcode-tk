@@ -877,7 +877,7 @@ def condense_the_rules(rules: list, source_file: str) -> dict:
     return condensed
 
 
-def extract_variables_for_document(html_path: str) -> dict:
+def extract_variables_for_document(stylesheets: list) -> dict:
     """returns variable names with their values and meta data
 
     Checks all stylesheets (including styletags) linked by an html document
@@ -886,13 +886,13 @@ def extract_variables_for_document(html_path: str) -> dict:
     (which is the order in which it is linked).
 
     Args:
-        html_path: relative path to html doc in project folder.
+        stylesheets: all stylesheets from a file in the order in which
+            they were called.
 
     Returns:
         variables_registry: a dictionary of all CSS variables and their
             metadata in the order in which they appear as linked by html doc.
     """
-    stylesheets = get_all_stylesheets_by_file(html_path)
     variables_registry = {}
     sheet_index = 0
     for sheet in stylesheets:
@@ -1132,6 +1132,24 @@ def get_all_stylesheets_by_file(file_path: str) -> list:
     It will only accept links to local stylesheets and ignore any external
     stylesheets called with an http or https.
 
+    ALGORITHM:
+    For each Stylesheet in all_styles:
+    IF stylesheet.uses_variables is True:
+        FOR each Ruleset in stylesheet.rulesets:
+            FOR each Declaration in ruleset.declaration_block.declarations:
+                IF declaration.value contains "var(":
+                    1. Parse the var() reference(s) from declaration.value
+                       - Extract: variable name, fallback (if present)
+                    2. For each var() found:
+                        - Look up variable in variables_registry
+                        - Get the resolved value (using last definition due to
+                          cascade)
+                        - If variable not found, use fallback
+                        - If no fallback, leave as-is (or log warning)
+                    3. Replace all var() with resolved values in
+                       declaration.value
+                    4. Update declaration.value with resolved value
+
     Args:
         file_path: the path to an HTML file.
 
@@ -1175,6 +1193,8 @@ def get_all_stylesheets_by_file(file_path: str) -> list:
                 else:
                     css_sheet = Stylesheet(file_path, tag.text, "styletag")
                     all_styles.append(css_sheet)
+    variables_registry = extract_variables_for_document(all_styles)
+    print(variables_registry)
     return all_styles
 
 

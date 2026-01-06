@@ -106,7 +106,10 @@ project_dir = "tests/test_files/css_variables_test/"
 )
 def test_extract_variables_for_document(html_file, var_name, expected_entries):
     html_path = f"tests/test_files/css_variables_test/{html_file}"
-    variables_registry = css_tools.extract_variables_for_document(html_path)
+
+    # get stylesheets
+    stylesheets = css_tools.get_all_stylesheets_by_file(html_path)
+    variables_registry = css_tools.extract_variables_for_document(stylesheets)
 
     assert var_name in variables_registry
     actual_entries = variables_registry[var_name]
@@ -169,7 +172,10 @@ def test_resolve_variable(
     var_name, fallback, expected_value, expected_resolved
 ):
     html_path = "tests/test_files/css_variables_test/page1.html"
-    variables_registry = css_tools.extract_variables_for_document(html_path)
+    # Get stylesheets first (NEW)
+    stylesheets = css_tools.get_all_stylesheets_by_file(html_path)
+    # Pass stylesheets instead of html_path (CHANGED)
+    variables_registry = css_tools.extract_variables_for_document(stylesheets)
 
     resolved_value, was_resolved = css_tools.resolve_variable(
         var_name, variables_registry, fallback
