@@ -853,6 +853,15 @@ def apply_rule_to_element(
             if property_name not in CONTRAST_RELEVANT_PROPERTIES:
                 continue
 
+            # If the property_value is "inherit"
+            if (
+                property_name in ["color", "background-color", "background"]
+                and property_value.strip().lower() == "initial"
+            ):
+                property_value = normalize_css_value(
+                    property_value, property_name, element, computed_styles
+                )
+
             # Special handling for font-size - convert to pixels
             # and store enhanced data
             if property_name == "font-size":
@@ -1681,6 +1690,20 @@ def element_name_or_default(property_data: dict) -> str:
     """Get element name for default styling or fallback."""
     # You might need to pass element context here
     return "default"
+
+
+def normalize_css_value(
+    value: str, property_name: str, element: Tag, computed_styles: dict
+) -> str:
+    """Normalize CSS keywords to actual values."""
+    value = value.strip()
+    if value.lower() == "initial":
+        if property_name == "color":
+            return DEFAULT_GLOBAL_COLOR
+        elif property_name in ["background-color", "background"]:
+            return DEFAULT_GLOBAL_BACKGROUND
+    # Handle other keywords here in future (inherit, unset, revert)
+    return value
 
 
 if __name__ == "__main__":
