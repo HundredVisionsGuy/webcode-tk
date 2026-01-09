@@ -1194,7 +1194,27 @@ def get_all_stylesheets_by_file(file_path: str) -> list:
                     css_sheet = Stylesheet(file_path, tag.text, "styletag")
                     all_styles.append(css_sheet)
     variables_registry = extract_variables_for_document(all_styles)
-    print(variables_registry)
+
+    # Check each sheet to see if it applies variables, if so, resolve them
+    for stylesheet in all_styles:
+        if stylesheet.uses_variables:
+            for ruleset in stylesheet.rulesets:
+                for declaration in ruleset.declaration_block.declarations:
+                    if "var(" in declaration.value:
+                        var_keys = list(variables_registry.keys())
+                        for var in var_keys:
+                            if var in declaration.value:
+                                var = declaration.value
+                                if "," in declaration.value:
+                                    # get fallback
+                                    print()
+                                value, resolved = resolve_variable(
+                                    var, variables_registry
+                                )
+                                if resolved:
+                                    declaration.value = value
+                                else:
+                                    print()
     return all_styles
 
 

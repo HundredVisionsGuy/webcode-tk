@@ -1712,5 +1712,3 @@ if __name__ == "__main__":
     contrast_results = generate_contrast_report(project_path, "AAA")
     project_path = "tests/test_files/contrast_tool_test/"
     global_colors = css_tools.get_project_global_colors(project_path)
-    print()
-    print()
