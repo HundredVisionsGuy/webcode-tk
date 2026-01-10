@@ -928,6 +928,9 @@ def resolve_variable(
     Returns:
         Resolved value, fallback value, or original var() reference
     """
+    pos_1 = var_name.index("(")
+    pos_2 = var_name.index(")")
+    var_name = var_name[pos_1 + 1 : pos_2]
     variable_data = variables_registry.get(var_name)
     if not variable_data:
         if not fallback:
@@ -1198,24 +1201,42 @@ def get_all_stylesheets_by_file(file_path: str) -> list:
     # Check each sheet to see if it applies variables, if so, resolve them
     for stylesheet in all_styles:
         if stylesheet.uses_variables:
-            for ruleset in stylesheet.rulesets:
-                for declaration in ruleset.declaration_block.declarations:
-                    if "var(" in declaration.value:
-                        var_keys = list(variables_registry.keys())
-                        for var in var_keys:
-                            if var in declaration.value:
-                                var = declaration.value
-                                if "," in declaration.value:
-                                    # get fallback
-                                    print()
-                                value, resolved = resolve_variable(
-                                    var, variables_registry
-                                )
-                                if resolved:
-                                    declaration.value = value
-                                else:
-                                    print()
+            resolve_variables_in_stylesheet(stylesheet, variables_registry)
+            print()
     return all_styles
+
+
+def resolve_variables_in_stylesheet(
+    stylesheet: Stylesheet, variables_registry: dict
+) -> None:
+    """Resolve CSS variables in stylesheet declarations.
+
+    Only call if the stylesheet uses variables (`stylesheet.uses_variables`),
+    and be sure to extract variables first using the
+    `extract_variables_for_document()` function.
+
+    Args:
+        stylesheet: the stylesheet that uses `CSS` variables.
+        variables_registry: the dictionary that contains all
+    """
+    for ruleset in stylesheet.rulesets:
+        for declaration in ruleset.declaration_block.declarations:
+            if "var(" in declaration.value:
+                var_keys = list(variables_registry.keys())
+                for var in var_keys:
+                    if var in declaration.value:
+                        var = declaration.value
+                        if "," in declaration.value:
+                            # get fallback
+                            print()
+                        value, resolved = resolve_variable(
+                            var, variables_registry
+                        )
+                        if resolved:
+                            declaration.value = value
+                        else:
+                            print()
+    print(stylesheet.text)
 
 
 def get_background_color(declaration: Declaration) -> Union[str, None]:
@@ -1957,6 +1978,7 @@ def get_styles_by_html_files(project_path: str) -> list:
     html_files = html_tools.get_all_html_files(project_path)
     for file in html_files:
         file_data = get_all_stylesheets_by_file(file)
+        # variables_registry = extract_variables_for_document()
         styles_by_html_files.append({"file": file, "stylesheets": file_data})
     return styles_by_html_files
 
