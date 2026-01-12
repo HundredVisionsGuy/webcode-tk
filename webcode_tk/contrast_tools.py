@@ -32,6 +32,7 @@ Constants:
         compliance.
 """
 import copy
+import os
 import re
 
 import tinycss2
@@ -251,25 +252,37 @@ def load_css_files(html_docs: list[dict], project_folder: str) -> list[dict]:
             for each HTML file.
     """
     css_files = []
-    stylesheet_cache = {}
     for file in html_docs:
-        soup = file.get("soup")
-        source_order = get_css_source_order(soup)
         html_file = file.get("filename")
 
-        for sheet in source_order:
-            if sheet.get("type") == "external":
-                href = sheet.get("href")
-                parsed = get_or_parse_external_stylesheet(
-                    href, project_folder, stylesheet_cache
+        html_file_path = project_folder + html_file
+
+        if os.path.exists(html_file_path):
+            try:
+                resolved_stylesheets = css_tools.get_all_stylesheets_by_file(
+                    html_file_path
                 )
-            else:
-                parsed = parse_internal_style_tag(sheet.get("content"))
-                href = "style_tag"
+            except Exception:
+                # Fall back if resolution fails
+                pass
+
+        for resolved_sheet in resolved_stylesheets:
+            parsed = tinycss2.parse_stylesheet(resolved_sheet.text)
+
             css_source = {}
             if not css_source.get(html_file):
                 css_source[html_file] = []
-            append_style_data(html_file, sheet, href, parsed, css_source)
+
+            source_type = (
+                "internal" if resolved_sheet.type == "styletag" else "external"
+            )
+
+            data = {
+                "source_type": source_type,
+                "css_name": resolved_sheet.href,
+                "stylesheet": parsed,
+            }
+            css_source[html_file].append(data)
             css_files.append(css_source)
     return css_files
 
@@ -322,6 +335,7 @@ def get_or_parse_external_stylesheet(
     Returns:
         list: Parsed CSS rules from tinycss2 for the given stylesheet.
     """
+
     if href not in cache:
         css_path = project_folder + href
         with open(css_path, "rb") as fd:

@@ -143,7 +143,7 @@ def test_css_variables_contrast_resolution(
     matching_result = [
         r
         for r in results
-        if page_path in r.get("file", "") and r.get("selector") == selector
+        if page_path in r.get("filename", "") and r.get("selector") == selector
     ]
 
     assert (

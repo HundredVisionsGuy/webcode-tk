@@ -537,6 +537,18 @@ class Ruleset:
         if "{" not in self.__text or "}" not in self.__text:
             self.is_valid = False
 
+    @property
+    def text(self) -> str:
+        """Returns the text representation of the ruleset."""
+        return self.__text
+
+    @text.setter
+    def text(self, new_text: str) -> None:
+        """Updates the text and re-initializes the ruleset."""
+        self.__text = new_text
+        self.validate()
+        self.initialize()
+
 
 class DeclarationBlock:
     """A set of properties and values that go with a selector
@@ -748,6 +760,20 @@ class Declaration:
             value = value[:-1]
         self.is_color = color_tools.is_color_value(value)
 
+    @property
+    def text(self) -> str:
+        """Returns the text representation of the declaration."""
+        return self.__text
+
+    @text.setter
+    def text(self, new_text: str) -> None:
+        """Updates the text and re-parses property and value."""
+        self.__text = new_text
+        # Re-parse the property and value from the new text
+        elements = self.__text.split(":")
+        self.property = elements[0].strip()
+        self.value = elements[1].strip()
+
 
 def adjust_overrides(file_path: str, rules: dict) -> dict:
     """Returns a dictionary with a single global ruleset.
@@ -917,20 +943,29 @@ def extract_variables_for_document(stylesheets: list) -> dict:
 
 def resolve_variable(
     var_name: str, variables_registry: dict, fallback: str = None
-) -> str:
+) -> tuple:
     """Resolve a CSS variable to its value.
 
     Args:
-        var_name: Variable name like "--primary-color"
+        var_name: Variable name like "--primary-color" or
+            "var(--primary-color)"
         variables_registry: From extract_variables_for_document()
         fallback: Fallback value if variable not found
 
     Returns:
-        Resolved value, fallback value, or original var() reference
+        Tuple of (resolved_value, was_resolved)
+        resolved_value: the value of the variable, fallback if provided, or
+            None
+        was_resolved: True if variable was found, False if fallback or not
+            found
     """
-    pos_1 = var_name.index("(")
-    pos_2 = var_name.index(")")
-    var_name = var_name[pos_1 + 1 : pos_2]
+    # Extract variable name if wrapped in var()
+    if "var(" in var_name and ")" in var_name:
+        pos_1 = var_name.index("(")
+        pos_2 = var_name.index(")")
+        var_name = var_name[pos_1 + 1 : pos_2].strip()
+
+    # Look up variable in registry
     variable_data = variables_registry.get(var_name)
     if not variable_data:
         if not fallback:
@@ -1218,25 +1253,48 @@ def resolve_variables_in_stylesheet(
     Args:
         stylesheet: the stylesheet that uses `CSS` variables.
         variables_registry: the dictionary that contains all
+            variable definitions indexed by variable name
     """
+    # Track if any variables were resolved
     for ruleset in stylesheet.rulesets:
         for declaration in ruleset.declaration_block.declarations:
             if "var(" in declaration.value:
-                var_keys = list(variables_registry.keys())
-                for var in var_keys:
-                    if var in declaration.value:
-                        var = declaration.value
-                        if "," in declaration.value:
-                            # get fallback
-                            print()
-                        value, resolved = resolve_variable(
-                            var, variables_registry
+                # Extract the variable reference with fallback if present
+                var_pattern = r"var\(([^,)]+)(?:,\s*([^)]+))?\)"
+                match = re.search(var_pattern, declaration.value)
+
+                if match:
+                    var_name = match.group(1).strip()
+                    fallback = (
+                        match.group(2).strip() if match.group(2) else None
+                    )
+
+                    # Resolve the variable
+                    resolved_value, was_resolved = resolve_variable(
+                        var_name, variables_registry, fallback
+                    )
+
+                    if resolved_value is not None:
+                        # Update declaration value and text
+                        declaration.text = (
+                            declaration.property + ": " + resolved_value
                         )
-                        if resolved:
-                            declaration.value = value
-                        else:
-                            print()
-    print(stylesheet.text)
+
+        # Rebuild ruleset texts from updated declarations
+        declarations_text = ";".join(
+            d.text for d in ruleset.declaration_block.declarations
+        )
+        ruleset.text = ruleset.selector + "{" + declarations_text + "}"
+
+    # Rebuild stylehseet text from updated rulesets
+    stylesheet.text = "".join(ruleset.text for ruleset in stylesheet.rulesets)
+
+    # Repopulate color rulesets
+    stylesheet.color_rulesets = []
+    for ruleset in stylesheet.rulesets:
+        color_ruleset = stylesheet.get_color_ruleset(ruleset)
+        print(color_ruleset)
+    print("breakpoint for testing - remove when pass all tests ")
 
 
 def get_background_color(declaration: Declaration) -> Union[str, None]:
