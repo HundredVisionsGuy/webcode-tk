@@ -1,0 +1,1994 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../color_tools/">
+      
+      
+        <link rel="next" href="../ux_tools/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../docs/docs_assets/images/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>animation_tools.py - webcode-tk docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="dark" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#animation_toolspy" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="webcode-tk docs" class="md-header__button md-logo" aria-label="webcode-tk docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M360.8 1.2c-17-4.9-34.7 5-39.6 22l-128 448c-4.9 17 5 34.7 22 39.6s34.7-5 39.6-22l128-448c4.9-17-5-34.7-22-39.6m64.6 136.1c-12.5 12.5-12.5 32.8 0 45.3l73.4 73.4-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3l-96-96c-12.5-12.5-32.8-12.5-45.3 0zm-274.7 0c-12.5-12.5-32.8-12.5-45.3 0l-96 96c-12.5 12.5-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256l73.3-73.4c12.5-12.5 12.5-32.8 0-45.3z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            webcode-tk docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              animation_tools.py
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="webcode-tk docs" class="md-nav__button md-logo" aria-label="webcode-tk docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M360.8 1.2c-17-4.9-34.7 5-39.6 22l-128 448c-4.9 17 5 34.7 22 39.6s34.7-5 39.6-22l128-448c4.9-17-5-34.7-22-39.6m64.6 136.1c-12.5 12.5-12.5 32.8 0 45.3l73.4 73.4-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3l-96-96c-12.5-12.5-32.8-12.5-45.3 0zm-274.7 0c-12.5-12.5-32.8-12.5-45.3 0l-96 96c-12.5 12.5-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256l73.3-73.4c12.5-12.5 12.5-32.8 0-45.3z"/></svg>
+
+    </a>
+    webcode-tk docs
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    webcode-tk Docs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../html_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    html_tools.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../css_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    css_tools.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cascade_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    cascade_tools.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../color_keywords/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    color_keywords.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../color_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    color_tools.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    animation_tools.py
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    animation_tools.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.animation_tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        animation_tools
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.animation_tools.get_animation_properties_report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_animation_properties_report
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.animation_tools.get_animation_report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_animation_report
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.animation_tools.get_keyframe_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_keyframe_data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.animation_tools.get_keyframe_report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_keyframe_report
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.animation_tools.get_num_properties_msg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_num_properties_msg
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.animation_tools.get_targetted_properties_msg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_targetted_properties_msg
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ux_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ux_tools.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    utils.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../validator_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    validator_tools.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../explanation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Explanation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.animation_tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        animation_tools
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.animation_tools.get_animation_properties_report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_animation_properties_report
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.animation_tools.get_animation_report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_animation_report
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.animation_tools.get_keyframe_data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_keyframe_data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.animation_tools.get_keyframe_report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_keyframe_report
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.animation_tools.get_num_properties_msg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_num_properties_msg
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.animation_tools.get_targetted_properties_msg" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_targetted_properties_msg
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="animation_toolspy">animation_tools.py</h1>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<a id="webcode_tk.animation_tools"></a>
+    <div class="doc doc-contents first">
+
+        <p>A group of functions that work with css_tools and cascade_tools to provide
+reports on CSS animations.</p>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="webcode_tk.animation_tools.get_animation_properties_report" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_animation_properties_report</span><span class="p">(</span><span class="n">project_folder</span><span class="p">,</span> <span class="n">num_goal</span><span class="p">,</span> <span class="n">specific_properties</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>returns a list of pass/fail messages based on number and type of
+unique animation keyframe properties.</p>
+<p>You can specify just the number of unique properties or you can specify
+both the number as well as check for specific targetted properties. If you
+specify both, both must be met for a pass.</p>
+<p>NOTE: In the case of the transform properties, you can just specify
+transform, or you can include the type of transform in the form of
+transform- + the transform value (eg. transform-rotate(),
+transform-translate(), transfrom-skew(), etc.)</p>
+<p>Since animation_values might have multiple entries for the same file,
+we need to track a per file record to see if it meets or not.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>animation_values</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>a list of filenames with keyframe and property
+data.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>num_goal</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>the minimum number of percentage keyframes we would want
+to see.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>specific_properties</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>a list or tuple of properties required to be
+present.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>results</code></td>            <td>
+                  <code><span title="list">list</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>a list of messages (one for each file in the project) with
+a pass or fail with number present of each type.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>webcode_tk/animation_tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_animation_properties_report</span><span class="p">(</span>
+    <span class="n">project_folder</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">num_goal</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">specific_properties</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;returns a list of pass/fail messages based on number and type of</span>
+<span class="sd">    unique animation keyframe properties.</span>
+
+<span class="sd">    You can specify just the number of unique properties or you can specify</span>
+<span class="sd">    both the number as well as check for specific targetted properties. If you</span>
+<span class="sd">    specify both, both must be met for a pass.</span>
+
+<span class="sd">    NOTE: In the case of the transform properties, you can just specify</span>
+<span class="sd">    transform, or you can include the type of transform in the form of</span>
+<span class="sd">    transform- + the transform value (eg. transform-rotate(),</span>
+<span class="sd">    transform-translate(), transfrom-skew(), etc.)</span>
+
+<span class="sd">    Since animation_values might have multiple entries for the same file,</span>
+<span class="sd">    we need to track a per file record to see if it meets or not.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        animation_values: a list of filenames with keyframe and property</span>
+<span class="sd">            data.</span>
+<span class="sd">        num_goal: the minimum number of percentage keyframes we would want</span>
+<span class="sd">            to see.</span>
+<span class="sd">        specific_properties: a list or tuple of properties required to be</span>
+<span class="sd">            present.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        results: a list of messages (one for each file in the project) with</span>
+<span class="sd">            a pass or fail with number present of each type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">report</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">animation_report</span> <span class="o">=</span> <span class="n">get_animation_report</span><span class="p">(</span><span class="n">project_folder</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">animation_report</span><span class="p">:</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_first_dict_key</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="n">properties_targetted</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;properties&quot;</span><span class="p">)</span>
+        <span class="n">num_properties</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">properties_targetted</span><span class="p">)</span>
+        <span class="n">num_remaining</span> <span class="o">=</span> <span class="n">num_goal</span> <span class="o">-</span> <span class="n">num_properties</span>
+        <span class="k">if</span> <span class="n">num_remaining</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;fail: </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> did not target enough properties; should&quot;</span>
+            <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;target </span><span class="si">{</span><span class="n">num_remaining</span><span class="si">}</span><span class="s2"> properties more.&quot;</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">specific_properties</span><span class="p">:</span>
+                <span class="c1"># make sure it&#39;s a list</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="n">get_targetted_properties_msg</span><span class="p">(</span>
+                    <span class="n">specific_properties</span><span class="p">,</span> <span class="n">properties_targetted</span><span class="p">,</span> <span class="n">filename</span>
+                <span class="p">)</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Now lets check for num of unique properties</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="n">get_num_properties_msg</span><span class="p">(</span>
+                    <span class="n">num_goal</span><span class="p">,</span> <span class="n">properties_targetted</span><span class="p">,</span> <span class="n">filename</span>
+                <span class="p">)</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="c1"># now is the time to restart our list of properties</span>
+        <span class="n">properties_targetted</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">report</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="webcode_tk.animation_tools.get_animation_report" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_animation_report</span><span class="p">(</span><span class="n">project_dir</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>gets a report on the implementation of animation in a project.</p>
+<p>The animation report should contain a single entry for each HTML
+file. Each HTML file will have a list of animations: the name of the
+keyframe, a list of each keyframe type (percentage, from, or two),
+and a list of properties included and if it is transform, it will
+treat each type of transform as a unique property: eg. skew(), rotate(),
+translate(), etc.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>project_dir</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>the path to the project folder.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>report</code></td>            <td>
+                  <code><span title="list">list</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>a list of dictionary objects</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>webcode_tk/animation_tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_animation_report</span><span class="p">(</span><span class="n">project_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;gets a report on the implementation of animation in a project.</span>
+
+<span class="sd">    The animation report should contain a single entry for each HTML</span>
+<span class="sd">    file. Each HTML file will have a list of animations: the name of the</span>
+<span class="sd">    keyframe, a list of each keyframe type (percentage, from, or two),</span>
+<span class="sd">    and a list of properties included and if it is transform, it will</span>
+<span class="sd">    treat each type of transform as a unique property: eg. skew(), rotate(),</span>
+<span class="sd">    translate(), etc.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        project_dir: the path to the project folder.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        report: a list of dictionary objects&quot;&quot;&quot;</span>
+    <span class="n">report</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Animation Tests (test for # of keyframes and types of transitions)</span>
+    <span class="n">files_by_styles</span> <span class="o">=</span> <span class="n">css_tools</span><span class="o">.</span><span class="n">get_styles_by_html_files</span><span class="p">(</span><span class="n">project_dir</span><span class="p">)</span>
+
+    <span class="c1"># loop through each file&#39;s stylesheet objects</span>
+    <span class="n">keyframe_animations</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files_by_styles</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">sheet</span> <span class="ow">in</span> <span class="n">file</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;stylesheets&quot;</span><span class="p">):</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">clerk</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;file&quot;</span><span class="p">))</span>
+            <span class="n">nested_at_rules</span> <span class="o">=</span> <span class="n">sheet</span><span class="o">.</span><span class="n">nested_at_rules</span>
+            <span class="k">for</span> <span class="n">at_rule</span> <span class="ow">in</span> <span class="n">nested_at_rules</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;@keyframes&quot;</span> <span class="ow">in</span> <span class="n">at_rule</span><span class="o">.</span><span class="n">at_rule</span><span class="p">:</span>
+                    <span class="n">keyframe_animations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">at_rule</span><span class="o">.</span><span class="n">at_rule</span><span class="p">,</span> <span class="n">at_rule</span><span class="o">.</span><span class="n">rulesets</span><span class="p">)</span>
+                    <span class="p">)</span>
+
+    <span class="n">report</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">animation_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">animation</span> <span class="ow">in</span> <span class="n">keyframe_animations</span><span class="p">:</span>
+        <span class="n">filename</span><span class="p">,</span> <span class="n">keyframe</span><span class="p">,</span> <span class="n">rulesets</span> <span class="o">=</span> <span class="n">animation</span>
+        <span class="k">if</span> <span class="n">filename</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">animation_dict</span><span class="p">:</span>
+            <span class="n">animation_dict</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">filename</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;keyframes&quot;</span><span class="p">:</span> <span class="p">[],</span>
+                    <span class="s2">&quot;pct_keyframes&quot;</span><span class="p">:</span> <span class="p">[],</span>
+                    <span class="s2">&quot;from_keyframes&quot;</span><span class="p">:</span> <span class="p">[],</span>
+                    <span class="s2">&quot;to_keyframes&quot;</span><span class="p">:</span> <span class="p">[],</span>
+                    <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="nb">set</span><span class="p">(),</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">animation_dict</span><span class="p">)</span>
+        <span class="n">animation_dict</span><span class="p">[</span><span class="n">filename</span><span class="p">][</span><span class="s2">&quot;keyframes&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">keyframe</span><span class="p">)</span>
+        <span class="n">current_dict</span> <span class="o">=</span> <span class="n">animation_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">rulesets</span><span class="p">:</span>
+            <span class="n">declarations</span> <span class="o">=</span> <span class="n">rule</span><span class="o">.</span><span class="n">declaration_block</span><span class="o">.</span><span class="n">declarations</span>
+            <span class="k">for</span> <span class="n">declaration</span> <span class="ow">in</span> <span class="n">declarations</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">declaration</span><span class="o">.</span><span class="n">property</span> <span class="o">==</span> <span class="s2">&quot;transform&quot;</span><span class="p">:</span>
+                    <span class="n">value_type</span> <span class="o">=</span> <span class="n">declaration</span><span class="o">.</span><span class="n">value</span>
+                    <span class="n">value_split</span> <span class="o">=</span> <span class="n">value_type</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;(&quot;</span><span class="p">)</span>
+                    <span class="n">transform_value</span> <span class="o">=</span> <span class="s2">&quot;transform-&quot;</span> <span class="o">+</span> <span class="n">value_split</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;()&quot;</span>
+                    <span class="n">current_dict</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">transform_value</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">current_dict</span><span class="p">[</span><span class="s2">&quot;properties&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">declaration</span><span class="o">.</span><span class="n">property</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;%&quot;</span> <span class="ow">in</span> <span class="n">rule</span><span class="o">.</span><span class="n">selector</span><span class="p">:</span>
+                <span class="n">current_dict</span><span class="p">[</span><span class="s2">&quot;pct_keyframes&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rule</span><span class="o">.</span><span class="n">selector</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="s2">&quot;from&quot;</span> <span class="ow">in</span> <span class="n">rule</span><span class="o">.</span><span class="n">selector</span><span class="p">:</span>
+                <span class="n">current_dict</span><span class="p">[</span><span class="s2">&quot;from_keyframes&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rule</span><span class="o">.</span><span class="n">selector</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="s2">&quot;to&quot;</span> <span class="ow">in</span> <span class="n">rule</span><span class="o">.</span><span class="n">selector</span><span class="p">:</span>
+                <span class="n">current_dict</span><span class="p">[</span><span class="s2">&quot;to_keyframes&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rule</span><span class="o">.</span><span class="n">selector</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">report</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="webcode_tk.animation_tools.get_keyframe_data" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_keyframe_data</span><span class="p">(</span><span class="n">report</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>return a list of keyframe types and numbers from an animation report</p>
+<p>The goal is to track all data related to animation keyframes per file.
+The data is a dictionary of filenames. The filenames will be the key, and
+each filename's values will be a dictionary of keyframe names, number of
+percentage keyframes, and the number of from {} and to {} keyframes.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>report</code>
+            </td>
+            <td>
+                  <code><span title="list">list</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>an animation report, which is a list of project files with a
+dictionary of details</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>data</code></td>            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>a dictionary of filenames as primary keys with a dictionary of
+keyframe data as the key's value.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>webcode_tk/animation_tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_keyframe_data</span><span class="p">(</span><span class="n">report</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;return a list of keyframe types and numbers from an animation report</span>
+
+<span class="sd">    The goal is to track all data related to animation keyframes per file.</span>
+<span class="sd">    The data is a dictionary of filenames. The filenames will be the key, and</span>
+<span class="sd">    each filename&#39;s values will be a dictionary of keyframe names, number of</span>
+<span class="sd">    percentage keyframes, and the number of from {} and to {} keyframes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        report: an animation report, which is a list of project files with a</span>
+<span class="sd">            dictionary of details</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        data: a dictionary of filenames as primary keys with a dictionary of</span>
+<span class="sd">            keyframe data as the key&#39;s value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">animation_data</span> <span class="ow">in</span> <span class="n">report</span><span class="p">:</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_first_dict_key</span><span class="p">(</span><span class="n">animation_data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">filename</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">names</span> <span class="o">=</span> <span class="n">animation_data</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;keyframes&quot;</span><span class="p">)</span>
+            <span class="n">data</span><span class="p">[</span><span class="n">filename</span><span class="p">][</span><span class="s2">&quot;keyframe_names&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">names</span>
+            <span class="n">data</span><span class="p">[</span><span class="n">filename</span><span class="p">][</span><span class="s2">&quot;froms_tos&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">data</span><span class="p">[</span><span class="n">filename</span><span class="p">][</span><span class="s2">&quot;pct_keyframes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">names</span> <span class="o">=</span> <span class="n">animation_data</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;keyframes&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">names</span><span class="p">:</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">filename</span><span class="p">][</span><span class="s2">&quot;keyframe_names&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">names</span>
+        <span class="n">pct_keyframes</span> <span class="o">=</span> <span class="n">animation_data</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;pct_keyframes&quot;</span><span class="p">)</span>
+        <span class="n">froms</span> <span class="o">=</span> <span class="n">animation_data</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;from_keyframes&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">froms</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="n">filename</span><span class="p">][</span><span class="s2">&quot;froms_tos&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">froms</span><span class="p">)</span>
+        <span class="n">tos</span> <span class="o">=</span> <span class="n">animation_data</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;to_keyframes&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">tos</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="n">filename</span><span class="p">][</span><span class="s2">&quot;froms_tos&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tos</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pct_keyframes</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="n">filename</span><span class="p">][</span><span class="s2">&quot;pct_keyframes&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pct_keyframes</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">data</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="webcode_tk.animation_tools.get_keyframe_report" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_keyframe_report</span><span class="p">(</span><span class="n">project_folder</span><span class="p">,</span> <span class="n">num_goal</span><span class="p">,</span> <span class="n">pct_goal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">from_to_goals</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>returns a list of pass/fail messages (1 for each goal in each file).</p>
+<p>A report that allows you to set the minimum number of keyframes for each
+file. By setting num_goal, you are stating how many keyframes in all you
+expect to see in a project.</p>
+<p>You can also set a minimum number of percentage keyframes, and the minimum
+number of from {} and to {} keyframes.</p>
+<p>NOTE: for every goal, there will be a report on that goal (one for each
+file). If your project has two files, and you set all three goals (
+num_goal, pct_goal, and from_to_goals), the report will create a list of
+6 messages.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>project_folder</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>the folder that houses the project.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>num_goal</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>the minimum number of keyframes per file (overall)</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>pct_goal</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>the minimum number of percentage keyframes we would want
+to see.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>from_to_goals</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>the minimum number of from and to keyframes.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>results</code></td>            <td>
+                  <code><span title="list">list</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>a list of messages (one for each file in the project) with
+a pass or fail with number present of each type.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>webcode_tk/animation_tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_keyframe_report</span><span class="p">(</span>
+    <span class="n">project_folder</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">num_goal</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">pct_goal</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">from_to_goals</span><span class="o">=</span><span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;returns a list of pass/fail messages (1 for each goal in each file).</span>
+
+<span class="sd">    A report that allows you to set the minimum number of keyframes for each</span>
+<span class="sd">    file. By setting num_goal, you are stating how many keyframes in all you</span>
+<span class="sd">    expect to see in a project.</span>
+
+<span class="sd">    You can also set a minimum number of percentage keyframes, and the minimum</span>
+<span class="sd">    number of from {} and to {} keyframes.</span>
+
+<span class="sd">    NOTE: for every goal, there will be a report on that goal (one for each</span>
+<span class="sd">    file). If your project has two files, and you set all three goals (</span>
+<span class="sd">    num_goal, pct_goal, and from_to_goals), the report will create a list of</span>
+<span class="sd">    6 messages.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        project_folder: the folder that houses the project.</span>
+<span class="sd">        num_goal: the minimum number of keyframes per file (overall)</span>
+<span class="sd">        pct_goal: the minimum number of percentage keyframes we would want</span>
+<span class="sd">            to see.</span>
+<span class="sd">        from_to_goals: the minimum number of from and to keyframes.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        results: a list of messages (one for each file in the project) with</span>
+<span class="sd">            a pass or fail with number present of each type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">report</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">animation_report</span> <span class="o">=</span> <span class="n">get_animation_report</span><span class="p">(</span><span class="n">project_folder</span><span class="p">)</span>
+    <span class="n">keyframe_results</span> <span class="o">=</span> <span class="n">get_keyframe_data</span><span class="p">(</span><span class="n">animation_report</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">file</span><span class="p">,</span> <span class="n">results</span> <span class="ow">in</span> <span class="n">keyframe_results</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">pct_keyframes</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;pct_keyframes&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pct_keyframes</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
+            <span class="n">pct_keyframes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pct_keyframes</span><span class="p">)</span>
+        <span class="n">num_froms_tos</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;froms_tos&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">num_froms_tos</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
+            <span class="n">num_froms_tos</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">num_froms_tos</span><span class="p">)</span>
+        <span class="n">overall_num</span> <span class="o">=</span> <span class="n">pct_keyframes</span> <span class="o">+</span> <span class="n">num_froms_tos</span>
+        <span class="k">if</span> <span class="n">overall_num</span> <span class="o">&gt;=</span> <span class="n">num_goal</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;pass: </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2"> has </span><span class="si">{</span><span class="n">overall_num</span><span class="si">}</span><span class="s2"> keyframes (enough &quot;</span>
+            <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot;overall to meet).&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">remaining</span> <span class="o">=</span> <span class="n">num_goal</span> <span class="o">-</span> <span class="n">overall_num</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;fail: </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2"> has only </span><span class="si">{</span><span class="n">overall_num</span><span class="si">}</span><span class="s2"> keyframes (needs &quot;</span>
+            <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">remaining</span><span class="si">}</span><span class="s2"> more to pass).&quot;</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pct_goal</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">pct_keyframes</span> <span class="o">&gt;=</span> <span class="n">pct_goal</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;pass: </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2"> has </span><span class="si">{</span><span class="n">pct_keyframes</span><span class="si">}</span><span class="s2"> percentage &quot;</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot;keyframes.&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;fail: </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2"> does not have enough percentage &quot;</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot;keyframes to pass.&quot;</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">from_to_goals</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">num_froms_tos</span> <span class="o">&gt;=</span> <span class="n">from_to_goals</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;pass: </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2"> has </span><span class="si">{</span><span class="n">num_froms_tos</span><span class="si">}</span><span class="s2"> from and to &quot;</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot;keyframes.&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;fail: </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2"> does not have enough from and to &quot;</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot;keyframes to pass.&quot;</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">report</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="webcode_tk.animation_tools.get_num_properties_msg" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_num_properties_msg</span><span class="p">(</span><span class="n">num_goal</span><span class="p">,</span> <span class="n">properties_targetted</span><span class="p">,</span> <span class="n">current_file</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Returns a pass/fail message based on whether a file targets the min
+number of properties found.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>num_goal</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>the number of unique properties that should be targetted</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>webcode_tk/animation_tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_num_properties_msg</span><span class="p">(</span>
+    <span class="n">num_goal</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">properties_targetted</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="nb">set</span><span class="p">],</span>
+    <span class="n">current_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a pass/fail message based on whether a file targets the min</span>
+<span class="sd">    number of properties found.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        num_goal: the number of unique properties that should be targetted&quot;&quot;&quot;</span>
+    <span class="n">num_unique_props</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">properties_targetted</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">num_unique_props</span> <span class="o">&gt;=</span> <span class="n">num_goal</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;pass: </span><span class="si">{</span><span class="n">current_file</span><span class="si">}</span><span class="s2">&#39;s animations targetted the minimum &quot;</span>
+        <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot;required number of properties.&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">off_by</span> <span class="o">=</span> <span class="n">num_goal</span> <span class="o">-</span> <span class="n">num_unique_props</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;fail: </span><span class="si">{</span><span class="n">current_file</span><span class="si">}</span><span class="s2">&#39;s animations did not target the &quot;</span>
+        <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">num_goal</span><span class="si">}</span><span class="s2"> required number of properties (missing &quot;</span>
+        <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">off_by</span><span class="si">}</span><span class="s2">)&quot;</span>
+    <span class="k">return</span> <span class="n">msg</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="webcode_tk.animation_tools.get_targetted_properties_msg" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_targetted_properties_msg</span><span class="p">(</span><span class="n">properties</span><span class="p">,</span> <span class="n">properties_targetted</span><span class="p">,</span> <span class="n">current_file</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>returns whether the file addresses all targetted keyframe properties or
+not.</p>
+<p>Receives the keyframe properties found in a file's styles and returns a
+message that states whether the file has targetted all required properties
+in the form of "pass" or "fail".</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>properties</code>
+            </td>
+            <td>
+                  <code><span title="typing.Union">Union</span>[<span title="list">list</span>, <span title="tuple">tuple</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>a list or tuple of the keyframe properties targetted in a
+file's stylesheets or not.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>properties_targetted</code>
+            </td>
+            <td>
+                  <code><span title="typing.Union">Union</span>[<span title="list">list</span>, <span title="tuple">tuple</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>a list or tuple of the properties that the file
+should contain.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>current_file</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>the name of the HTML document we are checking.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>msg</code></td>            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>a string that begins with 'pass:' or 'fail:', and details on what
+was missing if a fail.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>webcode_tk/animation_tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_targetted_properties_msg</span><span class="p">(</span>
+    <span class="n">properties</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">],</span>
+    <span class="n">properties_targetted</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">],</span>
+    <span class="n">current_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;returns whether the file addresses all targetted keyframe properties or</span>
+<span class="sd">    not.</span>
+
+<span class="sd">    Receives the keyframe properties found in a file&#39;s styles and returns a</span>
+<span class="sd">    message that states whether the file has targetted all required properties</span>
+<span class="sd">    in the form of &quot;pass&quot; or &quot;fail&quot;.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        properties: a list or tuple of the keyframe properties targetted in a</span>
+<span class="sd">            file&#39;s stylesheets or not.</span>
+<span class="sd">        properties_targetted: a list or tuple of the properties that the file</span>
+<span class="sd">            should contain.</span>
+<span class="sd">        current_file: the name of the HTML document we are checking.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        msg: a string that begins with &#39;pass:&#39; or &#39;fail:&#39;, and details on what</span>
+<span class="sd">            was missing if a fail.&quot;&quot;&quot;</span>
+    <span class="n">properties</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">properties</span><span class="p">)</span>
+    <span class="k">for</span> <span class="nb">property</span> <span class="ow">in</span> <span class="n">properties_targetted</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">property</span> <span class="ow">in</span> <span class="n">properties</span><span class="p">:</span>
+            <span class="n">properties</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="nb">property</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">properties</span><span class="p">:</span>
+        <span class="c1"># we failed to include all required properties</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;fail: </span><span class="si">{</span><span class="n">current_file</span><span class="si">}</span><span class="s2">&#39;s animations did not target all &quot;</span>
+        <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;required properties (missing </span><span class="si">{</span><span class="n">properties</span><span class="si">}</span><span class="s2">)&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Success on the required properties</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;pass: </span><span class="si">{</span><span class="n">current_file</span><span class="si">}</span><span class="s2">&#39;s animations targetted all &quot;</span>
+        <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot;required properties&quot;</span>
+    <span class="k">return</span> <span class="n">msg</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div><h2 id="notes">Notes</h2>
+<p>I added these tools to check CSS animations. In my class, my more advanced students are learning to make keyframe animations, and I want to test to make sure they have a certain number of keyframes, and be able to check whether they are using <code>from {}</code> and <code>to {}</code> keyframes as well as percentage keyframes.</p>
+<p>I would also like to encourage them to animate more than use standard properties, but to target transforms.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

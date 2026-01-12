@@ -1,0 +1,905 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+        <link rel="next" href="tutorials/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="docs/docs_assets/images/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>webcode-tk docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="dark" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#webcode-tk-docs" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="." title="webcode-tk docs" class="md-header__button md-logo" aria-label="webcode-tk docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M360.8 1.2c-17-4.9-34.7 5-39.6 22l-128 448c-4.9 17 5 34.7 22 39.6s34.7-5 39.6-22l128-448c4.9-17-5-34.7-22-39.6m64.6 136.1c-12.5 12.5-12.5 32.8 0 45.3l73.4 73.4-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3l-96-96c-12.5-12.5-32.8-12.5-45.3 0zm-274.7 0c-12.5-12.5-32.8-12.5-45.3 0l-96 96c-12.5 12.5-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256l73.3-73.4c12.5-12.5 12.5-32.8 0-45.3z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            webcode-tk docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              webcode-tk Docs
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="." title="webcode-tk docs" class="md-nav__button md-logo" aria-label="webcode-tk docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M360.8 1.2c-17-4.9-34.7 5-39.6 22l-128 448c-4.9 17 5 34.7 22 39.6s34.7-5 39.6-22l128-448c4.9-17-5-34.7-22-39.6m64.6 136.1c-12.5 12.5-12.5 32.8 0 45.3l73.4 73.4-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3l-96-96c-12.5-12.5-32.8-12.5-45.3 0zm-274.7 0c-12.5-12.5-32.8-12.5-45.3 0l-96 96c-12.5 12.5-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256l73.3-73.4c12.5-12.5 12.5-32.8 0-45.3z"/></svg>
+
+    </a>
+    webcode-tk docs
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    webcode-tk Docs
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="." class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    webcode-tk Docs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Table Of Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#project-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Project Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        webcode_tk
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="webcode_tk">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#webcode_tk--modules-exported-by-this-package" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modules exported by this package:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#web-design-class-project-templates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web Design Class Project Templates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acknowledgements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acknowledgements
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="tutorials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="reference/html_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    html_tools.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="reference/css_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    css_tools.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="reference/cascade_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    cascade_tools.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="reference/color_keywords/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    color_keywords.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="reference/color_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    color_tools.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="reference/animation_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    animation_tools.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="reference/ux_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ux_tools.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="reference/utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    utils.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="reference/validator_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    validator_tools.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="explanation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Explanation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Table Of Contents
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#project-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Project Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        webcode_tk
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="webcode_tk">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#webcode_tk--modules-exported-by-this-package" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modules exported by this package:
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#web-design-class-project-templates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web Design Class Project Templates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acknowledgements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acknowledgements
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="webcode-tk-docs">webcode-tk Docs</h1>
+<p>A collection of functions designed by a Web Design teacher for checking front-end web documents (in particular HTML and CSS files). It can automatically check validation on HTML and CSS.</p>
+<p>The way I use it is to create a GitHub template with a project folder and a README file indicating which elements must be present. I deploy these templates on <a href="https://classroom.github.com/">GitHub Classroom</a>. Each template has a project folder with a README file both in the main repo folder as well as the project folder to indicate what I'll be testing for.</p>
+<p>For <strong>HTML checks</strong>, I use it to make sure the project does not have any validation errors, meets the required number of elements, and can even check for a minimum number of image files.</p>
+<p>For CSS, you can check validation, check to make sure specific properties are addressed, check for color contrast, and check to see if font families have been targetted. I also have a check that identifies if style attributes have been employed or not.</p>
+<p>I have other helper tools that work with the html_tools and css_tools. I have included a ux_tools library that reports back on words per sentence, sentences per paragraph, list items in list, and readability scores. I have an animation_tools that can report back on the keyframe animations that are employed.</p>
+<h2 id="table-of-contents">Table Of Contents</h2>
+<ol>
+<li><a href="tutorials/">Tutorials</a></li>
+<li><a href="reference/html_tools/">html_tools.py</a></li>
+<li><a href="reference/css_tools/">css_tools.py</a></li>
+<li><a href="reference/cascade_tools/">cascade_tools.py</a></li>
+<li><a href="reference/color_tools/">color_tools.py</a></li>
+<li><a href="reference/color_keywords/">color_keywords.py</a></li>
+<li><a href="reference/contrast_tools/">contrast_tools.py</a></li>
+<li><a href="reference/animation_tools/">animation_tools.py</a></li>
+<li><a href="reference/ux_tools/">ux_tools.py</a></li>
+<li><a href="reference/utils/">utils.py</a></li>
+<li><a href="reference/validator_tools/">validator_tools.py</a></li>
+<li><a href="explanation/">Explanation</a></li>
+</ol>
+<p>Quickly find what you're looking for depending on
+your use case by looking at the different pages.</p>
+<h2 id="project-overview">Project Overview</h2>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<a id="webcode_tk"></a>
+    <div class="doc doc-contents first">
+
+        <p>Deals with html and css documents to check their code.</p>
+<h4 id="webcode_tk--modules-exported-by-this-package">Modules exported by this package:</h4>
+<ul>
+<li>
+<p><strong><code>animation_tools</code></strong>: a library used to report back on animations applied.
+           As of now, we are focusing entirely on keyframe animations (not)
+          transitions.</p>
+</li>
+<li>
+<p><strong><code>cascade_tools</code></strong>: library to calculate how the cascade affects font-size
+          and background color and color through inheritance and will be
+          used for calculating color contrast.</p>
+</li>
+<li>
+<p><strong><code>color_keywords</code></strong>: helper library to align color keywords with their
+          properties and hex and rgb values.</p>
+</li>
+<li>
+<p><strong><code>color_tools</code></strong>: processes CSS color related properties and values.</p>
+</li>
+<li>
+<p><strong><code>contrast_tools</code></strong>: calculates contrast results taking into account how
+          the background is invisible, but still affects contrast on elements
+          even if those elements do not have a background color explicitly
+          applied. It also only checks elements with text in the innerHTML.</p>
+</li>
+<li>
+<p><strong><code>css_tools</code></strong>: creates Stylesheet objects that store CSS information.</p>
+</li>
+<li>
+<p><strong><code>font_tools</code></strong>: A collection of functions used to process font-related
+          styles.</p>
+</li>
+<li>
+<p><strong><code>html_tools</code></strong>: gets html files from a project folder, gets the HTML code
+          from files, gets number of a particular element in a file
+          or folder, gets elements as tags, and much more.</p>
+</li>
+<li>
+<p><strong><code>ux_tools</code></strong>: gets readability stats for paragraphs of text (could
+          be from just <code>p</code> tags or a list of other tags e.g. <code>li</code>,
+          <code>div</code>, etc.).</p>
+</li>
+<li>
+<p><strong><code>utils.py</code></strong>: a library of helper functions to reduce the workload of the
+          other libraries.</p>
+</li>
+<li>
+<p><strong><code>validator_tools</code></strong>: sends HTML or CSS code to the W3C Validator to check
+          for errors.</p>
+</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div><h2 id="web-design-class-project-templates">Web Design Class Project Templates</h2>
+<p>Below are a few examples of how I use webcode-tk in a class project. If you look at the test files, you can see how I set it up.</p>
+<p>I use <code>webcode-tk</code> to inspect all files in the <code>project</code> folder, and <code>pytest</code> looks at the reports and other tools to determine whether students' projects have met all the goals:</p>
+<p><strong><a href="https://github.com/CenturyHSTech/one-pager-project">One Pager Project</a></strong> contains two <code>pytest</code> files:</p>
+<ul>
+<li><a href="https://github.com/CenturyHSTech/one-pager-project/blob/main/tests/test_html.py">test_html.py</a></li>
+<li><a href="https://github.com/CenturyHSTech/one-pager-project/blob/main/tests/test_css.py">test_css.py</a></li>
+</ul>
+<p><strong><a href="https://github.com/CenturyHSTech/Image-Gallery-Project">Image Gallery Project</a></strong> contains four <code>pytest</code> files (I use the exceeds tests to determine the difference between a B or an A):</p>
+<ul>
+<li><a href="https://github.com/CenturyHSTech/Image-Gallery-Project/blob/main/tests/test_html.py">test_html.py</a></li>
+<li><a href="https://github.com/CenturyHSTech/Image-Gallery-Project/blob/main/tests/test_html_exceeds.py">test_html_exceeds.py</a></li>
+<li><a href="https://github.com/CenturyHSTech/Image-Gallery-Project/blob/main/tests/test_css.py">test_css.py</a></li>
+<li><a href="https://github.com/CenturyHSTech/Image-Gallery-Project/blob/main/tests/test_css_exceeds.py">test_css_exceeds.py</a></li>
+</ul>
+<h2 id="acknowledgements">Acknowledgements</h2>
+<p>I'd like to thank Guido van Rossum for his love of Monty Python and creating the Python programming language (pseudo-code that works) as well as the Python community and PyCon for running Development Sprints and giving rookies like me the chance to learn how to contribute to open-source projects.</p>
+<p>I'd also like to thank <a href="https://realpython.com/">Real Python</a> for being my go-to source for expanding my toolset.</p>
+<p>If you can read this, it's because <strong>Real Python</strong> came through yet again by publishing <strong><em><a href="https://realpython.com/python-project-documentation-with-mkdocs/">Build Your Python Project Documentation With MkDocs</a></em></strong>, written by <a href="https://realpython.com/python-project-documentation-with-mkdocs/#author">Martin Breuss</a> and his trusty team of developers who helped work on the tutorial.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": [], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

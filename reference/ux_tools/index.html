@@ -1,0 +1,2726 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../animation_tools/">
+      
+      
+        <link rel="next" href="../utils/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../docs/docs_assets/images/favicon.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>ux_tools.py - webcode-tk docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="dark" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#ux_toolspy" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="webcode-tk docs" class="md-header__button md-logo" aria-label="webcode-tk docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M360.8 1.2c-17-4.9-34.7 5-39.6 22l-128 448c-4.9 17 5 34.7 22 39.6s34.7-5 39.6-22l128-448c4.9-17-5-34.7-22-39.6m64.6 136.1c-12.5 12.5-12.5 32.8 0 45.3l73.4 73.4-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3l-96-96c-12.5-12.5-32.8-12.5-45.3 0zm-274.7 0c-12.5-12.5-32.8-12.5-45.3 0l-96 96c-12.5 12.5-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256l73.3-73.4c12.5-12.5 12.5-32.8 0-45.3z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            webcode-tk docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              ux_tools.py
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="webcode-tk docs" class="md-nav__button md-logo" aria-label="webcode-tk docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M360.8 1.2c-17-4.9-34.7 5-39.6 22l-128 448c-4.9 17 5 34.7 22 39.6s34.7-5 39.6-22l128-448c4.9-17-5-34.7-22-39.6m64.6 136.1c-12.5 12.5-12.5 32.8 0 45.3l73.4 73.4-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l96-96c12.5-12.5 12.5-32.8 0-45.3l-96-96c-12.5-12.5-32.8-12.5-45.3 0zm-274.7 0c-12.5-12.5-32.8-12.5-45.3 0l-96 96c-12.5 12.5-12.5 32.8 0 45.3l96 96c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256l73.3-73.4c12.5-12.5 12.5-32.8 0-45.3z"/></svg>
+
+    </a>
+    webcode-tk docs
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    webcode-tk Docs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tutorials/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorials
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../html_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    html_tools.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../css_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    css_tools.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cascade_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    cascade_tools.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../color_keywords/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    color_keywords.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../color_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    color_tools.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../animation_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    animation_tools.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ux_tools.py
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ux_tools.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.ux_tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ux_tools
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.ux_tools.check_li_count" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_li_count
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.ux_tools.check_li_word_count" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_li_word_count
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.ux_tools.extract_text" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        extract_text
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.ux_tools.get_all_paragraphs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_all_paragraphs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.ux_tools.get_flesch_kincaid_grade_level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_flesch_kincaid_grade_level
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.ux_tools.get_paragraph_text" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_paragraph_text
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.ux_tools.get_readability_stats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_readability_stats
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.ux_tools.get_text_from_elements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_text_from_elements
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.ux_tools.get_usability_report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_usability_report
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.ux_tools.get_word_count" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_word_count
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.ux_tools.get_words_per_paragraph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_words_per_paragraph
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.ux_tools.remove_extensions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        remove_extensions
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    utils.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../validator_tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    validator_tools.py
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../explanation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Explanation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.ux_tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ux_tools
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.ux_tools.check_li_count" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_li_count
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.ux_tools.check_li_word_count" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        check_li_word_count
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.ux_tools.extract_text" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        extract_text
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.ux_tools.get_all_paragraphs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_all_paragraphs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.ux_tools.get_flesch_kincaid_grade_level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_flesch_kincaid_grade_level
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.ux_tools.get_paragraph_text" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_paragraph_text
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.ux_tools.get_readability_stats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_readability_stats
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.ux_tools.get_text_from_elements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_text_from_elements
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.ux_tools.get_usability_report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_usability_report
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.ux_tools.get_word_count" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_word_count
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.ux_tools.get_words_per_paragraph" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_words_per_paragraph
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webcode_tk.ux_tools.remove_extensions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        remove_extensions
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="ux_toolspy">ux_tools.py</h1>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<a id="webcode_tk.ux_tools"></a>
+    <div class="doc doc-contents first">
+
+        <p>A set of tools to conduct some UX (User eXperience) checks.</p>
+<p>As of now, I just want to check for best UX and SEO practices such
+as checking for best practices in writing for the web.</p>
+<p>The primary source of information we will begin to use are from
+<a href="https://www.nngroup.com/courses/writing/">Writing Compelling Digital Copy</a>.</p>
+<p>According to the article...
+* Be Succinct! (Writing for the Web)
+* "The 3 main guidelines for writing for the web are:
+    - Be succinct: write no more than 50% of the text you would have used in a
+    hardcopy publication
+    - Write for scannability: don't require users to read long continuous
+    blocks of text
+    - Use hypertext to split up long information into multiple pages"</p>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="webcode_tk.ux_tools.check_li_count" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">check_li_count</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">list_type</span><span class="p">,</span> <span class="nb">max</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>returns any warnings regarding li count</p>
+<p>Warns if too many lis in a list, too few in a list (default is 3), or
+too much content in a list item.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>filename</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>name of the HTML document.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>list_type</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>"ul" or "li" - we don't check definition lists.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>max</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>maximum recommended list items per list.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>min</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>minimum recommend list items per list (default is 3)</p>
+              </div>
+            </td>
+            <td>
+                  <code>3</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+        <p>Returns</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>webcode_tk/ux_tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">check_li_count</span><span class="p">(</span><span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">list_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">max</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;returns any warnings regarding li count</span>
+
+<span class="sd">    Warns if too many lis in a list, too few in a list (default is 3), or</span>
+<span class="sd">    too much content in a list item.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        filename: name of the HTML document.</span>
+<span class="sd">        list_type: &quot;ul&quot; or &quot;li&quot; - we don&#39;t check definition lists.</span>
+<span class="sd">        max: maximum recommended list items per list.</span>
+<span class="sd">        min: minimum recommend list items per list (default is 3)</span>
+
+<span class="sd">    Returns&quot;&quot;&quot;</span>
+    <span class="n">warnings</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">uls</span> <span class="o">=</span> <span class="n">html_tools</span><span class="o">.</span><span class="n">get_elements</span><span class="p">(</span><span class="n">list_type</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">uls</span><span class="p">:</span>
+        <span class="n">num_lis</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">ul</span> <span class="ow">in</span> <span class="n">uls</span><span class="p">:</span>
+            <span class="n">lis</span> <span class="o">=</span> <span class="n">html_tools</span><span class="o">.</span><span class="n">get_element_content</span><span class="p">(</span><span class="n">ul</span><span class="p">)</span>
+            <span class="n">li_count</span> <span class="o">=</span> <span class="n">lis</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s2">&quot;&lt;li&gt;&quot;</span><span class="p">)</span>
+            <span class="n">num_lis</span> <span class="o">+=</span> <span class="n">li_count</span>
+            <span class="k">if</span> <span class="n">num_lis</span> <span class="o">&gt;</span> <span class="nb">max</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;warning: ul should have less than </span><span class="si">{</span><span class="nb">max</span><span class="si">}</span><span class="s2"> &quot;</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;lis per ul - you have </span><span class="si">{</span><span class="n">num_lis</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">warnings</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="webcode_tk.ux_tools.check_li_word_count" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">check_li_word_count</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">45</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>sends warnings if too many words are in a list item.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>filepath</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>relative path to the HTML document in question.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>max</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>maximum number of words per li (default is 45)</p>
+              </div>
+            </td>
+            <td>
+                  <code>45</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>warnings</code></td>            <td>
+                  <code><span title="list">list</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>any warnings about the li content having too many words.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>webcode_tk/ux_tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span>
+<span class="normal">306</span>
+<span class="normal">307</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span>
+<span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">check_li_word_count</span><span class="p">(</span><span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">45</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;sends warnings if too many words are in a list item.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        filepath: relative path to the HTML document in question.</span>
+<span class="sd">        max: maximum number of words per li (default is 45)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        warnings: any warnings about the li content having too many words.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">warnings</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">clerk</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+    <span class="n">lis</span> <span class="o">=</span> <span class="n">html_tools</span><span class="o">.</span><span class="n">get_elements</span><span class="p">(</span><span class="s2">&quot;li&quot;</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">li</span> <span class="ow">in</span> <span class="n">lis</span><span class="p">:</span>
+        <span class="n">txt</span> <span class="o">=</span> <span class="n">html_tools</span><span class="o">.</span><span class="n">get_element_content</span><span class="p">(</span><span class="n">li</span><span class="p">)</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">txt</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">)</span>
+        <span class="n">word_count</span> <span class="o">=</span> <span class="n">textatistic</span><span class="o">.</span><span class="n">word_count</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">word_count</span> <span class="o">&gt;</span> <span class="nb">max</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;warning: An &lt;li&gt; element exceeds recommended word&quot;</span>
+            <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; count of </span><span class="si">{</span><span class="nb">max</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> has an &lt;li&gt; with &quot;</span>
+            <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">word_count</span><span class="si">}</span><span class="s2"> words.&quot;</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">warnings</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="webcode_tk.ux_tools.extract_text" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">extract_text</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>extracts only the text from a tag (no markup)</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>tag</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>this is a Tag (bs4)</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+        <p>Returns:
+    text: just the visible text from the element (with no
+    nested markup).</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>webcode_tk/ux_tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">extract_text</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;extracts only the text from a tag (no markup)</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        tag: this is a Tag (bs4)</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        text: just the visible text from the element (with no</span>
+<span class="sd">        nested markup).&quot;&quot;&quot;</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">tag</span><span class="o">.</span><span class="n">text</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">text</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="webcode_tk.ux_tools.get_all_paragraphs" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_all_paragraphs</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>returns a list of paragraph elements from a single file or project
+folder.</p>
+<p>It checks the path to determine if it's a path to a single page or a
+project folder.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>path</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>a string path to either an html document or a project folder.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>paragraphs</code></td>            <td>
+                  <code><span title="list">list</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>a list of paragraph elements.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>webcode_tk/ux_tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_all_paragraphs</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;returns a list of paragraph elements from a single file or project</span>
+<span class="sd">    folder.</span>
+
+<span class="sd">    It checks the path to determine if it&#39;s a path to a single page or a</span>
+<span class="sd">    project folder.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        path: a string path to either an html document or a project folder.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        paragraphs: a list of paragraph elements.&quot;&quot;&quot;</span>
+
+    <span class="n">paragraphs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">is_single_page</span> <span class="o">=</span> <span class="s2">&quot;html&quot;</span> <span class="o">==</span> <span class="n">clerk</span><span class="o">.</span><span class="n">get_file_type</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_single_page</span><span class="p">:</span>
+        <span class="c1"># it&#39;s a project, so we need to process all html files in the folder</span>
+        <span class="n">all_files</span> <span class="o">=</span> <span class="n">clerk</span><span class="o">.</span><span class="n">get_all_files_of_type</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;html&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">all_files</span><span class="p">:</span>
+            <span class="n">paragraphs</span> <span class="o">+=</span> <span class="n">html_tools</span><span class="o">.</span><span class="n">get_elements</span><span class="p">(</span><span class="s2">&quot;p&quot;</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">paragraphs</span> <span class="o">+=</span> <span class="n">html_tools</span><span class="o">.</span><span class="n">get_elements</span><span class="p">(</span><span class="s2">&quot;p&quot;</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">paragraphs</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="webcode_tk.ux_tools.get_flesch_kincaid_grade_level" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_flesch_kincaid_grade_level</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>returns the required education to be able to understand the text.</p>
+<p>We're only looking at the paragraphs (not headers or list items) and
+ignoring break tags as being paragraph breaks (that could be up for
+debate in the future).</p>
+<p>This function first checks to see if it's a project folder or just a
+single file and ascertains for all HTML documents if it's a project.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>path</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>the path to the page or project that we are measuring.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>grade_level</code></td>            <td>
+                  <code><span title="float">float</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>the US grade level equivalent.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>webcode_tk/ux_tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_flesch_kincaid_grade_level</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;returns the required education to be able to understand the text.</span>
+
+<span class="sd">    We&#39;re only looking at the paragraphs (not headers or list items) and</span>
+<span class="sd">    ignoring break tags as being paragraph breaks (that could be up for</span>
+<span class="sd">    debate in the future).</span>
+
+<span class="sd">    This function first checks to see if it&#39;s a project folder or just a</span>
+<span class="sd">    single file and ascertains for all HTML documents if it&#39;s a project.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        path: the path to the page or project that we are measuring.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        grade_level: the US grade level equivalent.&quot;&quot;&quot;</span>
+
+    <span class="c1"># convert all paragraph content into a single string</span>
+    <span class="n">paragraphs</span> <span class="o">=</span> <span class="n">get_all_paragraphs</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">paragraph_text</span> <span class="o">=</span> <span class="n">get_paragraph_text</span><span class="p">(</span><span class="n">paragraphs</span><span class="p">)</span>
+
+    <span class="c1"># get stats from textatistic</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">Textatistic</span><span class="p">(</span><span class="n">paragraph_text</span><span class="p">)</span>
+    <span class="n">grade_level</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">fleschkincaid_score</span>
+
+    <span class="c1"># return grade level rounded to 1 decimal point</span>
+    <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="n">grade_level</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="webcode_tk.ux_tools.get_paragraph_text" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_paragraph_text</span><span class="p">(</span><span class="n">paragraphs</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Returns a string of all the contents of the list of paragraphs</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>paragraphs</code>
+            </td>
+            <td>
+                  <code><span title="list">list</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>a list of paragraph elements.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>paragraph_text</code></td>            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>a string of all the content of the paragraph
+elements.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>webcode_tk/ux_tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_paragraph_text</span><span class="p">(</span><span class="n">paragraphs</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a string of all the contents of the list of paragraphs</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        paragraphs: a list of paragraph elements.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        paragraph_text: a string of all the content of the paragraph</span>
+<span class="sd">            elements.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">paragraph_text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">paragraph</span> <span class="ow">in</span> <span class="n">paragraphs</span><span class="p">:</span>
+        <span class="n">paragraph_text</span> <span class="o">+=</span> <span class="n">html_tools</span><span class="o">.</span><span class="n">get_element_content</span><span class="p">(</span><span class="n">paragraph</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="k">return</span> <span class="n">paragraph_text</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="webcode_tk.ux_tools.get_readability_stats" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_readability_stats</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="s1">&#39;p&#39;</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>returns a dictionary of various readability stats.</p>
+<p>It will collect all stats from the textastic libary as well as add
+a few of my own (words per sentence, sentences per paragraph).</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>path</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>the path to the file or folder (only looks at HTML files)</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>elements</code>
+            </td>
+            <td>
+                  <code><span title="typing.Union">Union</span>[<span title="str">str</span>, <span title="collections.abc.Sequence">Sequence</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>by default we will only look at the text from paragraph
+tags. You could supply other elements in the form of a list or
+tuple (e.g. ['p', 'div', 'li', 'figcaption']).</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;p&#39;</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>stats</code></td>            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>a dictionary of stats on readability metrics.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>webcode_tk/ux_tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_readability_stats</span><span class="p">(</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">elements</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;p&quot;</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;returns a dictionary of various readability stats.</span>
+
+<span class="sd">    It will collect all stats from the textastic libary as well as add</span>
+<span class="sd">    a few of my own (words per sentence, sentences per paragraph).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        path: the path to the file or folder (only looks at HTML files)</span>
+<span class="sd">        elements: by default we will only look at the text from paragraph</span>
+<span class="sd">            tags. You could supply other elements in the form of a list or</span>
+<span class="sd">            tuple (e.g. [&#39;p&#39;, &#39;div&#39;, &#39;li&#39;, &#39;figcaption&#39;]).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        stats: a dictionary of stats on readability metrics.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Get text and numbers</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">get_text_from_elements</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">elements</span><span class="p">)</span>
+    <span class="n">num_lines</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+    <span class="c1"># get stats from textatistic</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">Textatistic</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">scores</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">stats</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;character_count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">char_count</span>
+    <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;word_count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">word_count</span>
+    <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;sentence_count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">sent_count</span>
+    <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;paragraph_count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_lines</span>
+    <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;words_per_sentence&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">word_count</span> <span class="o">/</span> <span class="n">r</span><span class="o">.</span><span class="n">sent_count</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">stats</span><span class="p">[</span><span class="s2">&quot;sent_per_paragraph&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">sent_count</span> <span class="o">/</span> <span class="n">num_lines</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">stats</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="webcode_tk.ux_tools.get_text_from_elements" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_text_from_elements</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="s1">&#39;p&#39;</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>returns a list of text from elements (as strings) from a single file or
+project folder.</p>
+<p>It checks the path to determine if it's a path to a single page or a
+project folder. It then uses the elements to determine from which
+HTML element it will grab paragraphs.</p>
+<p>By default, it will only pull paragraphs from the <code>&lt;p&gt;</code> tag, but you
+can specify other elements (e.g. <code>&lt;div&gt;</code>, <code>&lt;li&gt;</code>, <code>&lt;figcaption&gt;</code>, etc.).</p>
+<p>NOTE: When selecting other tags, pass it a list or tuple of strings. Only
+specify the element without angle brackets (e.g. <code>['p', 'li', 'div']</code>)</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>path</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>a string path to either an html document or a project folder.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>elements</code>
+            </td>
+            <td>
+                  <code><span title="typing.Union">Union</span>[<span title="str">str</span>, <span title="collections.abc.Sequence">Sequence</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>the elements we want to pull our paragrphs from.</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;p&#39;</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+        <p>Returns:
+    paragraphs: a list of strings - text only without markup (for example
+    if an anchor is nested in a pargraph, the markup will be extracted, and
+    only the visible text on the page will be present.</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>webcode_tk/ux_tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_text_from_elements</span><span class="p">(</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">elements</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;p&quot;</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;returns a list of text from elements (as strings) from a single file or</span>
+<span class="sd">    project folder.</span>
+
+<span class="sd">    It checks the path to determine if it&#39;s a path to a single page or a</span>
+<span class="sd">    project folder. It then uses the elements to determine from which</span>
+<span class="sd">    HTML element it will grab paragraphs.</span>
+
+<span class="sd">    By default, it will only pull paragraphs from the `&lt;p&gt;` tag, but you</span>
+<span class="sd">    can specify other elements (e.g. `&lt;div&gt;`, `&lt;li&gt;`, `&lt;figcaption&gt;`, etc.).</span>
+
+<span class="sd">    NOTE: When selecting other tags, pass it a list or tuple of strings. Only</span>
+<span class="sd">    specify the element without angle brackets (e.g. `[&#39;p&#39;, &#39;li&#39;, &#39;div&#39;]`)</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        path: a string path to either an html document or a project folder.</span>
+<span class="sd">        elements: the elements we want to pull our paragrphs from.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        paragraphs: a list of strings - text only without markup (for example</span>
+<span class="sd">        if an anchor is nested in a pargraph, the markup will be extracted, and</span>
+<span class="sd">        only the visible text on the page will be present.&quot;&quot;&quot;</span>
+
+    <span class="n">paragraphs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">is_single_page</span> <span class="o">=</span> <span class="s2">&quot;html&quot;</span> <span class="o">==</span> <span class="n">clerk</span><span class="o">.</span><span class="n">get_file_type</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">elements</span> <span class="o">==</span> <span class="s2">&quot;p&quot;</span><span class="p">:</span>
+        <span class="n">elements</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_single_page</span><span class="p">:</span>
+        <span class="c1"># it&#39;s a project, so we need to process all html files in the folder</span>
+        <span class="n">all_files</span> <span class="o">=</span> <span class="n">clerk</span><span class="o">.</span><span class="n">get_all_files_of_type</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;html&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">all_files</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">elements</span><span class="p">:</span>
+                <span class="n">markup</span> <span class="o">=</span> <span class="n">html_tools</span><span class="o">.</span><span class="n">get_elements</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">markup</span><span class="p">:</span>
+                    <span class="n">text</span> <span class="o">=</span> <span class="n">extract_text</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span>
+                    <span class="n">paragraphs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">elements</span><span class="p">:</span>
+            <span class="n">markup</span> <span class="o">=</span> <span class="n">html_tools</span><span class="o">.</span><span class="n">get_elements</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">markup</span><span class="p">:</span>
+                <span class="n">text</span> <span class="o">=</span> <span class="n">extract_text</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span>
+                <span class="n">paragraphs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">paragraphs</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="webcode_tk.ux_tools.get_usability_report" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_usability_report</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="n">elements</span><span class="p">,</span> <span class="n">goals</span><span class="o">=</span><span class="n">DEFAULT_GOALS</span><span class="p">,</span> <span class="n">exceeds</span><span class="o">=</span><span class="n">DEFAULT_EXCEEDS_GOALS</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Generates a list of pass, fail, and warnings on usability.</p>
+<p>If goals or exceeds not set, goals &amp; exceeds should follow the example
+keys...
+goals   avg_words_sentence_range, max_sentences_per_paragraph,
+        min_word_count, min_num_single_sentence_paragraphs</p>
+<p>exceeds max_avg_words_sentence, max_li_per_list, max_sentence_paragraph,
+        max_words_per_li, max_words_per_paragraph, min_word_count</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>project_dir</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>path to project folder</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>goals</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>set of goals to test for.</p>
+              </div>
+            </td>
+            <td>
+                  <code><span title="webcode_tk.ux_tools.DEFAULT_GOALS">DEFAULT_GOALS</span></code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>exceeds</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>set of metrics to determine if content goes above &amp; beyond.</p>
+              </div>
+            </td>
+            <td>
+                  <code><span title="webcode_tk.ux_tools.DEFAULT_EXCEEDS_GOALS">DEFAULT_EXCEEDS_GOALS</span></code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>elements</code>
+            </td>
+            <td>
+                  <code><span title="tuple">tuple</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>set of elements to capture</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>report</code></td>            <td>
+                  <code><span title="list">list</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>a list of pass, fails, and warnings</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>webcode_tk/ux_tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">316</span>
+<span class="normal">317</span>
+<span class="normal">318</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span>
+<span class="normal">323</span>
+<span class="normal">324</span>
+<span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span>
+<span class="normal">330</span>
+<span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span>
+<span class="normal">348</span>
+<span class="normal">349</span>
+<span class="normal">350</span>
+<span class="normal">351</span>
+<span class="normal">352</span>
+<span class="normal">353</span>
+<span class="normal">354</span>
+<span class="normal">355</span>
+<span class="normal">356</span>
+<span class="normal">357</span>
+<span class="normal">358</span>
+<span class="normal">359</span>
+<span class="normal">360</span>
+<span class="normal">361</span>
+<span class="normal">362</span>
+<span class="normal">363</span>
+<span class="normal">364</span>
+<span class="normal">365</span>
+<span class="normal">366</span>
+<span class="normal">367</span>
+<span class="normal">368</span>
+<span class="normal">369</span>
+<span class="normal">370</span>
+<span class="normal">371</span>
+<span class="normal">372</span>
+<span class="normal">373</span>
+<span class="normal">374</span>
+<span class="normal">375</span>
+<span class="normal">376</span>
+<span class="normal">377</span>
+<span class="normal">378</span>
+<span class="normal">379</span>
+<span class="normal">380</span>
+<span class="normal">381</span>
+<span class="normal">382</span>
+<span class="normal">383</span>
+<span class="normal">384</span>
+<span class="normal">385</span>
+<span class="normal">386</span>
+<span class="normal">387</span>
+<span class="normal">388</span>
+<span class="normal">389</span>
+<span class="normal">390</span>
+<span class="normal">391</span>
+<span class="normal">392</span>
+<span class="normal">393</span>
+<span class="normal">394</span>
+<span class="normal">395</span>
+<span class="normal">396</span>
+<span class="normal">397</span>
+<span class="normal">398</span>
+<span class="normal">399</span>
+<span class="normal">400</span>
+<span class="normal">401</span>
+<span class="normal">402</span>
+<span class="normal">403</span>
+<span class="normal">404</span>
+<span class="normal">405</span>
+<span class="normal">406</span>
+<span class="normal">407</span>
+<span class="normal">408</span>
+<span class="normal">409</span>
+<span class="normal">410</span>
+<span class="normal">411</span>
+<span class="normal">412</span>
+<span class="normal">413</span>
+<span class="normal">414</span>
+<span class="normal">415</span>
+<span class="normal">416</span>
+<span class="normal">417</span>
+<span class="normal">418</span>
+<span class="normal">419</span>
+<span class="normal">420</span>
+<span class="normal">421</span>
+<span class="normal">422</span>
+<span class="normal">423</span>
+<span class="normal">424</span>
+<span class="normal">425</span>
+<span class="normal">426</span>
+<span class="normal">427</span>
+<span class="normal">428</span>
+<span class="normal">429</span>
+<span class="normal">430</span>
+<span class="normal">431</span>
+<span class="normal">432</span>
+<span class="normal">433</span>
+<span class="normal">434</span>
+<span class="normal">435</span>
+<span class="normal">436</span>
+<span class="normal">437</span>
+<span class="normal">438</span>
+<span class="normal">439</span>
+<span class="normal">440</span>
+<span class="normal">441</span>
+<span class="normal">442</span>
+<span class="normal">443</span>
+<span class="normal">444</span>
+<span class="normal">445</span>
+<span class="normal">446</span>
+<span class="normal">447</span>
+<span class="normal">448</span>
+<span class="normal">449</span>
+<span class="normal">450</span>
+<span class="normal">451</span>
+<span class="normal">452</span>
+<span class="normal">453</span>
+<span class="normal">454</span>
+<span class="normal">455</span>
+<span class="normal">456</span>
+<span class="normal">457</span>
+<span class="normal">458</span>
+<span class="normal">459</span>
+<span class="normal">460</span>
+<span class="normal">461</span>
+<span class="normal">462</span>
+<span class="normal">463</span>
+<span class="normal">464</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_usability_report</span><span class="p">(</span>
+    <span class="n">project_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">elements</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span>
+    <span class="n">goals</span><span class="o">=</span><span class="n">DEFAULT_GOALS</span><span class="p">,</span>
+    <span class="n">exceeds</span><span class="o">=</span><span class="n">DEFAULT_EXCEEDS_GOALS</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generates a list of pass, fail, and warnings on usability.</span>
+
+<span class="sd">    If goals or exceeds not set, goals &amp; exceeds should follow the example</span>
+<span class="sd">    keys...</span>
+<span class="sd">    goals   avg_words_sentence_range, max_sentences_per_paragraph,</span>
+<span class="sd">            min_word_count, min_num_single_sentence_paragraphs</span>
+
+<span class="sd">    exceeds max_avg_words_sentence, max_li_per_list, max_sentence_paragraph,</span>
+<span class="sd">            max_words_per_li, max_words_per_paragraph, min_word_count</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        project_dir: path to project folder</span>
+<span class="sd">        goals: set of goals to test for.</span>
+<span class="sd">        exceeds: set of metrics to determine if content goes above &amp; beyond.</span>
+<span class="sd">        elements: set of elements to capture</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        report: a list of pass, fails, and warnings</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">report</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">readability_report</span> <span class="o">=</span> <span class="n">get_readability_stats</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="n">elements</span><span class="p">)</span>
+    <span class="n">all_html_files</span> <span class="o">=</span> <span class="n">clerk</span><span class="o">.</span><span class="n">get_all_files_of_type</span><span class="p">(</span><span class="n">project_dir</span><span class="p">,</span> <span class="s2">&quot;html&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">all_html_files</span> <span class="ow">and</span> <span class="s2">&quot;.html&quot;</span> <span class="o">==</span> <span class="n">project_dir</span><span class="p">[</span><span class="o">-</span><span class="mi">5</span><span class="p">:]:</span>
+        <span class="n">all_html_files</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">project_dir</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="k">for</span> <span class="nb">type</span><span class="p">,</span> <span class="n">expected</span> <span class="ow">in</span> <span class="n">goals</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;avg_words_sentence_range&quot;</span><span class="p">:</span>
+            <span class="n">words_per_sentence</span> <span class="o">=</span> <span class="n">readability_report</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;words_per_sentence&quot;</span><span class="p">)</span>
+            <span class="nb">min</span><span class="p">,</span> <span class="nb">max</span> <span class="o">=</span> <span class="n">expected</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">words_per_sentence</span> <span class="o">&lt;=</span> <span class="nb">min</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;fail: not enough average words per sentence (actual = &quot;</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">words_per_sentence</span><span class="si">}</span><span class="s2">).&quot;</span>
+            <span class="k">elif</span> <span class="n">words_per_sentence</span> <span class="o">&gt;=</span> <span class="nb">max</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;fail: sentences are too long (should be between </span><span class="si">{</span><span class="nb">min</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; &amp; </span><span class="si">{</span><span class="nb">max</span><span class="si">}</span><span class="s2">) (actual = </span><span class="si">{</span><span class="n">words_per_sentence</span><span class="si">}</span><span class="s2"> - should be&quot;</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; no more than </span><span class="si">{</span><span class="nb">max</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;pass: at </span><span class="si">{</span><span class="n">words_per_sentence</span><span class="si">}</span><span class="s2"> words per sentence, &quot;</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;you are within expected range (</span><span class="si">{</span><span class="nb">min</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="nb">max</span><span class="si">}</span><span class="s2"> wps).&quot;</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;max_sentences_per_paragraph&quot;</span><span class="p">:</span>
+            <span class="n">max_sent</span> <span class="o">=</span> <span class="n">expected</span>
+            <span class="n">min_single_sentence_data</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">single_sentences</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">all_html_files</span><span class="p">:</span>
+                <span class="n">paragraphs</span> <span class="o">=</span> <span class="n">html_tools</span><span class="o">.</span><span class="n">get_elements</span><span class="p">(</span><span class="s2">&quot;p&quot;</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+                <span class="n">para_num</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="n">clerk</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">paragraph</span> <span class="ow">in</span> <span class="n">paragraphs</span><span class="p">:</span>
+                    <span class="n">para_num</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">content</span> <span class="o">=</span> <span class="n">html_tools</span><span class="o">.</span><span class="n">get_element_content</span><span class="p">(</span><span class="n">paragraph</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                    <span class="n">sentence_count</span> <span class="o">=</span> <span class="n">textatistic</span><span class="o">.</span><span class="n">sent_count</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">content</span> <span class="ow">and</span> <span class="n">sentence_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">sentence_count</span> <span class="o">=</span> <span class="mi">1</span>
+                    <span class="k">if</span> <span class="n">sentence_count</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">single_sentences</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">if</span> <span class="n">sentence_count</span> <span class="o">&gt;</span> <span class="n">max_sent</span><span class="p">:</span>
+                        <span class="n">sentence_msg</span> <span class="o">=</span> <span class="n">sentence_count</span> <span class="o">-</span> <span class="n">max_sent</span>
+                        <span class="k">if</span> <span class="n">sentence_msg</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                            <span class="n">sentence_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">sentence_msg</span><span class="si">}</span><span class="s2"> more sentence&quot;</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">sentence_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">sentence_msg</span><span class="si">}</span><span class="s2"> more sentences&quot;</span>
+                        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;fail: in file, </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">, paragraph #&quot;</span>
+                        <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">para_num</span><span class="si">}</span><span class="s2">, you have </span><span class="si">{</span><span class="n">sentence_msg</span><span class="si">}</span><span class="s2"> than the&quot;</span>
+                        <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; maximum number of </span><span class="si">{</span><span class="n">max_sent</span><span class="si">}</span><span class="s2">.&quot;</span>
+                        <span class="n">report</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="n">min_single_sentence_data</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">filename</span><span class="p">,</span> <span class="n">single_sentences</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;min_word_count&quot;</span><span class="p">:</span>
+            <span class="n">num_words</span> <span class="o">=</span> <span class="n">readability_report</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;word_count&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">num_words</span> <span class="o">&gt;=</span> <span class="n">expected</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;pass: </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> at </span><span class="si">{</span><span class="n">num_words</span><span class="si">}</span><span class="s2"> words has enough &quot;</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot;words to effectively measure readability.&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;fail: </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> at only </span><span class="si">{</span><span class="n">num_words</span><span class="si">}</span><span class="s2"> words, does not &quot;</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot;have enough words to effectively measure readability.&quot;</span>
+            <span class="n">report</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;min_num_single_sentence_paragraphs&quot;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">datum</span> <span class="ow">in</span> <span class="n">min_single_sentence_data</span><span class="p">:</span>
+                <span class="n">name</span><span class="p">,</span> <span class="n">paras_with_one_sentence</span> <span class="o">=</span> <span class="n">datum</span>
+                <span class="k">if</span> <span class="n">paras_with_one_sentence</span> <span class="o">&gt;=</span> <span class="n">expected</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;pass: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> has enough paragraphs with just one&quot;</span>
+                    <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot; sentence.&quot;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;fail: </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> does not have enough paragraphs with&quot;</span>
+                    <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot; a single sentence. You should have at least&quot;</span>
+                    <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">expected</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="c1"># Get List data for exceeds:</span>
+    <span class="n">li_report</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">all_html_files</span><span class="p">:</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">clerk</span><span class="o">.</span><span class="n">get_file_name</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="n">max_li_per_ul</span> <span class="o">=</span> <span class="n">exceeds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;max_li_per_list&quot;</span><span class="p">)</span>
+        <span class="n">li_report</span> <span class="o">+=</span> <span class="n">check_li_count</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;ul&quot;</span><span class="p">,</span> <span class="n">max_li_per_ul</span><span class="p">)</span>
+        <span class="n">li_report</span> <span class="o">+=</span> <span class="n">check_li_word_count</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="nb">type</span><span class="p">,</span> <span class="n">goal</span> <span class="ow">in</span> <span class="n">exceeds</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;max_avg_words_sentence&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">words_per_sentence</span> <span class="o">&gt;</span> <span class="mi">20</span><span class="p">:</span>
+                <span class="n">warning</span> <span class="o">=</span> <span class="s2">&quot;warning: Average words per sentence should be 20 &quot;</span>
+                <span class="n">warning</span> <span class="o">+=</span> <span class="s2">&quot;or less (you have an average of &quot;</span>
+                <span class="n">warning</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">words_per_sentence</span><span class="si">}</span><span class="s2">).&quot;</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">warning</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;max_li_per_list&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">li_report</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">li_report</span><span class="p">:</span>
+                    <span class="n">report</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;max_sentence_paragraph&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">sentence_count</span> <span class="o">&gt;</span> <span class="n">goal</span><span class="p">:</span>
+                <span class="n">warning</span> <span class="o">=</span> <span class="s2">&quot;warning: for best results, you should have fewer &quot;</span>
+                <span class="n">warning</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;than </span><span class="si">{</span><span class="n">goal</span><span class="si">}</span><span class="s2"> sentences per paragraph, but you &quot;</span>
+                <span class="n">warning</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;have </span><span class="si">{</span><span class="n">sentence_count</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;max_words_per_li&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">li_report</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">li_report</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="s2">&quot;An &lt;li&gt; element exceeds recommended&quot;</span> <span class="ow">in</span> <span class="n">item</span><span class="p">:</span>
+                        <span class="n">report</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;max_words_per_paragraph&quot;</span><span class="p">:</span>
+            <span class="n">paragraphs_exceeding</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">maximum_num_words</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">paragraph</span> <span class="ow">in</span> <span class="n">paragraphs</span><span class="p">:</span>
+                <span class="n">content</span> <span class="o">=</span> <span class="n">html_tools</span><span class="o">.</span><span class="n">get_element_content</span><span class="p">(</span><span class="n">paragraph</span><span class="p">)</span>
+                <span class="n">word_count</span> <span class="o">=</span> <span class="n">textatistic</span><span class="o">.</span><span class="n">word_count</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">word_count</span> <span class="o">&gt;</span> <span class="n">expected</span><span class="p">:</span>
+                    <span class="n">paragraphs_exceeding</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">if</span> <span class="n">word_count</span> <span class="o">&gt;</span> <span class="n">maximum_num_words</span><span class="p">:</span>
+                        <span class="n">maximum_num_words</span> <span class="o">=</span> <span class="n">word_count</span>
+            <span class="k">if</span> <span class="n">paragraphs_exceeding</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;warning: you should not exceed </span><span class="si">{</span><span class="n">expected</span><span class="si">}</span><span class="s2"> words per &quot;</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;paragraph, but you have </span><span class="si">{</span><span class="n">paragraphs_exceeding</span><span class="si">}</span><span class="s2"> &quot;</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot;paragraphs that exceed, the maximum having &quot;</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">maximum_num_words</span><span class="si">}</span><span class="s2"> words.&quot;</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;min_word_count&quot;</span><span class="p">:</span>
+            <span class="c1"># warn if meets minimum word count but not the goal for exceeds</span>
+            <span class="n">min_words</span> <span class="o">=</span> <span class="n">goals</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;min_word_count&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">num_words</span> <span class="o">&gt;</span> <span class="n">min_words</span> <span class="ow">and</span> <span class="n">num_words</span> <span class="o">&lt;</span> <span class="n">goal</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;warning: for best results, you should have at least&quot;</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">goal</span><span class="si">}</span><span class="s2"> words in your project.&quot;</span>
+                <span class="n">report</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">report</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="webcode_tk.ux_tools.get_word_count" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_word_count</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>returns word count of text.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>txt</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>the raw text (may or may not contain line returns)</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>word_count</code></td>            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>number of words as measured by Textastic</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>webcode_tk/ux_tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_word_count</span><span class="p">(</span><span class="n">txt</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;returns word count of text.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        txt: the raw text (may or may not contain line returns)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        word_count: number of words as measured by Textastic</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">text</span> <span class="o">=</span> <span class="n">txt</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">)</span>
+    <span class="n">word_count</span> <span class="o">=</span> <span class="n">textatistic</span><span class="o">.</span><span class="n">word_count</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">word_count</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="webcode_tk.ux_tools.get_words_per_paragraph" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_words_per_paragraph</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>returns average number of words per paragraph</p>
+<p>uses Textatistic stats</p>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>webcode_tk/ux_tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_words_per_paragraph</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;returns average number of words per paragraph</span>
+
+<span class="sd">    uses Textatistic stats&quot;&quot;&quot;</span>
+    <span class="n">paragraphs</span> <span class="o">=</span> <span class="n">get_all_paragraphs</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">get_paragraph_text</span><span class="p">(</span><span class="n">paragraphs</span><span class="p">)</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="n">get_word_count</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="n">num_paragraphs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">paragraphs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="n">words</span> <span class="o">/</span> <span class="n">num_paragraphs</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="webcode_tk.ux_tools.remove_extensions" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">remove_extensions</span><span class="p">(</span><span class="n">text</span><span class="p">)</span></code>
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+
+        <p>removes extension from filenames.</p>
+<p>Filenames with extensions end up causing textatistic to count filenames
+as two words instead of one, and we don't really need to count the
+extensions when calculating readability stats.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>text</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>the text which may or may not have filenames in them.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>newtext</code></td>            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>the text without file extensions.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>webcode_tk/ux_tools.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">remove_extensions</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;removes extension from filenames.</span>
+
+<span class="sd">    Filenames with extensions end up causing textatistic to count filenames</span>
+<span class="sd">    as two words instead of one, and we don&#39;t really need to count the</span>
+<span class="sd">    extensions when calculating readability stats.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        text: the text which may or may not have filenames in them.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        newtext: the text without file extensions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">newtext</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="c1"># get the last character just in case it gets dropped with extension.</span>
+    <span class="n">last_char</span> <span class="o">=</span> <span class="n">text</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">regex</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;\.[a-zA-Z0-9]+&quot;</span>
+    <span class="n">newtext</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">regex</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+
+    <span class="c1"># add back the last character if it was dropped.</span>
+    <span class="k">if</span> <span class="n">newtext</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">last_char</span><span class="p">:</span>
+        <span class="n">newtext</span> <span class="o">+=</span> <span class="n">last_char</span>
+    <span class="k">return</span> <span class="n">newtext</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
