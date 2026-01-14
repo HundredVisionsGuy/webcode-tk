@@ -183,3 +183,68 @@ def test_resolve_variable(
 
     assert resolved_value == expected_value
     assert was_resolved == expected_resolved
+
+
+results = contrast.analyze_contrast(project_dir)
+variables_results = {
+    "h1": {"page1.html": [], "page3.html": []},
+    "p": {"page1.html": [], "page3.html": []},
+    "p.highlight": {"page1.html": [], "page3.html": []},
+}
+for result in results:
+    filename = result.get("filename")
+    if filename == "page2.html":
+        continue
+    tag = result.get("element_tag")
+
+    if result.get("element_tag") == "h1":
+        header_data = variables_results[tag].get(filename)
+        if len(header_data) <= 2:
+            color = result.get("text_color")
+            bg_color = result.get("background_color")
+            contrast_ratio = result.get("contrast_ratio")
+            variables_results[tag][filename].append(
+                ["", color, bg_color, contrast_ratio]
+            )
+        else:
+            continue
+    elif result.get("element_tag") == "p" and not result.get("element_class"):
+        p_data = variables_results[tag].get(filename)
+        if len(p_data) < 2:
+            color = result.get("text_color")
+            bg_color = result.get("background_color")
+            contrast_ratio = result.get("contrast_ratio")
+            variables_results[tag][filename].append(
+                ["no class", color, bg_color, contrast_ratio]
+            )
+    elif result.get("element_tag") == "p" and result.get("element_class"):
+        p_data = variables_results["p.highlight"].get(filename)
+        if len(p_data) <= 2:
+            color = result.get("text_color")
+            bg_color = result.get("background_color")
+            contrast_ratio = result.get("contrast_ratio")
+            element_classes = result.get("element_class")
+            variables_results["p.highlight"][filename].append(
+                ["classes", color, bg_color, contrast_ratio]
+            )
+variables_integration_data = []
+for item in variables_results.items():
+    element = item[0]
+    filename_data = item[1]
+    page1, page2 = filename_data.keys()
+    page1_results = filename_data.get(page1)[0]
+    page2_results = filename_data.get(page2)[0]
+    variables_integration_data.append([page1_results, page2_results])
+
+
+@pytest.mark.parametrize(
+    "var_results,no_var_results", variables_integration_data
+)
+def test_variables_resolve_same_as_hardcoded(var_results, no_var_results):
+    """Integration test: Variables resolve to same results as hardcoded colors.
+
+    page1.html uses CSS variables via theme.css and reset.css
+    page3.html uses hardcoded colors in page3_styles.css
+    Both should produce identical contrast analysis results.
+    """
+    assert var_results == no_var_results

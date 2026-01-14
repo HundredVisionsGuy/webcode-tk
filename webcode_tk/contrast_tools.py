@@ -599,8 +599,6 @@ def apply_browser_defaults(
                 },
             }
 
-            if element.name in ["html", "body"]:
-                print(f"  ✓ Added <{element.name}> to element_styles")
             # Apply element-specific defaults
             # Apply link colors
             if element.name == "a":
@@ -1097,8 +1095,7 @@ def convert_font_size_to_pixels(
 
     except Exception as e:
         # Fallback for parsing errors
-        print(f"DEBUG: Exception caught: '{e}'")
-        return f"{font_size_value}px"  # Assume it's already in pixels
+        return f"{font_size_value}px - {e}"  # Assume it's already in pixels
 
 
 def get_parent_font_size(element, computed_styles: dict) -> float:

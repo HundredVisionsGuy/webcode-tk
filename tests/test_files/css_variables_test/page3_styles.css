@@ -2,13 +2,13 @@ body {
     background-color: #bdd7bd;
     color: #333;
 }
-hgroup {
-    color: #000;
-}
 hgroup p {
     border: 2px solid green;
-    border-color: #000;
+    border-color: #691a1a;
     padding: 0.5em;
+}
+hgroup h1 {
+    color: #691a1a;
 }
 p.highlight {
     background-color: #ccc;

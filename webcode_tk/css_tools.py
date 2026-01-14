@@ -354,7 +354,7 @@ class Stylesheet:
                     # Check for a gradient bg color
                     is_bg_gradient = color_tools.is_gradient(value)
                     if is_bg_gradient:
-                        print()
+                        print("we have a gradient")
                     # skip if has vendor prefix
                     if has_vendor_prefix(value):
                         continue
@@ -1237,7 +1237,6 @@ def get_all_stylesheets_by_file(file_path: str) -> list:
     for stylesheet in all_styles:
         if stylesheet.uses_variables:
             resolve_variables_in_stylesheet(stylesheet, variables_registry)
-            print()
     return all_styles
 
 
@@ -1288,13 +1287,6 @@ def resolve_variables_in_stylesheet(
 
     # Rebuild stylehseet text from updated rulesets
     stylesheet.text = "".join(ruleset.text for ruleset in stylesheet.rulesets)
-
-    # Repopulate color rulesets
-    stylesheet.color_rulesets = []
-    for ruleset in stylesheet.rulesets:
-        color_ruleset = stylesheet.get_color_ruleset(ruleset)
-        print(color_ruleset)
-    print("breakpoint for testing - remove when pass all tests ")
 
 
 def get_background_color(declaration: Declaration) -> Union[str, None]:
@@ -1608,7 +1600,7 @@ def get_global_color_details(rulesets: Union[list, tuple]) -> list:
                     background_color = declaration.value
                     if is_gradient(background_color):
                         bg_colors = process_gradient(background_color)
-                        print("We have bg colors: " + str(bg_colors))
+                        print(bg_colors)
 
             if background_color or color:
                 contrast_ratio = "NA"
@@ -2091,8 +2083,7 @@ def get_unique_font_rules(project_folder: str) -> list:
                         unique_font_selectors.append(selector)
                     if value not in unique_font_values:
                         unique_font_values.append(value)
-                else:
-                    print()
+
         # apply the file, unique rules, unique selectors, and unique values
         filename = file.get("file")
         file_data = {"file": filename, "rules": unique_rules}
