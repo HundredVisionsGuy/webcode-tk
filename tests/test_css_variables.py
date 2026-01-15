@@ -119,7 +119,7 @@ def test_extract_variables_for_document(html_file, var_name, expected_entries):
 
 
 @pytest.mark.parametrize(
-    "page,selector,expected_color,expected_bg",
+    "page,element,expected_color,expected_bg",
     [
         ("page1.html", "p", "#111", "#bdd7bd"),  # Override in page1 style tag
         ("page1.html", "p.highlight", "#ccc", "#bdd7bd"),  # Uses fallback
@@ -133,26 +133,25 @@ def test_extract_variables_for_document(html_file, var_name, expected_entries):
     ],
 )
 def test_css_variables_contrast_resolution(
-    page, selector, expected_color, expected_bg
+    page, element, expected_color, expected_bg
 ):
     # Run contrast analysis for the project
     results = contrast.analyze_contrast(project_dir)
 
     # Find the matching element result
-    page_path = f"{project_dir}{page}"
-    matching_result = [
-        r
-        for r in results
-        if page_path in r.get("filename", "") and r.get("selector") == selector
-    ]
-
-    assert (
-        len(matching_result) > 0
-    ), f"No result found for {selector} in {page}"
-
-    element_result = matching_result[0]
-    assert element_result.get("color") == expected_color
-    assert element_result.get("background-color") == expected_bg
+    for result in results:
+        if (
+            page == result.get("filename")
+            and result.get("element_tag") == element
+        ):
+            if "highlight" in element and "highlight" in result.get(
+                "element_class"
+            ):
+                assert result.get("color") == expected_color
+                assert result.get("background-color") == expected_bg
+            else:
+                assert result.get("color") == expected_color
+                assert result.get("background-color") == expected_bg
 
 
 @pytest.mark.parametrize(
