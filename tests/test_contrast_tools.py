@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 
 from webcode_tk.contrast_tools import append_style_data
 from webcode_tk.contrast_tools import apply_browser_defaults
-from webcode_tk.contrast_tools import apply_css_inheritance
+from webcode_tk._style_inheritance import apply_css_inheritance
 from webcode_tk.contrast_tools import apply_rule_to_element
 from webcode_tk.contrast_tools import apply_visual_background_inheritance
 from webcode_tk.contrast_tools import convert_font_size_to_pixels
@@ -1325,7 +1325,7 @@ def test_apply_css_inheritance_parent_no_inheritable_properties():
     computed_styles = {
         div_element: {
             "background-color": {"value": "yellow", "specificity": "010"},
-            "display": {"value": "block", "specificity": "010"}
+            "display": {"value": "block", "specificity": "010"},
             # No inheritable properties
         },
         p_element: {"font-size": {"value": "16px", "specificity": "001"}},
@@ -1535,7 +1535,7 @@ def test_find_ancestor_background_skips_elements_without_styles():
                 "selector": "body",
             }
         },
-        ul_element: {"color": {"value": "black", "specificity": "001"}}
+        ul_element: {"color": {"value": "black", "specificity": "001"}},
         # header and nav intentionally not in computed_styles
     }
 

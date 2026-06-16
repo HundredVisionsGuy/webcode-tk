@@ -8,6 +8,7 @@ all styles applied to every element on the page.
 With that, it scans each stylesheet and applies each style one at a time
 to all elements and their children (if applicable) of a page.
 """
+
 import ctypes
 import re
 from collections import abc

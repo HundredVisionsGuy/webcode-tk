@@ -1,29 +1,42 @@
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v2.4.0
+  rev: v4.5.0
   hooks:
   - id: check-added-large-files
     args: ['--maxkb=700']
   - id: check-ast
-  - id: check-docstring-first
   - id: check-yaml
   - id: end-of-file-fixer
   - id: trailing-whitespace
   - id: check-merge-conflict
-- repo: https://github.com/asottile/reorder_python_imports
-  rev: v1.9.0
-  hooks:
-  - id: reorder-python-imports
-    args: [--py3-plus]
 - repo: https://github.com/psf/black
-  rev: 22.6.0
+  rev: 24.1.1
   hooks:
   - id: black
+    language_version: python3
 - repo: https://github.com/PyCQA/flake8
-  rev: 5.0.4
+  rev: 7.0.0
   hooks:
   - id: flake8
-    args: ["--ignore=E231,E701,E762,E702,W503"]
+    args: ["--max-line-length=79", "--extend-ignore=E203"]
+- repo: local
+  hooks:
+  - id: pytest
+    name: pytest
+    entry: pytest
+    language: python
+    types: [python]
+    pass_filenames: false
+    always_run: true
     additional_dependencies:
-    - flake8-bugbear
-    - flake8-implicit-str-concat
+    - pytest
+    - bs4
+    - file-clerk
+    - requests
+    - py-readability-metrics
+    - textatistic
+    - nltk
+    - tinycss2
+    - lxml
+    - mechanicalsoup
+    - pytest-mock

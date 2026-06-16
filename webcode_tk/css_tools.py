@@ -2,6 +2,7 @@
 This module is a set of tools to analyze CSS syntax as well as properties
 and values.
 """
+
 import re
 from typing import Union
 
@@ -1234,7 +1235,7 @@ def get_colors_from_gradient(gradient: str) -> list:
     return colors
 
 
-def get_comment_positions(code: (str)) -> Union[list, None]:
+def get_comment_positions(code: str) -> Union[list, None]:
     """looks for index positions of first opening and closing comment.
 
     From this function, you can create a slice of a comment from the

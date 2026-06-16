@@ -231,7 +231,7 @@ def is_a_keyword(word: str) -> bool:
     return is_keyword
 
 
-def get_hex_by_keyword(word: (str)) -> str:
+def get_hex_by_keyword(word: str) -> str:
     """returns the hex value of a keyword (if valid).
 
     Args:

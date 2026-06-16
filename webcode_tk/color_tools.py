@@ -19,6 +19,7 @@ One thing led to another, yada yada, then I realized that this could
 be a useful tool in my web grading projects, and there you have it:
 `color_tools`.
 """
+
 import re
 
 from webcode_tk import color_keywords

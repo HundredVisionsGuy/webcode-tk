@@ -2,6 +2,7 @@
 A group of functions that work with css_tools and cascade_tools to provide
 reports on CSS animations.
 """
+
 from collections.abc import Iterable
 from typing import Union
 

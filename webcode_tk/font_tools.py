@@ -21,6 +21,7 @@ I will also not support calculating `ch` or `ex` since those are
 dependent upon the font-family itself and require information from the
 font-file or some other hidden calculation from the browser.
 """
+
 import re
 from typing import Any
 from typing import Union

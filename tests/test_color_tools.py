@@ -1,4 +1,5 @@
 """Tests for `colortools` package."""
+
 import pytest
 
 from webcode_tk import color_tools as color

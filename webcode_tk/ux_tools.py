@@ -15,6 +15,7 @@ According to the article...
     blocks of text
     - Use hypertext to split up long information into multiple pages"
 """
+
 import re
 from collections.abc import Sequence
 from typing import Union

@@ -31,6 +31,7 @@ Constants:
         mathematical contrast ratios and size thresholds that determine WCAG
         compliance.
 """
+
 import copy
 import re
 
@@ -40,6 +41,7 @@ from bs4 import NavigableString
 from bs4 import Tag
 from file_clerk import clerk
 
+from webcode_tk import _style_inheritance
 from webcode_tk import color_tools
 from webcode_tk import css_tools
 from webcode_tk import font_tools
@@ -871,12 +873,16 @@ def apply_rule_to_element(
                     "specificity": rule_specificity,
                     "source": "rule",
                     "selector": selector,
-                    "css_file": css_source_info.get("filename")
-                    if css_source_info
-                    else None,
-                    "css_source_type": css_source_info.get("source_type")
-                    if css_source_info
-                    else None,
+                    "css_file": (
+                        css_source_info.get("filename")
+                        if css_source_info
+                        else None
+                    ),
+                    "css_source_type": (
+                        css_source_info.get("source_type")
+                        if css_source_info
+                        else None
+                    ),
                 }
 
                 # Check if we should apply this font-size rule
@@ -911,12 +917,16 @@ def apply_rule_to_element(
                         "specificity": rule_specificity,
                         "source": "rule",
                         "selector": selector,
-                        "css_file": css_source_info.get("filename")
-                        if css_source_info
-                        else None,
-                        "css_source_type": css_source_info.get("source_type")
-                        if css_source_info
-                        else None,
+                        "css_file": (
+                            css_source_info.get("filename")
+                            if css_source_info
+                            else None
+                        ),
+                        "css_source_type": (
+                            css_source_info.get("source_type")
+                            if css_source_info
+                            else None
+                        ),
                         "contrast_analysis": "indeterminate",
                         "reason": "background_image_blocks_color_analysis",
                         "original_background": property_value,
@@ -933,16 +943,22 @@ def apply_rule_to_element(
                         "specificity": rule_specificity,
                         "source": "rule",
                         "selector": selector,
-                        "css_file": css_source_info.get("filename")
-                        if css_source_info
-                        else None,
-                        "css_source_type": css_source_info.get("source_type")
-                        if css_source_info
-                        else None,
+                        "css_file": (
+                            css_source_info.get("filename")
+                            if css_source_info
+                            else None
+                        ),
+                        "css_source_type": (
+                            css_source_info.get("source_type")
+                            if css_source_info
+                            else None
+                        ),
                         "contrast_analysis": "determinable",
-                        "original_background": property_value
-                        if property_value != effective_color
-                        else None,
+                        "original_background": (
+                            property_value
+                            if property_value != effective_color
+                            else None
+                        ),
                     }
 
                 # Apply specificity logic and set the property
@@ -1000,12 +1016,16 @@ def apply_rule_to_element(
                         "specificity": rule_specificity,
                         "source": "rule",
                         "selector": selector,
-                        "css_file": css_source_info.get("filename")
-                        if css_source_info
-                        else None,
-                        "css_source_type": css_source_info.get("source_type")
-                        if css_source_info
-                        else None,
+                        "css_file": (
+                            css_source_info.get("filename")
+                            if css_source_info
+                            else None
+                        ),
+                        "css_source_type": (
+                            css_source_info.get("source_type")
+                            if css_source_info
+                            else None
+                        ),
                     }
 
     return
@@ -1121,63 +1141,10 @@ def apply_inheritance(soup: BeautifulSoup, computed_styles: dict) -> None:
         None: Modifies computed_styles dictionary in place.
     """
     # Step 1: Apply true CSS inheritance (color, font properties)
-    apply_css_inheritance(computed_styles)
+    _style_inheritance.apply_css_inheritance(computed_styles)
 
     # Step 2: Apply visual background inheritance
     apply_visual_background_inheritance(computed_styles)
-
-
-def apply_css_inheritance(computed_styles: dict) -> None:
-    """
-    Apply traditional CSS inheritance for inheritable properties.
-    Only inherit from the closest ancestor with an explicit rule.
-    """
-    inheritable_props = {"color", "font-size", "font-weight"}
-
-    for child_element in computed_styles:
-        child_styles = computed_styles[child_element]
-
-        # find closest ancestor with explicit value
-        for prop in inheritable_props:
-            child_prop = child_styles.get(prop)
-
-            # Skip if child has explicit CSS rule (not default)
-            if child_prop and child_prop.get("source") not in [
-                "default",
-                None,
-            ]:
-                continue
-
-            # Walk up tree to find first ancestor with explicit value
-            current = child_element.parent
-            inherited_value = None
-
-            while current and not inherited_value:
-                if current in computed_styles:
-                    parent_styles = computed_styles[current]
-                    parent_prop = parent_styles.get(prop)
-
-                    # Found a parent with this property
-                    if parent_prop:
-                        # Only inherit if parent has explicit rule
-                        if parent_prop.get("source") == "rule":
-                            inherited_value = parent_prop
-                            inherited_from = current
-                            break  # ← Stop at first explicit ancestor
-
-                current = current.parent
-
-            # Apply inherited value if found
-            if inherited_value:
-                child_styles[prop] = {
-                    "value": inherited_value["value"],
-                    "specificity": inherited_value["specificity"],
-                    "source": "inheritance",
-                    "selector": inherited_value.get("selector", "inherited"),
-                    "css_file": inherited_value.get("css_file"),
-                    "css_source_type": inherited_value.get("css_source_type"),
-                    "inherited_from": inherited_from,
-                }
 
 
 def apply_visual_background_inheritance(computed_styles: dict) -> None:
@@ -1650,9 +1617,11 @@ def extract_property_source(property_data: dict) -> dict:
             "source_type": "visual_inheritance",
             "css_file": "visual_cascade",
             "selector": "ancestor_background",
-            "inherited_from": getattr(inherited_element, "name", None)
-            if inherited_element
-            else None,
+            "inherited_from": (
+                getattr(inherited_element, "name", None)
+                if inherited_element
+                else None
+            ),
         }
     elif source_type == "rule":
         return {
