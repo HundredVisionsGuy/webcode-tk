@@ -1,7 +1,9 @@
 from bs4 import BeautifulSoup
 
-from webcode_tk.contrast_tools import DEFAULT_GLOBAL_BACKGROUND
-from webcode_tk.contrast_tools import find_ancestor_background
+from webcode_tk._style_inheritance import (
+    DEFAULT_GLOBAL_BACKGROUND,
+    find_ancestor_background,
+)
 
 
 class TestFindAncestorBackground:

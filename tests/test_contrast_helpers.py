@@ -1,6 +1,8 @@
-from webcode_tk.contrast_tools import contains_raster_image
-from webcode_tk.contrast_tools import extract_contrast_color
-from webcode_tk.contrast_tools import extract_gradient_contrast_color
+from webcode_tk._style_inheritance import (
+    contains_raster_image,
+    extract_contrast_color,
+    extract_gradient_contrast_color,
+)
 from webcode_tk.contrast_tools import has_usable_background_color
 from webcode_tk.contrast_tools import is_selector_supported_by_bs4
 

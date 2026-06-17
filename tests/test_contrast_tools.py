@@ -4,15 +4,17 @@ from bs4 import BeautifulSoup
 
 from webcode_tk.contrast_tools import append_style_data
 from webcode_tk.contrast_tools import apply_browser_defaults
-from webcode_tk._style_inheritance import apply_css_inheritance
+from webcode_tk._style_inheritance import (
+    apply_css_inheritance,
+    apply_visual_background_inheritance,
+    DEFAULT_GLOBAL_BACKGROUND,
+    find_ancestor_background,
+)
 from webcode_tk.contrast_tools import apply_rule_to_element
-from webcode_tk.contrast_tools import apply_visual_background_inheritance
 from webcode_tk.contrast_tools import convert_font_size_to_pixels
-from webcode_tk.contrast_tools import DEFAULT_GLOBAL_BACKGROUND
 from webcode_tk.contrast_tools import DEFAULT_GLOBAL_COLOR
 from webcode_tk.contrast_tools import DEFAULT_LINK_COLOR
 from webcode_tk.contrast_tools import DEFAULT_LINK_VISITED
-from webcode_tk.contrast_tools import find_ancestor_background
 from webcode_tk.contrast_tools import find_matching_elements
 from webcode_tk.contrast_tools import get_css_source_order
 from webcode_tk.contrast_tools import get_or_parse_external_stylesheet
