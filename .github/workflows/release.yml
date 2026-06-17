@@ -17,6 +17,6 @@ jobs:
       - name: Poetry Config
         run: poetry config pypi-token.pypi "${{ secrets.PYPI_API_KEY }}"
       - name: Publish package
-        run: poetry publish --build
+        run: poetry publish --build --no-interaction
 
 # From https://www.ianwootten.co.uk/2020/10/23/publishing-to-pypi-using-github-actions/
