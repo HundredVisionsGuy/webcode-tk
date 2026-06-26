@@ -25,8 +25,11 @@ font-file or some other hidden calculation from the browser.
 import re
 from typing import Any
 from typing import Union
+from file_clerk import clerk
 
 from webcode_tk import css_tools
+from webcode_tk import html_tools as html
+
 
 absolute_keyword_regex = (
     r"\b(?:xx-small|x-small|small(?!-caps)|medium|large|x-large|"
@@ -355,6 +358,103 @@ def is_valid_shorthand(value: str) -> bool:
             targets_fontfamily = True
     is_valid = targets_size and targets_fontfamily
     return is_valid
+
+
+def get_google_font_report(project_dir: str, min=1, max=2) -> str:
+    """determines if the page is using the min number of google fonts
+
+    We're looking for three things in each web page:
+    1) a link in the head to the googlefonts API,
+    2) each of those fonts being applied, and
+    3) at least the minimum number of unique Google fonts and no more than the
+       max #.
+
+    Args:
+        project_dir: the folder where the files reside
+        min: minimum number of Google font families in use
+        max: maximum number of Google font families in use
+
+    Returns:
+        report: a pass/fail report with accompanying data
+    """
+
+    # Loop through all HTML docs and their styles
+    report = []
+    styles = css_tools.get_styles_by_html_files(project_dir)
+    for data in styles:
+
+        # Step 1: get all linked Google fonts
+        file = data.get("file")
+        filename = clerk.get_file_name(file)
+        links = html.get_elements("link", file)
+        google_fonts_linked = []
+
+        for link in links:
+            href = link.attrs.get("href")
+            if (
+                "fonts.googleapis.com" in href
+                and href != "https://fonts.googleapis.com"
+            ):
+                fonts = get_google_font_data(href)
+                if isinstance(fonts, list):
+                    google_fonts_linked += fonts
+                else:
+                    google_fonts_linked.append(fonts)
+
+        # Check to see the linked fonts match required number.
+        num_fonts = len(google_fonts_linked)
+        if num_fonts < min:
+            data = f"fail: {filename} does not link to min number of Google "
+            data += "fonts."
+            report.append(data)
+            continue
+
+        # if we have any google fonts, are they being used?
+        stylesheets = data.get("stylesheets")
+        fonts_used = []
+        for sheet in stylesheets:
+            families = []
+            font_data = css_tools.get_font_families(sheet)
+            if font_data:
+                families = extract_families(font_data)
+            if families:
+                for family in google_fonts_linked:
+                    if family in families:
+                        if family not in fonts_used:
+                            fonts_used.append(family)
+
+        num_used = len(fonts_used)
+        if num_used >= min and num_used <= max:
+            data = f"pass: {filename} uses the correct number of Google fonts"
+            report.append(data)
+        else:
+            data = f"fail: {filename} with {num_used} font families does not "
+            data += "have enough applied Google fonts"
+            report.append(data)
+    return report
+
+
+def extract_families(family_data: list) -> list:
+    families = []
+    for datum in family_data:
+        family_value = datum.get("family")
+        family = family_value.split(",")[0]
+        family = family.strip()
+        family = family.replace('"', "")
+        family = family.replace("'", "")
+        families.append(family)
+    return families
+
+
+def get_google_font_data(href: str) -> list:
+    font_families = []
+    font_data = href.split("family=")
+    font_data.pop(0)
+    for item in font_data:
+        family = item.split(":")[0]
+        family = family.replace("+", " ")
+        font_families.append(family)
+    return font_families
 
 
 if __name__ == "__main__":

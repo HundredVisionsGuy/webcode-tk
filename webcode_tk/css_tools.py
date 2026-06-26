@@ -1362,6 +1362,8 @@ def get_font_families(sheet: Stylesheet) -> list:
             # always take the last family as it would be an override in CSS
             family = families[-1]
             font_families.append({"selector": selector, "family": family})
+        else:
+            print()
     return font_families
 
 

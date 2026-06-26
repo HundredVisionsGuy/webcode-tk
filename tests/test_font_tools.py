@@ -187,3 +187,95 @@ def test_is_valid_shorthand_for_false():
     results = fonts.is_valid_shorthand("bold small-caps")
     expected = False
     assert results == expected
+
+
+path = "tests/test_files/single_file_project"
+large_project_path = "tests/test_files/large_project"
+
+
+# Test Google font report
+def test_get_google_font_report_for_single_page_no_fonts():
+    report = fonts.get_google_font_report(path)
+    assert "fail" in report[0]
+
+
+def test_get_google_font_report_for_large_project_mixed_results():
+    report = fonts.get_google_font_report(large_project_path, 2)
+    num_fails = 0
+    expected_fails = 1
+    num_passed = 0
+    expected_passed = 2
+    for datum in report:
+        if "pass:" in datum[:6]:
+            num_passed += 1
+        else:
+            num_fails += 1
+    meets_passed = num_passed == expected_passed
+    meets_failed = num_fails == expected_fails
+    assert len(report) == 3 and meets_passed and meets_failed
+
+
+def test_get_google_font_data_for_two_in_single_page():
+    url = "https://fonts.googleapis.com/css2?family=Elms+Sans:ital,wght@0,"
+    url += "100..900;1,100..900&family=Tirra:wght@400;500;600;700;800;900&"
+    url += "display=swap"
+    results = fonts.get_google_font_data(url)
+    assert len(results) == 2 and "Tirra" in results
+
+
+def test_extract_families_for_one_family():
+    font_data = [{"selector": "body", "family": "'Open Sans', sans-serif"}]
+    expected = ["Open Sans"]
+    results = fonts.extract_families(font_data)
+    assert results == expected
+
+
+@pytest.fixture
+def two_families():
+    font_data = [
+        {"selector": "body", "family": "'Open Sans', sans-serif"},
+        {
+            "selector": "article h1.important, h2, h3, h4, h5, h6",
+            "family": "'Righteous', sans-serif",
+        },
+    ]
+    families = fonts.extract_families(font_data)
+    return families
+
+
+def test_extract_families_for_two_families_in_all(two_families):
+    has_both = len(two_families) == 2
+    assert has_both
+
+
+def test_extract_families_for_correct_families(two_families):
+    has_both = "Open Sans" in two_families
+    has_both = has_both and "Righteous" in two_families
+    assert has_both
+
+
+def test_get_google_font_data_for_two_plus_word_fonts():
+    href = "https://fonts.googleapis.com/css2?family=Bitcount+Prop+Single:"
+    href += "wght@100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&"
+    href += "display=swap"
+    font_data = fonts.get_google_font_data(href)
+    has_both = len(font_data) == 2
+    has_both = (
+        has_both
+        and "Open Sans" in font_data
+        and "Bitcount Prop Single" in font_data
+    )
+    assert has_both
+
+
+def test_get_google_font_data_for_one_word_font_with_symbols():
+    href = "https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@"
+    href += "0,200..900;1,200..900&display=swap"
+    expected = ["Source Sans 3"]
+    results = fonts.get_google_font_data(href)
+    assert results == expected
+
+
+if __name__ == "__main__":
+    report = fonts.get_google_font_report(large_project_path, 2)
+    print(report)
