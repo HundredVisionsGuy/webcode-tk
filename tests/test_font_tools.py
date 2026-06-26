@@ -215,12 +215,32 @@ def test_get_google_font_report_for_large_project_mixed_results():
     assert len(report) == 3 and meets_passed and meets_failed
 
 
+def test_get_google_font_report_for_too_many_fonts():
+    directory = "tests/test_files/attribute_selector_file"
+    report = fonts.get_google_font_report(directory)
+    result = report[0]
+    assert "fail" in result and "too many" in result
+
+
 def test_get_google_font_data_for_two_in_single_page():
     url = "https://fonts.googleapis.com/css2?family=Elms+Sans:ital,wght@0,"
     url += "100..900;1,100..900&family=Tirra:wght@400;500;600;700;800;900&"
     url += "display=swap"
     results = fonts.get_google_font_data(url)
     assert len(results) == 2 and "Tirra" in results
+
+
+def test_get_google_font_data_for_three_and_diff_char():
+    url = "https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300."
+    url += ".800;1,300..800&family=Righteous&family=Source+Sans+3:ital,wght@0,"
+    url += "200..900;1,200..900&display=swap"
+    results = fonts.get_google_font_data(url)
+    has_three_fonts = len(results) == 3
+    has_no_ampersand = True
+    for result in results:
+        if "&" in result:
+            has_no_ampersand = False
+    assert has_three_fonts and has_no_ampersand
 
 
 def test_extract_families_for_one_family():

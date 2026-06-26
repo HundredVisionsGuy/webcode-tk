@@ -404,9 +404,9 @@ def get_google_font_report(project_dir: str, min=1, max=2) -> str:
         # Check to see the linked fonts match required number.
         num_fonts = len(google_fonts_linked)
         if num_fonts < min:
-            data = f"fail: {filename} does not link to min number of Google "
-            data += "fonts."
-            report.append(data)
+            result = f"fail: {filename} does not link to min number of Google "
+            result += "fonts."
+            report.append(result)
             continue
 
         # if we have any google fonts, are they being used?
@@ -425,12 +425,20 @@ def get_google_font_report(project_dir: str, min=1, max=2) -> str:
 
         num_used = len(fonts_used)
         if num_used >= min and num_used <= max:
-            data = f"pass: {filename} uses the correct number of Google fonts"
-            report.append(data)
+            result = (
+                f"pass: {filename} uses the correct number of Google fonts"
+            )
+            report.append(result)
+        elif num_used > max:
+            result = f"fail: {filename} has too many font families - max is "
+            result += f"{max}, and you have {num_used} families."
+            report.append(result)
         else:
-            data = f"fail: {filename} with {num_used} font families does not "
-            data += "have enough applied Google fonts"
-            report.append(data)
+            result = (
+                f"fail: {filename} with {num_used} font families does not "
+            )
+            result += "have enough applied Google fonts"
+            report.append(result)
     return report
 
 
@@ -442,6 +450,7 @@ def extract_families(family_data: list) -> list:
         family = family.strip()
         family = family.replace('"', "")
         family = family.replace("'", "")
+        family = family.replace("&", "")
         families.append(family)
     return families
 
@@ -453,6 +462,7 @@ def get_google_font_data(href: str) -> list:
     for item in font_data:
         family = item.split(":")[0]
         family = family.replace("+", " ")
+        family = family.replace("&", "")
         font_families.append(family)
     return font_families
 
