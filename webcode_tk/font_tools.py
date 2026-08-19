@@ -24,12 +24,11 @@ font-file or some other hidden calculation from the browser.
 
 import re
 from typing import Any
-from typing import Union
+
 from file_clerk import clerk
 
 from webcode_tk import css_tools
 from webcode_tk import html_tools as html
-
 
 absolute_keyword_regex = (
     r"\b(?:xx-small|x-small|small(?!-caps)|medium|large|x-large|"
@@ -137,7 +136,7 @@ def get_font_unit(value: str) -> str:
     """returns unit being use when setting font-size"""
     unit = ""
     # Check for relative keywords
-    if value in KEYWORD_SIZE_MAP.keys():
+    if value in KEYWORD_SIZE_MAP:
         unit = "absolute_keyword"
     elif relative_keyword.search(value):
         unit = "relative_keyword"
@@ -169,7 +168,7 @@ def split_value_unit(value: str) -> tuple:
         value_unit: a tuple of the value and the unit.
     """
     value_unit = ["", ""]
-    if value in KEYWORD_SIZE_MAP.keys():
+    if value in KEYWORD_SIZE_MAP:
         value_unit = (value, "absolute_keyword")
     elif relative_keyword.search(value):
         value_unit = (value, "relative_keyword")
@@ -236,17 +235,15 @@ def is_large_text(size: float, is_bold: bool) -> bool:
         is_large: whether the text is considered large or not.
     """
     is_large = False
-    if size >= 24:
-        is_large = True
-    elif is_bold and size >= 18.66:
+    if size >= 24 or is_bold and size >= 18.66:
         is_large = True
     return is_large
 
 
 def compute_font_size(
-    value: Union[str, int, float],
+    value: str | float,
     unit: str,
-    parent_size: Union[int, float] = 16.0,
+    parent_size: float = 16.0,
     element_name: str = "",
 ) -> float:
     """Computes font size based on value, unit, and possibly parent size.
@@ -288,7 +285,7 @@ def compute_font_size(
         percentage = value * 0.01
         computed_size = parent_size * percentage
     elif unit == "em":
-        if element_name.lower() in HEADING_SIZES.keys():
+        if element_name.lower() in HEADING_SIZES:
             # factor = HEADING_SIZES.get(element_name).split("e")[0]
             computed_size = parent_size * value  # * factor
         else:
@@ -296,7 +293,7 @@ def compute_font_size(
     elif unit in ("unset", "inherit"):
         computed_size = parent_size
     elif unit in "revert":
-        if element_name.lower() in HEADING_SIZES.keys():
+        if element_name.lower() in HEADING_SIZES:
             ems = HEADING_SIZES.get(element_name)
             multiplier = ems.split("e")[0]
             computed_size = parent_size * float(multiplier)
@@ -340,13 +337,12 @@ def is_valid_shorthand(value: str) -> bool:
         if ignore:
             continue
         font_size_values = get_numeric_fontsize_values(val)
-        if font_size_values:
-            targets_size = True
-        elif val in KEYWORD_SIZE_MAP.keys():
-            targets_size = True
-        elif val in ("larger", "smaller"):
-            targets_size = True
-        elif val in UNIT_TO_PT_CONVERSIONS.keys():
+        if (
+            font_size_values
+            or val in KEYWORD_SIZE_MAP
+            or val in ("larger", "smaller")
+            or val in UNIT_TO_PT_CONVERSIONS
+        ):
             targets_size = True
 
         # check for font family.
@@ -419,9 +415,8 @@ def get_google_font_report(project_dir: str, min=1, max=2) -> str:
                 families = extract_families(font_data)
             if families:
                 for family in google_fonts_linked:
-                    if family in families:
-                        if family not in fonts_used:
-                            fonts_used.append(family)
+                    if family in families and family not in fonts_used:
+                        fonts_used.append(family)
 
         num_used = len(fonts_used)
         if num_used >= min and num_used <= max:

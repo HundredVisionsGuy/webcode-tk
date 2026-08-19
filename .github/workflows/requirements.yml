@@ -1,0 +1,24 @@
+name: Update requirements.txt
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  requirements:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+      - name: Generate requirements.txt
+        run: poetry export --with dev -f requirements.txt -o requirements.txt
+      - name: Commit and push requirements.txt
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add requirements.txt
+          git commit -m "chore: update requirements.txt" || true
+          git push
