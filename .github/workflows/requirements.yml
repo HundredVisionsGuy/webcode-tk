@@ -17,6 +17,8 @@ jobs:
         uses: snok/install-poetry@v1
         with:
           version: latest
+      - name: Add Poetry to path
+        run: echo "${HOME}/.local/bin" >> $GITHUB_PATH
       - name: Upgrade Poetry
         run: pip install --upgrade poetry
       - name: Generate requirements.txt
