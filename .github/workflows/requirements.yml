@@ -17,6 +17,8 @@ jobs:
         uses: snok/install-poetry@v1
         with:
           version: latest
+      - name: Upgrade Poetry
+        run: pip install --upgrade poetry
       - name: Generate requirements.txt
         run: poetry export --with dev -f requirements.txt -o requirements.txt
       - name: Commit and push requirements.txt
