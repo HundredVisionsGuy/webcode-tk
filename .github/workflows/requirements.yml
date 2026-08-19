@@ -7,6 +7,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -32,4 +34,4 @@ jobs:
           git config user.email "github-actions@github.com"
           git add requirements.txt
           git commit -m "chore: update requirements.txt" || true
-          git push
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git main
