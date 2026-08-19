@@ -286,11 +286,46 @@ def test_validate_css_with_errors(mocker):
     assert "Sorry! We found the following errors" in result[0].text
 
 
-def test_get_project_validation_for_project_css_fail():
+def test_validate_css_handles_connection_failure(mocker):
+    mock_browser = mocker.MagicMock()
+    mock_browser.open.side_effect = Exception("no connection")
+    mocker.patch("webcode_tk.validator_tools.browser", mock_browser)
+
+    result = val.validate_css("body { font-size: larger; }")
+
+    assert val.get_css_errors_list(result) == [
+        "Sorry, but we could not make a connection"
+    ]
+
+
+def test_get_project_validation_for_project_css_fail(mocker):
+    error_html = """
+    <div id="results_container">
+        <table>
+            <tr class="error">
+                <td>3</td>
+                <td>body</td>
+                <td>Property align doesn't exist</td>
+            </tr>
+        </table>
+    </div>
+    """
+    valid_html = '<div id="results_container"><div id="congrats"></div></div>'
+
+    def fake_validate_css(code):
+        html = error_html if "<style>" in code else valid_html
+        return BeautifulSoup(html, "lxml").select("#results_container")
+
+    mocker.patch(
+        "webcode_tk.validator_tools.validate_css",
+        side_effect=fake_validate_css,
+    )
+
     results = val.get_project_validation(project_folder, "css")
     fails = 0
     for result in results:
         if "fail" in result[:4]:
             fails += 1
     expected_fails = 1
-    assert len(results) == expected_fails
+    assert fails == expected_fails
+    assert results == ["fail: test.html has 1 css errors."]
