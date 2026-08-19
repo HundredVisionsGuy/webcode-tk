@@ -289,10 +289,17 @@ def validate_css(css_code: str) -> bs4.ResultSet:
             browser.submit_selected()
             results = browser.get_current_page().select("#results_container")
     except Exception:
-        # Convert the file "no_css_connection.html" into a soup tag object
-        no_connection_code = clerk.file_to_string(
-            "webanalyst/no_css_connection.html"
-        )
+        no_connection_code = """
+        <div id="results_container">
+            <table>
+                <tr class="error">
+                    <td>NA</td>
+                    <td>NA</td>
+                    <td>Sorry, but we could not make a connection</td>
+                </tr>
+            </table>
+        </div>
+        """
         soup = BeautifulSoup(no_connection_code, "lxml")
         # Convert string to result set
         results = soup.select("#results_container")
