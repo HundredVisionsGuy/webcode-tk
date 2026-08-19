@@ -1,32 +1,27 @@
-name: Update requirements.txt
+name: Export Requirements
 
 on:
   push:
-    branches: [main]
-  workflow_dispatch:
+    branches: [ main ]
 
 jobs:
-  requirements:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.10.21"
+          python-version: '3.11'
+
       - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
           version: latest
-      - name: Add Poetry to path
-        run: echo "${HOME}/.local/bin" >> $GITHUB_PATH
-      - name: Upgrade Poetry
-        run: pip install --upgrade poetry
-      - name: Generate requirements.txt
-        run: poetry export --without-hashes --format=requirements.txt > requirements.txt
-      - name: Commit and push requirements.txt
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add requirements.txt
-          git commit -m "chore: update requirements.txt" || true
-          git push
+
+      - name: Install Export Plugin (Required for Poetry 2.x)
+        run: poetry self add poetry-plugin-export
+
+      - name: Generate requirements.txt without hashes
+        run: poetry export -f requirements.txt --output requirements.txt --without-hashes
