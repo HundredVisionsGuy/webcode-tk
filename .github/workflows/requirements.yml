@@ -28,10 +28,10 @@ jobs:
       - name: Generate requirements.txt without hashes
         run: poetry export -f requirements.txt --output requirements.txt --without-hashes
 
-      - name: Commit and push requirements.txt
+      - name: Verify requirements.txt is up to date
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add requirements.txt
-          git commit -m "chore: update requirements.txt" || true
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git main
+          if ! git diff --quiet -- requirements.txt; then
+            echo "requirements.txt is out of date. Run 'poetry export -f requirements.txt --output requirements.txt --without-hashes' and commit the result."
+            git diff -- requirements.txt
+            exit 1
+          fi
