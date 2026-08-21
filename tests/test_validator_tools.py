@@ -294,3 +294,17 @@ def test_get_project_validation_for_project_css_fail():
             fails += 1
     expected_fails = 1
     assert len(results) == expected_fails
+
+
+def test_validate_css_handles_connection_failure(mocker):
+    import requests
+
+    mock_browser = mocker.MagicMock()
+    mock_browser.open.side_effect = requests.ConnectionError("no connection")
+    mocker.patch("webcode_tk.validator_tools.browser", mock_browser)
+
+    result = val.validate_css("body { font-size: larger; }")
+
+    assert val.get_css_errors_list(result) == [
+        "Sorry, but we could not make a connection"
+    ]

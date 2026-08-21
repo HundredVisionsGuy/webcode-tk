@@ -103,7 +103,7 @@ def get_markup_validity(file_path: str) -> list:
         try:
             errors = r.json()
             errors = errors.get("messages")
-        except Exception:
+        except ValueError:
             # We need to use the web browser
             errors = get_validation_by_browser(file_path)
 
@@ -252,7 +252,7 @@ def get_validation_by_browser(file_path: str) -> list:
             browser["fragment"] = html_code
             browser.submit_selected()
             results = browser.get_current_page().select("div#results")
-    except Exception:
+    except requests.ConnectionError:
         # Convert the file "no_css_connection.html" into a soup tag object
         no_connection_code = (
             "<h1>Sorry, but we could not make a connection</h1>"
@@ -288,11 +288,18 @@ def validate_css(css_code: str) -> bs4.ResultSet:
             browser["text"] = css_code
             browser.submit_selected()
             results = browser.get_current_page().select("#results_container")
-    except Exception:
-        # Convert the file "no_css_connection.html" into a soup tag object
-        no_connection_code = clerk.file_to_string(
-            "webanalyst/no_css_connection.html"
-        )
+    except requests.ConnectionError:
+        no_connection_code = """
+        <div id="results_container">
+            <table>
+                <tr class="error">
+                    <td>NA</td>
+                    <td>NA</td>
+                    <td>Sorry, but we could not make a connection</td>
+                </tr>
+            </table>
+        </div>
+        """
         soup = BeautifulSoup(no_connection_code, "lxml")
         # Convert string to result set
         results = soup.select("#results_container")
@@ -357,6 +364,6 @@ def get_project_validation(project_dir: str, type="html") -> list:
 if __name__ == "__main__":
     path = "tests/test_files/sample_with_errors.html"
     report = get_markup_validity(path)
-    print("report is a {}.".format(type(report)))
+    print(f"report is a {type(report)}.")
     for item in report:
         print(item)
