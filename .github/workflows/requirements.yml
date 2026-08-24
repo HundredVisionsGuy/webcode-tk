@@ -28,8 +28,11 @@ jobs:
       - name: Generate requirements.txt without hashes
         run: poetry export -f requirements.txt --output requirements.txt --without-hashes
 
-      - name: Commit requirements.txt if changed
-        uses: stefanzweifel/git-auto-commit-action@v5
+      - name: Create Pull Request if changed
+        uses: peter-evans/create-pull-request@v6
         with:
-          commit_message: "chore: auto-update requirements.txt"
-          file_pattern: "requirements.txt"
+          commit-message: "chore: auto-update requirements.txt"
+          title: "chore: auto-update requirements.txt"
+          body: "Automatically generated pull request to update requirements.txt"
+          branch: "update-requirements-txt"
+          add-paths: "requirements.txt"
