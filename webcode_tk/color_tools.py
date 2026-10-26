@@ -607,7 +607,7 @@ def contrast_ratio(hex1: str, hex2: str) -> float:
     try:
         rgb1 = hex_to_rgb(hex1)
         rgb2 = hex_to_rgb(hex2)
-    except ValueError as e:
+    except ValueError:
         return 0
     l1 = luminance(rgb1)
     l2 = luminance(rgb2)

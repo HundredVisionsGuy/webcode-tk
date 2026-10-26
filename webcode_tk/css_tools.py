@@ -1260,7 +1260,7 @@ def get_comment_positions(code: str) -> Union[list, None]:
         positions.append(code.index("/*"))
         positions.append(code.index("*/"))
         return positions
-    except Exception as ex:
+    except Exception:
         return
 
 
