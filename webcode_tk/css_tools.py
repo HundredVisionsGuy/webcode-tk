@@ -326,15 +326,16 @@ class Stylesheet:
 
                     # Check for a gradient bg color
                     is_bg_gradient = color_tools.is_gradient(value)
-                    if is_bg_gradient:
-                        print()
+
                     # skip if has vendor prefix
                     if has_vendor_prefix(value):
                         continue
+
                     # skip if not valid color value
                     is_valid_color = color_tools.is_color_value(value)
                     if not is_valid_color and not is_bg_gradient:
                         continue
+
                     # make sure the value is a color (not other)
                     rule = {selector: {property: value}}
                     color_rulesets.append(rule)
@@ -1260,7 +1261,6 @@ def get_comment_positions(code: str) -> Union[list, None]:
         positions.append(code.index("*/"))
         return positions
     except Exception as ex:
-        print(ex)
         return
 
 
@@ -1362,8 +1362,6 @@ def get_font_families(sheet: Stylesheet) -> list:
             # always take the last family as it would be an override in CSS
             family = families[-1]
             font_families.append({"selector": selector, "family": family})
-        else:
-            print()
     return font_families
 
 
@@ -1885,8 +1883,7 @@ def get_unique_font_rules(project_folder: str) -> list:
                         unique_font_selectors.append(selector)
                     if value not in unique_font_values:
                         unique_font_values.append(value)
-                else:
-                    print()
+
         # apply the file, unique rules, unique selectors, and unique values
         filename = file.get("file")
         file_data = {"file": filename, "rules": unique_rules}

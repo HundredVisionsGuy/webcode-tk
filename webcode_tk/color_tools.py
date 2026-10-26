@@ -608,7 +608,6 @@ def contrast_ratio(hex1: str, hex2: str) -> float:
         rgb1 = hex_to_rgb(hex1)
         rgb2 = hex_to_rgb(hex2)
     except ValueError as e:
-        print(f"Oops {str(e)}")
         return 0
     l1 = luminance(rgb1)
     l2 = luminance(rgb2)
@@ -1095,12 +1094,5 @@ def color_to_hsl(color_code: str) -> str:
 
 
 if __name__ == "__main__":
-    # print()
-    # hex = rgb_to_hex("rgb(190, 228, 210)")
-    # print(hex)
-    # hex2 = rgb_to_hex("rgb(215, 248, 247)")
-    # print(hex2)
-    # hex = rgb_to_hex("rgb(250, 178, 172)")
-    # print(hex)
     hex = rgb_to_hex("rgb(237, 161, 193)")
     print(hex)
