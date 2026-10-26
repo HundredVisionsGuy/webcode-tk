@@ -592,8 +592,6 @@ def apply_browser_defaults(
                 },
             }
 
-            if element.name in ["html", "body"]:
-                print(f"  ✓ Added <{element.name}> to element_styles")
             # Apply element-specific defaults
             # Apply link colors
             if element.name == "a":
@@ -758,7 +756,6 @@ def find_matching_elements(soup: BeautifulSoup, selector: str) -> list:
     if not is_selector_supported_by_bs4(selector):
         warning = f"Warning: Selector '{selector}' contains features not "
         warning += "supported by BS4"
-        print(warning)
         return []
 
     # Try BeautifulSoup's select method
@@ -1097,9 +1094,8 @@ def convert_font_size_to_pixels(
 
         return f"{computed_px:.1f}px"
 
-    except Exception as e:
+    except Exception:
         # Fallback for parsing errors
-        print(f"DEBUG: Exception caught: '{e}'")
         return f"{font_size_value}px"  # Assume it's already in pixels
 
 
@@ -1386,5 +1382,3 @@ if __name__ == "__main__":
     contrast_results = generate_contrast_report(project_path, "AAA")
     project_path = "tests/test_files/contrast_tool_test/"
     global_colors = css_tools.get_project_global_colors(project_path)
-    print()
-    print()
